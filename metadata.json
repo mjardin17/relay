@@ -1,0 +1,6 @@
+{
+  "name": "Empire OS: Relay Module",
+  "description": "Intelligent content distribution and social media automation engine for Empire OS.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
