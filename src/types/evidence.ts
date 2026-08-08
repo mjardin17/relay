@@ -151,7 +151,9 @@ export interface EvidenceItem {
 export type OpportunityStatus =
   | 'Detected'
   | 'Under Review'
+  | 'PendingApproval'
   | 'Approved'
+  | 'Rejected'
   | 'Activated'
   | 'Running'
   | 'Awaiting Results'

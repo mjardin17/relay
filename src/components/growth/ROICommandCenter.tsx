@@ -108,8 +108,8 @@ export const ROICommandCenter: React.FC<ROICommandCenterProps> = ({
               <Zap className="w-5 h-5" />
             </div>
           </div>
-          <div className="text-3xl font-extrabold text-sky-400 mt-3 font-mono">
-            +{stats.netRoiPercentage}%
+          <div className="text-2xl sm:text-3xl font-extrabold text-sky-400 mt-3 font-mono">
+            {stats.netRoiDisplay}
           </div>
           <div className="flex items-center justify-between mt-2 text-xs">
             <span className="text-slate-400">Execution Cost:</span>
@@ -127,13 +127,13 @@ export const ROICommandCenter: React.FC<ROICommandCenterProps> = ({
               <ShieldCheck className="w-5 h-5" />
             </div>
           </div>
-          <div className="text-3xl font-extrabold text-slate-100 mt-3 font-mono">
-            {stats.averagePaybackDays} <span className="text-lg text-slate-400">Days</span>
+          <div className="text-2xl sm:text-3xl font-extrabold text-slate-100 mt-3 font-mono">
+            {stats.paybackDisplay}
           </div>
           <div className="flex items-center justify-between mt-2 text-xs">
             <span className="text-slate-400">Attribution Status:</span>
-            <span className="text-emerald-400 font-semibold flex items-center gap-1 font-mono">
-              <CheckCircle className="w-3.5 h-3.5" /> VERIFIED
+            <span className="text-emerald-400 font-semibold flex items-center gap-1 font-mono text-[11px]">
+              <CheckCircle className="w-3.5 h-3.5" /> {stats.attributionStatus}
             </span>
           </div>
         </div>

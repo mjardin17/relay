@@ -16,6 +16,11 @@ export const ExecutionCenter: React.FC<ExecutionCenterProps> = ({ darkMode }) =>
     setRefresh((prev) => prev + 1);
   };
 
+  const handleReject = (id: string) => {
+    growthEvidenceEngine.rejectRequest(id, 'Executive Admin');
+    setRefresh((prev) => prev + 1);
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -81,15 +86,25 @@ export const ExecutionCenter: React.FC<ExecutionCenterProps> = ({ darkMode }) =>
                 {req.status === 'pending' ? (
                   <div className="flex items-center gap-2 shrink-0">
                     <button
+                      onClick={() => handleReject(req.id)}
+                      className="px-3 py-2 rounded-xl bg-slate-800 hover:bg-red-500/20 text-slate-300 hover:text-red-400 border border-slate-700 hover:border-red-500/30 font-bold text-xs flex items-center gap-1 transition-colors"
+                    >
+                      Reject
+                    </button>
+                    <button
                       onClick={() => handleApprove(req.id)}
                       className="px-4 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs flex items-center gap-1.5 transition-colors shadow-lg shadow-emerald-500/20"
                     >
                       <UserCheck className="w-4 h-4" /> Approve & Execute
                     </button>
                   </div>
-                ) : (
+                ) : req.status === 'approved' ? (
                   <div className="flex items-center gap-1.5 text-xs text-emerald-400 font-mono font-semibold">
                     <CheckCircle2 className="w-4 h-4" /> Approved by {req.decidedBy}
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-1.5 text-xs text-red-400 font-mono font-semibold">
+                    <AlertTriangle className="w-4 h-4" /> Rejected by {req.decidedBy}
                   </div>
                 )}
               </div>

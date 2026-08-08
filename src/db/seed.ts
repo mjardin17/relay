@@ -1,0 +1,197 @@
+import { getDatabase } from './database';
+
+export function seedDatabaseIfEmpty(): void {
+  const db = getDatabase();
+
+  const tenantCheck = db.prepare('SELECT count(*) as count FROM tenants WHERE id = ?').get('tenant_demo_1') as { count: number };
+  if (tenantCheck && tenantCheck.count > 0) {
+    return; // Already seeded
+  }
+
+  const now = new Date().toISOString();
+
+  db.exec('BEGIN TRANSACTION;');
+
+  try {
+    // 1. Seed Tenant
+    db.prepare(`
+      INSERT INTO tenants (id, name, industry, mrr, primary_bottleneck, created_at)
+      VALUES (?, ?, ?, ?, ?, ?)
+    `).run(
+      'tenant_demo_1',
+      'Apex Horizon Technologies',
+      'B2B SaaS & Enterprise AI',
+      142000,
+      'Lead response latency & stale lead recovery',
+      now
+    );
+
+    // 2. Seed Actors
+    db.prepare(`
+      INSERT INTO actors (id, tenant_id, name, role, email, created_at)
+      VALUES (?, ?, ?, ?, ?, ?)
+    `).run('actor_1', 'tenant_demo_1', 'Executive Admin', 'Executive', 'admin@apexhorizon.com', now);
+
+    // 3. Seed Source Records / Data Sources
+    const insertDs = db.prepare(`
+      INSERT INTO source_records (id, tenant_id, source_type, external_id, name, category, data_payload_json, records_ingested, failed_records, health_score, status, last_sync_at, created_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `);
+
+    insertDs.run('ds-stripe', 'tenant_demo_1', 'stripe', 'acc_stripe_01', 'Stripe Payments & Billing', 'Revenue & Commerce', '{}', 4820, 0, 99, 'connected', '5 mins ago', now);
+    insertDs.run('ds-hubspot', 'tenant_demo_1', 'hubspot', 'acc_hubspot_01', 'HubSpot Sales CRM', 'CRM & Sales', '{}', 3150, 4, 95, 'connected', '12 mins ago', now);
+    insertDs.run('ds-googleads', 'tenant_demo_1', 'google_ads', 'acc_gads_01', 'Google Ads Manager', 'Advertising', '{}', 1240, 0, 98, 'connected', '1 hour ago', now);
+    insertDs.run('ds-ga4', 'tenant_demo_1', 'ga4', 'acc_ga4_01', 'Google Analytics 4', 'Analytics', '{}', 18900, 12, 94, 'connected', '30 mins ago', now);
+    insertDs.run('ds-twilio', 'tenant_demo_1', 'twilio', 'acc_twilio_01', 'Twilio SMS & Voice Relay', 'Communication', '{}', 890, 1, 97, 'connected', '2 mins ago', now);
+
+    // 4. Seed Leads (including stale, converted, opted out, and valid active leads for Stale Lead Recovery slice)
+    const insertLead = db.prepare(`
+      INSERT INTO leads (id, tenant_id, name, email, company, phone, pipeline_stage, estimated_value, last_interaction_at, response_delay_hours, opted_out, do_not_contact, is_converted, is_duplicate, created_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `);
+
+    // Stale leads needing recovery (eligible)
+    insertLead.run('lead-101', 'tenant_demo_1', 'Marcus Vance', 'marcus.v@cloudscale.io', 'CloudScale Inc', '+1-555-0192', 'new_inbound', 8500, new Date(Date.now() - 35 * 86400000).toISOString(), 36, 0, 0, 0, 0, now);
+    insertLead.run('lead-102', 'tenant_demo_1', 'Elena Rostova', 'elena@cyberfront.net', 'CyberFront', '+1-555-0143', 'demo_completed', 14200, new Date(Date.now() - 42 * 86400000).toISOString(), 48, 0, 0, 0, 0, now);
+    insertLead.run('lead-103', 'tenant_demo_1', 'David Kim', 'dkim@nexusops.com', 'NexusOps', '+1-555-0188', 'proposal_sent', 12000, new Date(Date.now() - 50 * 86400000).toISOString(), 72, 0, 0, 0, 0, now);
+    insertLead.run('lead-104', 'tenant_demo_1', 'Samantha Wright', 'swright@quantumbio.com', 'QuantumBio', '+1-555-0122', 'new_inbound', 6800, new Date(Date.now() - 28 * 86400000).toISOString(), 30, 0, 0, 0, 0, now);
+
+    // Ineligible / Suppressed leads (test cases)
+    insertLead.run('lead-105', 'tenant_demo_1', 'Robert Thorne', 'robert.t@optedout.com', 'OptOut Logistics', '+1-555-0111', 'new_inbound', 9500, new Date(Date.now() - 40 * 86400000).toISOString(), 60, 1, 0, 0, 0, now); // Opted out
+    insertLead.run('lead-106', 'tenant_demo_1', 'Amanda Blake', 'amanda@converted.com', 'Converted Retail', '+1-555-0222', 'closed_won', 18000, new Date(Date.now() - 10 * 86400000).toISOString(), 2, 0, 0, 1, 0, now); // Converted
+    insertLead.run('lead-107', 'tenant_demo_1', 'Invalid User', 'invalid-email-format', 'Unknown', '+1-555-0333', 'new_inbound', 3000, new Date(Date.now() - 60 * 86400000).toISOString(), 90, 0, 0, 0, 0, now); // Invalid email
+    insertLead.run('lead-108', 'tenant_demo_1', 'Marcus Vance Duplicate', 'marcus.v@cloudscale.io', 'CloudScale Inc', '+1-555-0192', 'new_inbound', 8500, new Date(Date.now() - 35 * 86400000).toISOString(), 36, 0, 0, 0, 1, now); // Duplicate
+
+    // 5. Seed Verified Opportunities
+    const insertOpp = db.prepare(`
+      INSERT INTO opportunities (id, tenant_id, title, category, description, action_type, status, effort, risk_level, affected_records_count, estimated_monthly_value, estimated_annual_value, actual_realized_monthly_value, confidence, detected_condition, recommended_playbook, activated_at, created_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `);
+
+    insertOpp.run(
+      'opp-stale-lead-recovery',
+      'tenant_demo_1',
+      'Stale Inbound Lead Recovery Engine',
+      'Lead Recovery',
+      '4 high-value inbound prospects with response delays >24 hours and inactivity >25 days. Targeted AI re-engagement sequence.',
+      'email_sequence',
+      'Detected',
+      'Low',
+      'Medium',
+      4,
+      10790,
+      129480,
+      0,
+      'High',
+      '4 inbound leads with estimated total pipeline of $41,500 sitting unattended over 25 days.',
+      'AI Stale Lead Re-engagement Playbook',
+      null,
+      now
+    );
+
+    insertOpp.run(
+      'opp-pricing-optimization',
+      'tenant_demo_1',
+      'SaaS Tiered Pricing Optimization',
+      'Upsell/Cross-sell',
+      '38 active customers on legacy starter tier exceeding usage limits by 240%. Auto-suggest pro upgrade.',
+      'pricing_update',
+      'Detected',
+      'Medium',
+      'High',
+      38,
+      14200,
+      170400,
+      0,
+      'High',
+      '38 accounts on $99/mo starter tier exceeding monthly API quota by >2x.',
+      'Automated Pro Upgrade Nudge',
+      null,
+      now
+    );
+
+    // 6. Seed Calculation Formulas & Evidence
+    db.prepare(`
+      INSERT INTO calculation_formulas (id, tenant_id, formula_name, formula_expression, input_variables_json, calculated_output, calculated_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?)
+    `).run(
+      'form-stale-lead-1',
+      'tenant_demo_1',
+      'Stale Lead Expected Value Formula',
+      'expectedValue = pipelineTotal * expectedConversionRate',
+      JSON.stringify({ pipelineTotal: 41500, expectedConversionRate: 0.26, conservativeRate: 0.10, upsideRate: 0.40 }),
+      10790,
+      now
+    );
+
+    db.prepare(`
+      INSERT INTO evidence_items (id, tenant_id, opportunity_id, claim, source_type, sample_size, confidence, formula_id, metadata_json, created_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `).run(
+      'ev-stale-1',
+      'tenant_demo_1',
+      'opp-stale-lead-recovery',
+      '4 high-value leads sitting unresponded for >25 days with total pipeline value of $41,500.',
+      'HubSpot CRM + Twilio Logs',
+      4,
+      'High',
+      'form-stale-lead-1',
+      JSON.stringify({
+        dataSources: ['ds-hubspot', 'ds-twilio'],
+        sampleSize: 4,
+        confidenceScore: 0.94,
+        verifiedRecords: [
+          { recordId: 'lead-101', name: 'Marcus Vance', value: '$8,500', delay: '36 hours' },
+          { recordId: 'lead-102', name: 'Elena Rostova', value: '$14,200', delay: '48 hours' },
+          { recordId: 'lead-103', name: 'David Kim', value: '$12,000', delay: '72 hours' },
+          { recordId: 'lead-104', name: 'Samantha Wright', value: '$6,800', delay: '30 hours' }
+        ]
+      }),
+      now
+    );
+
+    // 7. Seed Opportunity Projections
+    db.prepare(`
+      INSERT INTO opportunity_projections (id, tenant_id, opportunity_id, conservative_value, expected_value, upside_value, assumptions_json, created_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    `).run(
+      'proj-stale-1',
+      'tenant_demo_1',
+      'opp-stale-lead-recovery',
+      4150, // 10%
+      10790, // 26%
+      16600, // 40%
+      JSON.stringify({
+        totalPipeline: 41500,
+        conservativeConversion: '10%',
+        expectedConversion: '26%',
+        upsideConversion: '40%'
+      }),
+      now
+    );
+
+    // 8. Seed Recommendation Evaluations
+    db.prepare(`
+      INSERT INTO recommendation_evaluations (id, tenant_id, opportunity_id, opportunity_title, predicted_value, realized_value, accuracy_score, feedback_notes, learning_adjustment_applied, evaluated_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `).run(
+      'rec-eval-1',
+      'tenant_demo_1',
+      'opp-stale-lead-recovery',
+      'Stale Inbound Lead Recovery Engine',
+      10790,
+      9800,
+      91,
+      'Historical re-engagement produced 23.6% conversion, within 2.4% of predicted 26% benchmark.',
+      'Adjusted decay model multiplier from 0.85 to 0.88 for tech leads with >$10k value.',
+      now
+    );
+
+    db.exec('COMMIT;');
+    console.log('[SQLite Seed] Database successfully initialized and seeded with tenant_demo_1.');
+  } catch (err) {
+    db.exec('ROLLBACK;');
+    console.error('[SQLite Seed Error]', err);
+    throw err;
+  }
+}
