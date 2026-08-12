@@ -15,6 +15,7 @@ import { IntegrationsHub } from './components/integrations/IntegrationsHub';
 import { CreatePostModal } from './components/studio/CreatePostModal';
 
 // Growth Engine Components
+import { LaunchProgramDashboard } from './components/launch/LaunchProgramDashboard';
 import { ExecutiveAIAdvisor } from './components/growth/ExecutiveAIAdvisor';
 import { BusinessIntelligence } from './components/growth/BusinessIntelligence';
 import { RevenueOpportunityEngine } from './components/growth/RevenueOpportunityEngine';
@@ -25,6 +26,7 @@ import { ROICommandCenter } from './components/growth/ROICommandCenter';
 import { ExecutionCenter } from './components/growth/ExecutionCenter';
 import { DataQualityCenter } from './components/growth/DataQualityCenter';
 import { RecommendationHistory } from './components/growth/RecommendationHistory';
+import { ElectricalWorkflowStudio } from './components/growth/ElectricalWorkflowStudio';
 import { EvidenceDrawer } from './components/evidence/EvidenceDrawer';
 import { EvidenceItem } from './types/evidence';
 
@@ -58,7 +60,7 @@ import { ContentPost, MediaAsset, RelayTab } from './types/relay';
 export default function App() {
   const [darkMode, setDarkMode] = useState(true);
   const [activeModule, setActiveModule] = useState('relay');
-  const [activeTab, setActiveTab] = useState<RelayTab>('advisor');
+  const [activeTab, setActiveTab] = useState<RelayTab>('launch_program');
 
   // Application State - Growth OS & Evidence Graph
   const [businessProfile, setBusinessProfile] = useState(INITIAL_BUSINESS_PROFILE);
@@ -194,6 +196,16 @@ export default function App() {
 
         {/* Main Workspace View */}
         <main className="flex-1 p-4 md:p-6 overflow-y-auto max-h-[calc(100vh-64px)]">
+          {/* Electrical Company Workflow Vertical Slice */}
+          {activeTab === 'electrical_workflow' && (
+            <ElectricalWorkflowStudio darkMode={darkMode} />
+          )}
+
+          {/* 60-Day AI Client Launch Program */}
+          {activeTab === 'launch_program' && (
+            <LaunchProgramDashboard darkMode={darkMode} />
+          )}
+
           {/* Growth Engine 6: Executive AI Advisor */}
           {activeTab === 'advisor' && (
             <ExecutiveAIAdvisor

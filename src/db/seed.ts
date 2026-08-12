@@ -13,7 +13,7 @@ export function seedDatabaseIfEmpty(): void {
   db.exec('BEGIN TRANSACTION;');
 
   try {
-    // 1. Seed Tenant
+    // 1. Seed Tenants
     db.prepare(`
       INSERT INTO tenants (id, name, industry, mrr, primary_bottleneck, created_at)
       VALUES (?, ?, ?, ?, ?, ?)
@@ -26,11 +26,46 @@ export function seedDatabaseIfEmpty(): void {
       now
     );
 
-    // 2. Seed Actors
     db.prepare(`
+      INSERT INTO tenants (id, name, industry, mrr, primary_bottleneck, created_at)
+      VALUES (?, ?, ?, ?, ?, ?)
+    `).run(
+      'tenant_demo_2',
+      'Titan Health Systems',
+      'Healthcare & Dental Clinics',
+      98000,
+      'Patient booking cancellation recovery',
+      now
+    );
+
+    // 2. Seed Actors
+    const insertActor = db.prepare(`
       INSERT INTO actors (id, tenant_id, name, role, email, created_at)
       VALUES (?, ?, ?, ?, ?, ?)
-    `).run('actor_1', 'tenant_demo_1', 'Executive Admin', 'Executive', 'admin@apexhorizon.com', now);
+    `);
+
+    insertActor.run('actor_1', 'tenant_demo_1', 'Executive Owner', 'owner', 'admin@apexhorizon.com', now);
+    insertActor.run('actor_2', 'tenant_demo_1', 'Growth Specialist', 'member', 'member@apexhorizon.com', now);
+    insertActor.run('actor_3', 'tenant_demo_2', 'Dr. Evelyn Vance', 'owner', 'evelyn@titanhealth.org', now);
+
+    // 2b. Seed Auth Sessions (Tokens)
+    const insertSession = db.prepare(`
+      INSERT INTO auth_sessions (token, actor_id, tenant_id, role, permissions_json, expires_at, created_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?)
+    `);
+
+    const farFuture = new Date(Date.now() + 365 * 24 * 3600 * 1000).toISOString();
+    const ownerPermissions = JSON.stringify(['launch:read', 'launch:write', 'launch:dispatch', 'launch:rollback', 'audit:read']);
+    const memberPermissions = JSON.stringify(['launch:read', 'launch:write']);
+
+    // Tenant 1 Owner
+    insertSession.run('token_owner_tenant1', 'actor_1', 'tenant_demo_1', 'owner', ownerPermissions, farFuture, now);
+    // Tenant 1 Member (No dispatch or audit permission)
+    insertSession.run('token_member_tenant1', 'actor_2', 'tenant_demo_1', 'member', memberPermissions, farFuture, now);
+    // Tenant 2 Owner
+    insertSession.run('token_owner_tenant2', 'actor_3', 'tenant_demo_2', 'owner', ownerPermissions, farFuture, now);
+    // Expired Token
+    insertSession.run('token_expired', 'actor_1', 'tenant_demo_1', 'owner', ownerPermissions, '2020-01-01T00:00:00.000Z', now);
 
     // 3. Seed Source Records / Data Sources
     const insertDs = db.prepare(`

@@ -1,0 +1,1657 @@
+[
+  {
+    "id": "audit-1786521610162-040799",
+    "tenant_id": "tenant_demo_1",
+    "actor_id": "user",
+    "client_ip": "127.0.0.1",
+    "endpoint": "/api/growth/electrical-leads/outcome",
+    "action": "electrical_lead_stage_record_revenue",
+    "status": "success",
+    "idempotency_key": null,
+    "details_json": {
+      "leadId": "lead-elec-1786521610105-472",
+      "stage": "record_revenue",
+      "payload": {
+        "actualRevenue": 2750
+      }
+    },
+    "created_at": "2026-08-12T08:00:10.162Z"
+  },
+  {
+    "id": "audit-1786521610160-fb5c72",
+    "tenant_id": "tenant_demo_1",
+    "actor_id": "user",
+    "client_ip": "127.0.0.1",
+    "endpoint": "/api/growth/electrical-leads/outcome",
+    "action": "electrical_lead_stage_record_booking",
+    "status": "success",
+    "idempotency_key": null,
+    "details_json": {
+      "leadId": "lead-elec-1786521610105-472",
+      "stage": "record_booking",
+      "payload": {
+        "bookedJobValue": 2500
+      }
+    },
+    "created_at": "2026-08-12T08:00:10.160Z"
+  },
+  {
+    "id": "audit-1786521610158-c21e71",
+    "tenant_id": "tenant_demo_1",
+    "actor_id": "user",
+    "client_ip": "127.0.0.1",
+    "endpoint": "/api/growth/electrical-leads/outcome",
+    "action": "electrical_lead_stage_schedule_estimate",
+    "status": "success",
+    "idempotency_key": null,
+    "details_json": {
+      "leadId": "lead-elec-1786521610105-472",
+      "stage": "schedule_estimate",
+      "payload": {
+        "scheduledTime": "2026-08-13T10:00:00Z"
+      }
+    },
+    "created_at": "2026-08-12T08:00:10.158Z"
+  },
+  {
+    "id": "audit-1786521610150-7405a3",
+    "tenant_id": "tenant_demo_1",
+    "actor_id": "actor_1",
+    "client_ip": "127.0.0.1",
+    "endpoint": "/api/growth/electrical-leads/execute",
+    "action": "electrical_lead_action_executed",
+    "status": "success",
+    "idempotency_key": "exec-idemp-1786521610148",
+    "details_json": {
+      "success": true,
+      "dispatchStatus": "simulated_dispatch_successful",
+      "isSimulation": true,
+      "executionRecord": {
+        "id": "exec-elec-1786521610150",
+        "idempotencyKey": "exec-idemp-1786521610148",
+        "executionMode": "simulated",
+        "outputSummary": "SIMULATED SMS dispatch to +1-503-9997557. No external telephony message sent.",
+        "dispatchedAt": "2026-08-12T08:00:10.149Z"
+      },
+      "_connectorStatus": {
+        "isSimulation": true,
+        "providerTruthfulness": "simulated_local_environment",
+        "externalVerification": "none_unconfirmed_by_third_party_provider",
+        "notice": "Simulation Mode Active: Actions have no external telephony, email, or database mutations."
+      }
+    },
+    "created_at": "2026-08-12T08:00:10.150Z"
+  },
+  {
+    "id": "audit-1786521610147-05501c",
+    "tenant_id": "tenant_demo_1",
+    "actor_id": "actor_1",
+    "client_ip": "127.0.0.1",
+    "endpoint": "/api/growth/electrical-leads/approve",
+    "action": "electrical_lead_action_approved",
+    "status": "success",
+    "idempotency_key": null,
+    "details_json": {
+      "leadId": "lead-elec-1786521610105-472",
+      "approvalId": "appr-elec-ok-1786521610144",
+      "contentHash": "59b1241bb22a6dbd77fac653439f93108c569765356de041a4dcdab0580ffd9b"
+    },
+    "created_at": "2026-08-12T08:00:10.147Z"
+  },
+  {
+    "id": "audit-1786521610141-0086de",
+    "tenant_id": "tenant_demo_1",
+    "actor_id": "user",
+    "client_ip": "127.0.0.1",
+    "endpoint": "/api/growth/electrical-leads/draft",
+    "action": "electrical_lead_draft_updated_approval_invalidated",
+    "status": "success",
+    "idempotency_key": null,
+    "details_json": {
+      "leadId": "lead-elec-1786521610105-472",
+      "newHash": "59b1241bb22a6dbd77fac653439f93108c569765356de041a4dcdab0580ffd9b"
+    },
+    "created_at": "2026-08-12T08:00:10.141Z"
+  },
+  {
+    "id": "audit-1786521610139-77dd9e",
+    "tenant_id": "tenant_demo_1",
+    "actor_id": "actor_1",
+    "client_ip": "127.0.0.1",
+    "endpoint": "/api/growth/electrical-leads/approve",
+    "action": "electrical_lead_action_approved",
+    "status": "success",
+    "idempotency_key": null,
+    "details_json": {
+      "leadId": "lead-elec-1786521610105-472",
+      "approvalId": "appr-elec-ok-1786521610138",
+      "contentHash": "331bc427905f54c7eb3914abb3d2e3945acce673fe10e6b08f2abd01d3c9f8d6"
+    },
+    "created_at": "2026-08-12T08:00:10.139Z"
+  },
+  {
+    "id": "audit-1786521610135-79fc34",
+    "tenant_id": "tenant_demo_1",
+    "actor_id": "actor_1",
+    "client_ip": "127.0.0.1",
+    "endpoint": "/api/growth/electrical-leads/execute",
+    "action": "electrical_lead_execution_blocked_unapproved",
+    "status": "blocked",
+    "idempotency_key": null,
+    "details_json": {
+      "leadId": "lead-elec-1786521610105-472",
+      "approvalStatus": "pending"
+    },
+    "created_at": "2026-08-12T08:00:10.135Z"
+  },
+  {
+    "id": "audit-1786521610130-a42124",
+    "tenant_id": "tenant_demo_1",
+    "actor_id": "system",
+    "client_ip": "127.0.0.1",
+    "endpoint": "/api/growth/electrical-leads/intake",
+    "action": "lead_intake_suppressed_no_consent",
+    "status": "blocked",
+    "idempotency_key": null,
+    "details_json": {
+      "email": "[REDACTED_EMAIL]",
+      "reason": "Consent provided is false"
+    },
+    "created_at": "2026-08-12T08:00:10.130Z"
+  },
+  {
+    "id": "audit-1786521610128-91ff3c",
+    "tenant_id": "tenant_demo_1",
+    "actor_id": "system",
+    "client_ip": "127.0.0.1",
+    "endpoint": "/api/growth/electrical-leads/intake",
+    "action": "lead_intake_suppressed_opted_out",
+    "status": "blocked",
+    "idempotency_key": null,
+    "details_json": {
+      "email": "[REDACTED_EMAIL]",
+      "reason": "Lead is in suppression list"
+    },
+    "created_at": "2026-08-12T08:00:10.128Z"
+  },
+  {
+    "id": "audit-1786521610119-16ede7",
+    "tenant_id": "tenant_demo_1",
+    "actor_id": "system",
+    "client_ip": "127.0.0.1",
+    "endpoint": "/api/growth/electrical-leads/intake",
+    "action": "lead_intake_duplicate_detected",
+    "status": "suppressed",
+    "idempotency_key": null,
+    "details_json": {
+      "leadId": "lead-elec-1786521610105-472",
+      "email": "[REDACTED_EMAIL]"
+    },
+    "created_at": "2026-08-12T08:00:10.119Z"
+  },
+  {
+    "id": "audit-1786521610106-6d46af",
+    "tenant_id": "tenant_demo_1",
+    "actor_id": "system",
+    "client_ip": "127.0.0.1",
+    "endpoint": "/api/growth/electrical-leads/intake",
+    "action": "electrical_lead_intake_created",
+    "status": "success",
+    "idempotency_key": null,
+    "details_json": {
+      "leadId": "lead-elec-1786521610105-472",
+      "elecId": "elec-1786521610105-473",
+      "oppId": "opp-elec-1786521610106",
+      "serviceRequested": "200A Electrical Panel Upgrade & EV Charger"
+    },
+    "created_at": "2026-08-12T08:00:10.106Z"
+  },
+  {
+    "id": "audit-1786521608975-da9572",
+    "tenant_id": "tenant_demo_1",
+    "actor_id": "actor_1",
+    "client_ip": "127.0.0.1",
+    "endpoint": "/execute-rollback",
+    "action": "EMERGENCY_ROLLBACK_EXECUTED",
+    "status": "SUCCESS",
+    "idempotency_key": null,
+    "details_json": {
+      "stageId": "stage-7",
+      "rollbackReason": "Synthetic rollback verification"
+    },
+    "created_at": "2026-08-12T08:00:08.975Z"
+  },
+  {
+    "id": "audit-1786521608969-cea655",
+    "tenant_id": "tenant_demo_1",
+    "actor_id": "actor_1",
+    "client_ip": "127.0.0.1",
+    "endpoint": "/generate-offer",
+    "action": "GENERATE_OFFER_SUCCESS",
+    "status": "SUCCESS",
+    "idempotency_key": "key-offer-1786521601996",
+    "details_json": {
+      "nicheName": "Pediatric Dentistry",
+      "offerTitle": "24/7 AI Pediatric Dental Triage & Emergency Booking System"
+    },
+    "created_at": "2026-08-12T08:00:08.969Z"
+  },
+  {
+    "id": "audit-1786521601996-f3d255",
+    "tenant_id": "tenant_demo_1",
+    "actor_id": "actor_1",
+    "client_ip": "127.0.0.1",
+    "endpoint": "/recommend-niche",
+    "action": "VALIDATION_FAILED",
+    "status": "BAD_REQUEST",
+    "idempotency_key": null,
+    "details_json": {
+      "errors": {
+        "_errors": [],
+        "industryPreference": {
+          "_errors": [
+            "industryPreference is required"
+          ]
+        }
+      }
+    },
+    "created_at": "2026-08-12T08:00:01.996Z"
+  },
+  {
+    "id": "audit-1786521601993-673867",
+    "tenant_id": "tenant_demo_1",
+    "actor_id": "actor_1",
+    "client_ip": "127.0.0.1",
+    "endpoint": "/dispatch-outreach",
+    "action": "DISPATCH_OUTREACH_EXECUTED",
+    "status": "SUCCESS",
+    "idempotency_key": "key-dispatch-1786521601991",
+    "details_json": {
+      "outreachId": "outreach-appr-1786521601988",
+      "prospectEmail": "[REDACTED_EMAIL]",
+      "approvalId": "appr-1786521601990-379e94"
+    },
+    "created_at": "2026-08-12T08:00:01.993Z"
+  },
+  {
+    "id": "audit-1786521601990-666e57",
+    "tenant_id": "tenant_demo_1",
+    "actor_id": "actor_1",
+    "client_ip": "127.0.0.1",
+    "endpoint": "/approve-outreach",
+    "action": "APPROVE_OUTREACH_RECORDED",
+    "status": "SUCCESS",
+    "idempotency_key": null,
+    "details_json": {
+      "outreachId": "outreach-appr-1786521601988",
+      "prospectEmail": "[REDACTED_EMAIL]",
+      "contentHash": "cc4b7d425a61652861bc138586482acd28836b4c21e6cc05cb5e9a9bc6f9c76b"
+    },
+    "created_at": "2026-08-12T08:00:01.990Z"
+  },
+  {
+    "id": "audit-1786521601984-830e91",
+    "tenant_id": "tenant_demo_1",
+    "actor_id": "actor_1",
+    "client_ip": "127.0.0.1",
+    "endpoint": "/dispatch-outreach",
+    "action": "UNAPPROVED_DISPATCH_BLOCKED",
+    "status": "FORBIDDEN",
+    "idempotency_key": null,
+    "details_json": {
+      "outreachId": "unapproved-outreach-101",
+      "reason": "NO_APPROVAL_RECORD",
+      "prospectEmail": "[REDACTED_EMAIL]"
+    },
+    "created_at": "2026-08-12T08:00:01.984Z"
+  },
+  {
+    "id": "audit-1786521601023-4930f2",
+    "tenant_id": "tenant_demo_1",
+    "actor_id": "actor_1",
+    "client_ip": "127.0.0.1",
+    "endpoint": "/recommend-niche",
+    "action": "IDEMPOTENCY_CONFLICT",
+    "status": "BAD_REQUEST",
+    "idempotency_key": "idemp-key-1786521594943",
+    "details_json": {
+      "errorMessage": "Idempotency key was previously used with a different request payload body."
+    },
+    "created_at": "2026-08-12T08:00:01.023Z"
+  },
+  {
+    "id": "audit-1786521601013-bccdfc",
+    "tenant_id": "tenant_demo_1",
+    "actor_id": "actor_1",
+    "client_ip": "127.0.0.1",
+    "endpoint": "/recommend-niche",
+    "action": "RECOMMEND_NICHE_SUCCESS",
+    "status": "SUCCESS",
+    "idempotency_key": "idemp-key-1786521594943",
+    "details_json": {
+      "industryPreference": "Legal & IP Law",
+      "nicheName": "Boutique Intellectual Property & Patent Law Practices"
+    },
+    "created_at": "2026-08-12T08:00:01.013Z"
+  },
+  {
+    "id": "audit-1786521594942-d305ae",
+    "tenant_id": "tenant_demo_1",
+    "actor_id": "actor_1",
+    "client_ip": "127.0.0.1",
+    "endpoint": "/dispatch-outreach",
+    "action": "DISPATCH_OUTREACH_EXECUTED",
+    "status": "SUCCESS",
+    "idempotency_key": null,
+    "details_json": {
+      "outreachId": "outreach-test-1786521594924",
+      "prospectEmail": "[REDACTED_EMAIL]",
+      "approvalId": "appr-1786521594928-c98ee5"
+    },
+    "created_at": "2026-08-12T07:59:54.942Z"
+  },
+  {
+    "id": "audit-1786521594938-33cde0",
+    "tenant_id": "tenant_demo_1",
+    "actor_id": "actor_1",
+    "client_ip": "127.0.0.1",
+    "endpoint": "/dispatch-outreach",
+    "action": "UNAPPROVED_DISPATCH_BLOCKED",
+    "status": "FORBIDDEN",
+    "idempotency_key": null,
+    "details_json": {
+      "outreachId": "outreach-test-1786521594924",
+      "reason": "APPROVAL_CONTENT_MISMATCH",
+      "prospectEmail": "[REDACTED_EMAIL]"
+    },
+    "created_at": "2026-08-12T07:59:54.938Z"
+  },
+  {
+    "id": "audit-1786521594934-01653a",
+    "tenant_id": "tenant_demo_2",
+    "actor_id": "actor_3",
+    "client_ip": "127.0.0.1",
+    "endpoint": "/dispatch-outreach",
+    "action": "UNAPPROVED_DISPATCH_BLOCKED",
+    "status": "FORBIDDEN",
+    "idempotency_key": null,
+    "details_json": {
+      "outreachId": "outreach-test-1786521594924",
+      "reason": "NO_APPROVAL_RECORD",
+      "prospectEmail": "[REDACTED_EMAIL]"
+    },
+    "created_at": "2026-08-12T07:59:54.934Z"
+  },
+  {
+    "id": "audit-1786521594929-c72743",
+    "tenant_id": "tenant_demo_1",
+    "actor_id": "actor_1",
+    "client_ip": "127.0.0.1",
+    "endpoint": "/approve-outreach",
+    "action": "APPROVE_OUTREACH_RECORDED",
+    "status": "SUCCESS",
+    "idempotency_key": null,
+    "details_json": {
+      "outreachId": "outreach-test-1786521594924",
+      "prospectEmail": "[REDACTED_EMAIL]",
+      "contentHash": "b1a6ca3066d2479467530bfca593cf3b9fa12019f611f2b221d4ea3e338a2c2d"
+    },
+    "created_at": "2026-08-12T07:59:54.929Z"
+  },
+  {
+    "id": "audit-1786521594923-df4cd9",
+    "tenant_id": "tenant_demo_1",
+    "actor_id": "actor_1",
+    "client_ip": "127.0.0.1",
+    "endpoint": "/dispatch-outreach",
+    "action": "UNAPPROVED_DISPATCH_BLOCKED",
+    "status": "FORBIDDEN",
+    "idempotency_key": null,
+    "details_json": {
+      "outreachId": "unapproved-draft-999",
+      "reason": "NO_APPROVAL_RECORD",
+      "prospectEmail": "[REDACTED_EMAIL]"
+    },
+    "created_at": "2026-08-12T07:59:54.923Z"
+  },
+  {
+    "id": "audit-1786521594919-d34c0c",
+    "tenant_id": "tenant_demo_1",
+    "actor_id": "actor_2",
+    "client_ip": "127.0.0.1",
+    "endpoint": "/api/launch-program/audit-logs",
+    "action": "PERMISSION_DENIED",
+    "status": "FORBIDDEN",
+    "idempotency_key": null,
+    "details_json": {
+      "requiredPermission": "audit:read",
+      "userRole": "member"
+    },
+    "created_at": "2026-08-12T07:59:54.919Z"
+  },
+  {
+    "id": "audit-1786521594914-1ea68a",
+    "tenant_id": "tenant_demo_1",
+    "actor_id": "actor_2",
+    "client_ip": "127.0.0.1",
+    "endpoint": "/api/launch-program/dispatch-outreach",
+    "action": "PERMISSION_DENIED",
+    "status": "FORBIDDEN",
+    "idempotency_key": null,
+    "details_json": {
+      "requiredPermission": "launch:dispatch",
+      "userRole": "member"
+    },
+    "created_at": "2026-08-12T07:59:54.914Z"
+  },
+  {
+    "id": "audit-1786521594908-939884",
+    "tenant_id": "tenant_demo_1",
+    "actor_id": "actor_1",
+    "client_ip": "127.0.0.1",
+    "endpoint": "/recommend-niche",
+    "action": "RECOMMEND_NICHE_SUCCESS",
+    "status": "SUCCESS",
+    "idempotency_key": null,
+    "details_json": {
+      "industryPreference": "Fintech",
+      "nicheName": "B2B Embedded Finance & Payment Facilitators"
+    },
+    "created_at": "2026-08-12T07:59:54.908Z"
+  },
+  {
+    "id": "audit-1786521588009-02a952",
+    "tenant_id": "unauthenticated",
+    "actor_id": null,
+    "client_ip": "127.0.0.1",
+    "endpoint": "/api/launch-program/recommend-niche?token=token_owner_tenant1",
+    "action": "AUTH_FAILED_MISSING_TOKEN",
+    "status": "UNAUTHORIZED",
+    "idempotency_key": null,
+    "details_json": {
+      "path": "/recommend-niche"
+    },
+    "created_at": "2026-08-12T07:59:48.009Z"
+  },
+  {
+    "id": "audit-1786521588004-599821",
+    "tenant_id": "unauthenticated",
+    "actor_id": null,
+    "client_ip": "127.0.0.1",
+    "endpoint": "/api/launch-program/recommend-niche",
+    "action": "AUTH_FAILED_INVALID_OR_EXPIRED_TOKEN",
+    "status": "UNAUTHORIZED",
+    "idempotency_key": null,
+    "details_json": {
+      "tokenPrefix": "[REDACTED_SENSITIVE_DATA]"
+    },
+    "created_at": "2026-08-12T07:59:48.004Z"
+  },
+  {
+    "id": "audit-1786521588000-6cec96",
+    "tenant_id": "unauthenticated",
+    "actor_id": null,
+    "client_ip": "127.0.0.1",
+    "endpoint": "/api/launch-program/recommend-niche",
+    "action": "AUTH_FAILED_INVALID_OR_EXPIRED_TOKEN",
+    "status": "UNAUTHORIZED",
+    "idempotency_key": null,
+    "details_json": {
+      "tokenPrefix": "[REDACTED_SENSITIVE_DATA]"
+    },
+    "created_at": "2026-08-12T07:59:48.000Z"
+  },
+  {
+    "id": "audit-1786521587986-9765bc",
+    "tenant_id": "unauthenticated",
+    "actor_id": null,
+    "client_ip": "127.0.0.1",
+    "endpoint": "/api/launch-program/recommend-niche",
+    "action": "AUTH_FAILED_MISSING_TOKEN",
+    "status": "UNAUTHORIZED",
+    "idempotency_key": null,
+    "details_json": {
+      "path": "/recommend-niche"
+    },
+    "created_at": "2026-08-12T07:59:47.986Z"
+  },
+  {
+    "id": "audit-1786521587040-2d2261",
+    "tenant_id": "tenant_demo_1",
+    "actor_id": "actor_1",
+    "client_ip": "127.0.0.1",
+    "endpoint": "/publish-post",
+    "action": "GBP_POST_PUBLISHED_GUIDED",
+    "status": "SUCCESS",
+    "idempotency_key": null,
+    "details_json": {
+      "postId": "gbp-post-1786521587015",
+      "approvalId": "gbp-appr-post-1786521587028"
+    },
+    "created_at": "2026-08-12T07:59:47.040Z"
+  },
+  {
+    "id": "audit-1786521587034-afe0cb",
+    "tenant_id": "tenant_demo_1",
+    "actor_id": "actor_1",
+    "client_ip": "127.0.0.1",
+    "endpoint": "/publish-post",
+    "action": "GBP_POST_PUBLISH_TAMPER_DETECTED",
+    "status": "FORBIDDEN",
+    "idempotency_key": null,
+    "details_json": {
+      "postId": "gbp-post-1786521587015",
+      "expectedHash": "c54a65cbdc7aca76a6e3a2e0ea010bc8f827c248a01aa4d166a40a1f1dfda70e",
+      "currentHash": "ca125c0393d3ed54d93ad2be5df1c9f40e24a3748c74ca0ce74a681247f11022"
+    },
+    "created_at": "2026-08-12T07:59:47.034Z"
+  },
+  {
+    "id": "audit-1786521587029-bb6a27",
+    "tenant_id": "tenant_demo_1",
+    "actor_id": "actor_1",
+    "client_ip": "127.0.0.1",
+    "endpoint": "/approve-post",
+    "action": "GBP_POST_HUMAN_APPROVED",
+    "status": "SUCCESS",
+    "idempotency_key": null,
+    "details_json": {
+      "postId": "gbp-post-1786521587015",
+      "approvalId": "gbp-appr-post-1786521587028",
+      "contentHash": "c54a65cbdc7aca76a6e3a2e0ea010bc8f827c248a01aa4d166a40a1f1dfda70e"
+    },
+    "created_at": "2026-08-12T07:59:47.029Z"
+  },
+  {
+    "id": "audit-1786521587022-b16f78",
+    "tenant_id": "tenant_demo_1",
+    "actor_id": "actor_1",
+    "client_ip": "127.0.0.1",
+    "endpoint": "/publish-post",
+    "action": "GBP_POST_PUBLISH_UNAPPROVED_BLOCKED",
+    "status": "FORBIDDEN",
+    "idempotency_key": null,
+    "details_json": {
+      "postId": "gbp-post-1786521587015"
+    },
+    "created_at": "2026-08-12T07:59:47.022Z"
+  },
+  {
+    "id": "audit-1786521587016-0cf12f",
+    "tenant_id": "tenant_demo_1",
+    "actor_id": "actor_1",
+    "client_ip": "127.0.0.1",
+    "endpoint": "/create-post-draft",
+    "action": "GBP_POST_DRAFT_CREATED",
+    "status": "SUCCESS",
+    "idempotency_key": null,
+    "details_json": {
+      "postId": "gbp-post-1786521587015",
+      "profileId": "gbp-prof-1786507240888",
+      "postType": "offer"
+    },
+    "created_at": "2026-08-12T07:59:47.016Z"
+  },
+  {
+    "id": "audit-1786521586996-2b1c9c",
+    "tenant_id": "tenant_demo_1",
+    "actor_id": "actor_1",
+    "client_ip": "127.0.0.1",
+    "endpoint": "/intake",
+    "action": "GBP_INTAKE_SAVED",
+    "status": "SUCCESS",
+    "idempotency_key": null,
+    "details_json": {
+      "profileId": "gbp-prof-1786507240888",
+      "companyName": "Apex Electrical Solutions & Generators"
+    },
+    "created_at": "2026-08-12T07:59:46.996Z"
+  },
+  {
+    "id": "audit-1786521585942-8a96b1",
+    "tenant_id": "tenant_demo_1",
+    "actor_id": "actor_1",
+    "client_ip": "127.0.0.1",
+    "endpoint": "/intake",
+    "action": "GBP_INTAKE_SAVED",
+    "status": "SUCCESS",
+    "idempotency_key": null,
+    "details_json": {
+      "profileId": "gbp-prof-1786513211352",
+      "companyName": "Redaction Integrity Electricians"
+    },
+    "created_at": "2026-08-12T07:59:45.942Z"
+  },
+  {
+    "id": "audit-1786521565184-45b23b",
+    "tenant_id": "tenant_demo_1",
+    "actor_id": "user",
+    "client_ip": "127.0.0.1",
+    "endpoint": "/api/growth/electrical-leads/outcome",
+    "action": "electrical_lead_stage_record_revenue",
+    "status": "success",
+    "idempotency_key": null,
+    "details_json": {
+      "leadId": "lead-elec-1786521565113-597",
+      "stage": "record_revenue",
+      "payload": {
+        "actualRevenue": 2750
+      }
+    },
+    "created_at": "2026-08-12T07:59:25.184Z"
+  },
+  {
+    "id": "audit-1786521565182-9de2bb",
+    "tenant_id": "tenant_demo_1",
+    "actor_id": "user",
+    "client_ip": "127.0.0.1",
+    "endpoint": "/api/growth/electrical-leads/outcome",
+    "action": "electrical_lead_stage_record_booking",
+    "status": "success",
+    "idempotency_key": null,
+    "details_json": {
+      "leadId": "lead-elec-1786521565113-597",
+      "stage": "record_booking",
+      "payload": {
+        "bookedJobValue": 2500
+      }
+    },
+    "created_at": "2026-08-12T07:59:25.182Z"
+  },
+  {
+    "id": "audit-1786521565181-d970cd",
+    "tenant_id": "tenant_demo_1",
+    "actor_id": "user",
+    "client_ip": "127.0.0.1",
+    "endpoint": "/api/growth/electrical-leads/outcome",
+    "action": "electrical_lead_stage_schedule_estimate",
+    "status": "success",
+    "idempotency_key": null,
+    "details_json": {
+      "leadId": "lead-elec-1786521565113-597",
+      "stage": "schedule_estimate",
+      "payload": {
+        "scheduledTime": "2026-08-13T10:00:00Z"
+      }
+    },
+    "created_at": "2026-08-12T07:59:25.181Z"
+  },
+  {
+    "id": "audit-1786521565174-201e25",
+    "tenant_id": "tenant_demo_1",
+    "actor_id": "actor_1",
+    "client_ip": "127.0.0.1",
+    "endpoint": "/api/growth/electrical-leads/execute",
+    "action": "electrical_lead_action_executed",
+    "status": "success",
+    "idempotency_key": "exec-idemp-1786521565172",
+    "details_json": {
+      "success": true,
+      "dispatchStatus": "simulated_dispatch_successful",
+      "isSimulation": true,
+      "executionRecord": {
+        "id": "exec-elec-1786521565174",
+        "idempotencyKey": "exec-idemp-1786521565172",
+        "executionMode": "simulated",
+        "outputSummary": "SIMULATED SMS dispatch to +1-503-7409502. No external telephony message sent.",
+        "dispatchedAt": "2026-08-12T07:59:25.173Z"
+      },
+      "_connectorStatus": {
+        "isSimulation": true,
+        "providerTruthfulness": "simulated_local_environment",
+        "externalVerification": "none_unconfirmed_by_third_party_provider",
+        "notice": "Simulation Mode Active: Actions have no external telephony, email, or database mutations."
+      }
+    },
+    "created_at": "2026-08-12T07:59:25.174Z"
+  },
+  {
+    "id": "audit-1786521565172-37ee8f",
+    "tenant_id": "tenant_demo_1",
+    "actor_id": "actor_1",
+    "client_ip": "127.0.0.1",
+    "endpoint": "/api/growth/electrical-leads/approve",
+    "action": "electrical_lead_action_approved",
+    "status": "success",
+    "idempotency_key": null,
+    "details_json": {
+      "leadId": "lead-elec-1786521565113-597",
+      "approvalId": "appr-elec-ok-1786521565172",
+      "contentHash": "1bf4ca6ffd325802b40634b9ab807668ec05d3d773836e251b81b12987af5031"
+    },
+    "created_at": "2026-08-12T07:59:25.172Z"
+  },
+  {
+    "id": "audit-1786521565169-08c165",
+    "tenant_id": "tenant_demo_1",
+    "actor_id": "user",
+    "client_ip": "127.0.0.1",
+    "endpoint": "/api/growth/electrical-leads/draft",
+    "action": "electrical_lead_draft_updated_approval_invalidated",
+    "status": "success",
+    "idempotency_key": null,
+    "details_json": {
+      "leadId": "lead-elec-1786521565113-597",
+      "newHash": "1bf4ca6ffd325802b40634b9ab807668ec05d3d773836e251b81b12987af5031"
+    },
+    "created_at": "2026-08-12T07:59:25.169Z"
+  },
+  {
+    "id": "audit-1786521565166-cfe4f9",
+    "tenant_id": "tenant_demo_1",
+    "actor_id": "actor_1",
+    "client_ip": "127.0.0.1",
+    "endpoint": "/api/growth/electrical-leads/approve",
+    "action": "electrical_lead_action_approved",
+    "status": "success",
+    "idempotency_key": null,
+    "details_json": {
+      "leadId": "lead-elec-1786521565113-597",
+      "approvalId": "appr-elec-ok-1786521565166",
+      "contentHash": "807e447088821c318a0e4c4e55a9cde0df7992c61c1690e0c0002a2ef3db6159"
+    },
+    "created_at": "2026-08-12T07:59:25.166Z"
+  },
+  {
+    "id": "audit-1786521565153-acfc01",
+    "tenant_id": "tenant_demo_1",
+    "actor_id": "actor_1",
+    "client_ip": "127.0.0.1",
+    "endpoint": "/api/growth/electrical-leads/execute",
+    "action": "electrical_lead_execution_blocked_unapproved",
+    "status": "blocked",
+    "idempotency_key": null,
+    "details_json": {
+      "leadId": "lead-elec-1786521565113-597",
+      "approvalStatus": "pending"
+    },
+    "created_at": "2026-08-12T07:59:25.153Z"
+  },
+  {
+    "id": "audit-1786521565137-2c1bd9",
+    "tenant_id": "tenant_demo_1",
+    "actor_id": "system",
+    "client_ip": "127.0.0.1",
+    "endpoint": "/api/growth/electrical-leads/intake",
+    "action": "lead_intake_suppressed_no_consent",
+    "status": "blocked",
+    "idempotency_key": null,
+    "details_json": {
+      "email": "[REDACTED_EMAIL]",
+      "reason": "Consent provided is false"
+    },
+    "created_at": "2026-08-12T07:59:25.137Z"
+  },
+  {
+    "id": "audit-1786521565135-3a1370",
+    "tenant_id": "tenant_demo_1",
+    "actor_id": "system",
+    "client_ip": "127.0.0.1",
+    "endpoint": "/api/growth/electrical-leads/intake",
+    "action": "lead_intake_suppressed_opted_out",
+    "status": "blocked",
+    "idempotency_key": null,
+    "details_json": {
+      "email": "[REDACTED_EMAIL]",
+      "reason": "Lead is in suppression list"
+    },
+    "created_at": "2026-08-12T07:59:25.135Z"
+  },
+  {
+    "id": "audit-1786521565128-764619",
+    "tenant_id": "tenant_demo_1",
+    "actor_id": "system",
+    "client_ip": "127.0.0.1",
+    "endpoint": "/api/growth/electrical-leads/intake",
+    "action": "lead_intake_duplicate_detected",
+    "status": "suppressed",
+    "idempotency_key": null,
+    "details_json": {
+      "leadId": "lead-elec-1786521565113-597",
+      "email": "[REDACTED_EMAIL]"
+    },
+    "created_at": "2026-08-12T07:59:25.128Z"
+  },
+  {
+    "id": "audit-1786521565114-3a4b7f",
+    "tenant_id": "tenant_demo_1",
+    "actor_id": "system",
+    "client_ip": "127.0.0.1",
+    "endpoint": "/api/growth/electrical-leads/intake",
+    "action": "electrical_lead_intake_created",
+    "status": "success",
+    "idempotency_key": null,
+    "details_json": {
+      "leadId": "lead-elec-1786521565113-597",
+      "elecId": "elec-1786521565113-759",
+      "oppId": "opp-elec-1786521565114",
+      "serviceRequested": "200A Electrical Panel Upgrade & EV Charger"
+    },
+    "created_at": "2026-08-12T07:59:25.114Z"
+  },
+  {
+    "id": "audit-1786521559527-651479",
+    "tenant_id": "tenant_demo_1",
+    "actor_id": "user",
+    "client_ip": "127.0.0.1",
+    "endpoint": "/api/growth/electrical-leads/outcome",
+    "action": "electrical_lead_stage_record_revenue",
+    "status": "success",
+    "idempotency_key": null,
+    "details_json": {
+      "leadId": "lead-elec-1786521559478-274",
+      "stage": "record_revenue",
+      "payload": {
+        "actualRevenue": 2750
+      }
+    },
+    "created_at": "2026-08-12T07:59:19.527Z"
+  },
+  {
+    "id": "audit-1786521559525-56fe79",
+    "tenant_id": "tenant_demo_1",
+    "actor_id": "user",
+    "client_ip": "127.0.0.1",
+    "endpoint": "/api/growth/electrical-leads/outcome",
+    "action": "electrical_lead_stage_record_booking",
+    "status": "success",
+    "idempotency_key": null,
+    "details_json": {
+      "leadId": "lead-elec-1786521559478-274",
+      "stage": "record_booking",
+      "payload": {
+        "bookedJobValue": 2500
+      }
+    },
+    "created_at": "2026-08-12T07:59:19.525Z"
+  },
+  {
+    "id": "audit-1786521559523-a6af39",
+    "tenant_id": "tenant_demo_1",
+    "actor_id": "user",
+    "client_ip": "127.0.0.1",
+    "endpoint": "/api/growth/electrical-leads/outcome",
+    "action": "electrical_lead_stage_schedule_estimate",
+    "status": "success",
+    "idempotency_key": null,
+    "details_json": {
+      "leadId": "lead-elec-1786521559478-274",
+      "stage": "schedule_estimate",
+      "payload": {
+        "scheduledTime": "2026-08-13T10:00:00Z"
+      }
+    },
+    "created_at": "2026-08-12T07:59:19.523Z"
+  },
+  {
+    "id": "audit-1786521559516-1c5aea",
+    "tenant_id": "tenant_demo_1",
+    "actor_id": "actor_1",
+    "client_ip": "127.0.0.1",
+    "endpoint": "/api/growth/electrical-leads/execute",
+    "action": "electrical_lead_action_executed",
+    "status": "success",
+    "idempotency_key": "exec-idemp-1786521559514",
+    "details_json": {
+      "success": true,
+      "dispatchStatus": "simulated_dispatch_successful",
+      "isSimulation": true,
+      "executionRecord": {
+        "id": "exec-elec-1786521559515",
+        "idempotencyKey": "exec-idemp-1786521559514",
+        "executionMode": "simulated",
+        "outputSummary": "SIMULATED SMS dispatch to +1-503-4654178. No external telephony message sent.",
+        "dispatchedAt": "2026-08-12T07:59:19.514Z"
+      },
+      "_connectorStatus": {
+        "isSimulation": true,
+        "providerTruthfulness": "simulated_local_environment",
+        "externalVerification": "none_unconfirmed_by_third_party_provider",
+        "notice": "Simulation Mode Active: Actions have no external telephony, email, or database mutations."
+      }
+    },
+    "created_at": "2026-08-12T07:59:19.516Z"
+  },
+  {
+    "id": "audit-1786521559513-ca9238",
+    "tenant_id": "tenant_demo_1",
+    "actor_id": "actor_1",
+    "client_ip": "127.0.0.1",
+    "endpoint": "/api/growth/electrical-leads/approve",
+    "action": "electrical_lead_action_approved",
+    "status": "success",
+    "idempotency_key": null,
+    "details_json": {
+      "leadId": "lead-elec-1786521559478-274",
+      "approvalId": "appr-elec-ok-1786521559513",
+      "contentHash": "e5054afe7416dd3da3acb05ca85a1076b620b0be1e53cac2549173a306cbadb2"
+    },
+    "created_at": "2026-08-12T07:59:19.513Z"
+  },
+  {
+    "id": "audit-1786521559511-bc7dc0",
+    "tenant_id": "tenant_demo_1",
+    "actor_id": "user",
+    "client_ip": "127.0.0.1",
+    "endpoint": "/api/growth/electrical-leads/draft",
+    "action": "electrical_lead_draft_updated_approval_invalidated",
+    "status": "success",
+    "idempotency_key": null,
+    "details_json": {
+      "leadId": "lead-elec-1786521559478-274",
+      "newHash": "e5054afe7416dd3da3acb05ca85a1076b620b0be1e53cac2549173a306cbadb2"
+    },
+    "created_at": "2026-08-12T07:59:19.511Z"
+  },
+  {
+    "id": "audit-1786521559509-f411a1",
+    "tenant_id": "tenant_demo_1",
+    "actor_id": "actor_1",
+    "client_ip": "127.0.0.1",
+    "endpoint": "/api/growth/electrical-leads/approve",
+    "action": "electrical_lead_action_approved",
+    "status": "success",
+    "idempotency_key": null,
+    "details_json": {
+      "leadId": "lead-elec-1786521559478-274",
+      "approvalId": "appr-elec-ok-1786521559509",
+      "contentHash": "21ad7612802c46e1188fe1b4c7ef445bd67cc7a4418b1231e07849baa7bd5a47"
+    },
+    "created_at": "2026-08-12T07:59:19.509Z"
+  },
+  {
+    "id": "audit-1786521559506-8596c9",
+    "tenant_id": "tenant_demo_1",
+    "actor_id": "actor_1",
+    "client_ip": "127.0.0.1",
+    "endpoint": "/api/growth/electrical-leads/execute",
+    "action": "electrical_lead_execution_blocked_unapproved",
+    "status": "blocked",
+    "idempotency_key": null,
+    "details_json": {
+      "leadId": "lead-elec-1786521559478-274",
+      "approvalStatus": "pending"
+    },
+    "created_at": "2026-08-12T07:59:19.506Z"
+  },
+  {
+    "id": "audit-1786521559502-55be28",
+    "tenant_id": "tenant_demo_1",
+    "actor_id": "system",
+    "client_ip": "127.0.0.1",
+    "endpoint": "/api/growth/electrical-leads/intake",
+    "action": "lead_intake_suppressed_no_consent",
+    "status": "blocked",
+    "idempotency_key": null,
+    "details_json": {
+      "email": "[REDACTED_EMAIL]",
+      "reason": "Consent provided is false"
+    },
+    "created_at": "2026-08-12T07:59:19.502Z"
+  },
+  {
+    "id": "audit-1786521559500-e14d26",
+    "tenant_id": "tenant_demo_1",
+    "actor_id": "system",
+    "client_ip": "127.0.0.1",
+    "endpoint": "/api/growth/electrical-leads/intake",
+    "action": "lead_intake_suppressed_opted_out",
+    "status": "blocked",
+    "idempotency_key": null,
+    "details_json": {
+      "email": "[REDACTED_EMAIL]",
+      "reason": "Lead is in suppression list"
+    },
+    "created_at": "2026-08-12T07:59:19.501Z"
+  },
+  {
+    "id": "audit-1786521559493-c8e749",
+    "tenant_id": "tenant_demo_1",
+    "actor_id": "system",
+    "client_ip": "127.0.0.1",
+    "endpoint": "/api/growth/electrical-leads/intake",
+    "action": "lead_intake_duplicate_detected",
+    "status": "suppressed",
+    "idempotency_key": null,
+    "details_json": {
+      "leadId": "lead-elec-1786521559478-274",
+      "email": "[REDACTED_EMAIL]"
+    },
+    "created_at": "2026-08-12T07:59:19.493Z"
+  },
+  {
+    "id": "audit-1786521559479-797bae",
+    "tenant_id": "tenant_demo_1",
+    "actor_id": "system",
+    "client_ip": "127.0.0.1",
+    "endpoint": "/api/growth/electrical-leads/intake",
+    "action": "electrical_lead_intake_created",
+    "status": "success",
+    "idempotency_key": null,
+    "details_json": {
+      "leadId": "lead-elec-1786521559478-274",
+      "elecId": "elec-1786521559478-867",
+      "oppId": "opp-elec-1786521559479",
+      "serviceRequested": "200A Electrical Panel Upgrade & EV Charger"
+    },
+    "created_at": "2026-08-12T07:59:19.479Z"
+  },
+  {
+    "id": "audit-1786521534438-a1d75a",
+    "tenant_id": "tenant_demo_1",
+    "actor_id": "user",
+    "client_ip": "127.0.0.1",
+    "endpoint": "/api/growth/electrical-leads/outcome",
+    "action": "electrical_lead_stage_record_revenue",
+    "status": "success",
+    "idempotency_key": null,
+    "details_json": {
+      "leadId": "lead-elec-1786521534395-893",
+      "stage": "record_revenue",
+      "payload": {
+        "actualRevenue": 2750
+      }
+    },
+    "created_at": "2026-08-12T07:58:54.438Z"
+  },
+  {
+    "id": "audit-1786521534436-438d9e",
+    "tenant_id": "tenant_demo_1",
+    "actor_id": "user",
+    "client_ip": "127.0.0.1",
+    "endpoint": "/api/growth/electrical-leads/outcome",
+    "action": "electrical_lead_stage_record_booking",
+    "status": "success",
+    "idempotency_key": null,
+    "details_json": {
+      "leadId": "lead-elec-1786521534395-893",
+      "stage": "record_booking",
+      "payload": {
+        "bookedJobValue": 2500
+      }
+    },
+    "created_at": "2026-08-12T07:58:54.436Z"
+  },
+  {
+    "id": "audit-1786521534432-53ff78",
+    "tenant_id": "tenant_demo_1",
+    "actor_id": "user",
+    "client_ip": "127.0.0.1",
+    "endpoint": "/api/growth/electrical-leads/outcome",
+    "action": "electrical_lead_stage_schedule_estimate",
+    "status": "success",
+    "idempotency_key": null,
+    "details_json": {
+      "leadId": "lead-elec-1786521534395-893",
+      "stage": "schedule_estimate",
+      "payload": {
+        "scheduledTime": "2026-08-13T10:00:00Z"
+      }
+    },
+    "created_at": "2026-08-12T07:58:54.432Z"
+  },
+  {
+    "id": "audit-1786521534421-320659",
+    "tenant_id": "tenant_demo_1",
+    "actor_id": "actor_1",
+    "client_ip": "127.0.0.1",
+    "endpoint": "/api/growth/electrical-leads/execute",
+    "action": "electrical_lead_action_executed",
+    "status": "success",
+    "idempotency_key": "exec-idemp-1786521534419",
+    "details_json": {
+      "success": true,
+      "dispatchStatus": "simulated_dispatch_successful",
+      "isSimulation": true,
+      "executionRecord": {
+        "id": "exec-elec-1786521534421",
+        "idempotencyKey": "exec-idemp-1786521534419",
+        "executionMode": "simulated",
+        "outputSummary": "SIMULATED SMS dispatch to +1-503-5748419. No external telephony message sent.",
+        "dispatchedAt": "2026-08-12T07:58:54.420Z"
+      },
+      "_connectorStatus": {
+        "isSimulation": true,
+        "providerTruthfulness": "simulated_local_environment",
+        "externalVerification": "none_unconfirmed_by_third_party_provider",
+        "notice": "Simulation Mode Active: Actions have no external telephony, email, or database mutations."
+      }
+    },
+    "created_at": "2026-08-12T07:58:54.421Z"
+  },
+  {
+    "id": "audit-1786521534418-bd19f7",
+    "tenant_id": "tenant_demo_1",
+    "actor_id": "actor_1",
+    "client_ip": "127.0.0.1",
+    "endpoint": "/api/growth/electrical-leads/approve",
+    "action": "electrical_lead_action_approved",
+    "status": "success",
+    "idempotency_key": null,
+    "details_json": {
+      "leadId": "lead-elec-1786521534395-893",
+      "approvalId": "appr-elec-ok-1786521534418",
+      "contentHash": "a0174844a7ad45b8faae1a7485af8142d57dd2d750411a7b16a6079e6b4b0ba8"
+    },
+    "created_at": "2026-08-12T07:58:54.418Z"
+  },
+  {
+    "id": "audit-1786521534416-b8b72c",
+    "tenant_id": "tenant_demo_1",
+    "actor_id": "user",
+    "client_ip": "127.0.0.1",
+    "endpoint": "/api/growth/electrical-leads/draft",
+    "action": "electrical_lead_draft_updated_approval_invalidated",
+    "status": "success",
+    "idempotency_key": null,
+    "details_json": {
+      "leadId": "lead-elec-1786521534395-893",
+      "newHash": "a0174844a7ad45b8faae1a7485af8142d57dd2d750411a7b16a6079e6b4b0ba8"
+    },
+    "created_at": "2026-08-12T07:58:54.416Z"
+  },
+  {
+    "id": "audit-1786521534414-4b16a8",
+    "tenant_id": "tenant_demo_1",
+    "actor_id": "actor_1",
+    "client_ip": "127.0.0.1",
+    "endpoint": "/api/growth/electrical-leads/approve",
+    "action": "electrical_lead_action_approved",
+    "status": "success",
+    "idempotency_key": null,
+    "details_json": {
+      "leadId": "lead-elec-1786521534395-893",
+      "approvalId": "appr-elec-ok-1786521534413",
+      "contentHash": "1ce516c4a519596adc0f0ebf4778bf3c559d490e9dd1909bfbdb9a9e251b4060"
+    },
+    "created_at": "2026-08-12T07:58:54.414Z"
+  },
+  {
+    "id": "audit-1786521534411-f6fb61",
+    "tenant_id": "tenant_demo_1",
+    "actor_id": "actor_1",
+    "client_ip": "127.0.0.1",
+    "endpoint": "/api/growth/electrical-leads/execute",
+    "action": "electrical_lead_execution_blocked_unapproved",
+    "status": "blocked",
+    "idempotency_key": null,
+    "details_json": {
+      "leadId": "lead-elec-1786521534395-893",
+      "approvalStatus": "pending"
+    },
+    "created_at": "2026-08-12T07:58:54.411Z"
+  },
+  {
+    "id": "audit-1786521534407-e3a570",
+    "tenant_id": "tenant_demo_1",
+    "actor_id": "system",
+    "client_ip": "127.0.0.1",
+    "endpoint": "/api/growth/electrical-leads/intake",
+    "action": "lead_intake_suppressed_no_consent",
+    "status": "blocked",
+    "idempotency_key": null,
+    "details_json": {
+      "email": "[REDACTED_EMAIL]",
+      "reason": "Consent provided is false"
+    },
+    "created_at": "2026-08-12T07:58:54.407Z"
+  },
+  {
+    "id": "audit-1786521534405-3413b1",
+    "tenant_id": "tenant_demo_1",
+    "actor_id": "system",
+    "client_ip": "127.0.0.1",
+    "endpoint": "/api/growth/electrical-leads/intake",
+    "action": "lead_intake_duplicate_detected",
+    "status": "suppressed",
+    "idempotency_key": null,
+    "details_json": {
+      "leadId": "lead-105",
+      "email": "[REDACTED_EMAIL]"
+    },
+    "created_at": "2026-08-12T07:58:54.405Z"
+  },
+  {
+    "id": "audit-1786521534404-041516",
+    "tenant_id": "tenant_demo_1",
+    "actor_id": "system",
+    "client_ip": "127.0.0.1",
+    "endpoint": "/api/growth/electrical-leads/intake",
+    "action": "lead_intake_duplicate_detected",
+    "status": "suppressed",
+    "idempotency_key": null,
+    "details_json": {
+      "leadId": "lead-elec-1786521534395-893",
+      "email": "[REDACTED_EMAIL]"
+    },
+    "created_at": "2026-08-12T07:58:54.404Z"
+  },
+  {
+    "id": "audit-1786521534395-00d76b",
+    "tenant_id": "tenant_demo_1",
+    "actor_id": "system",
+    "client_ip": "127.0.0.1",
+    "endpoint": "/api/growth/electrical-leads/intake",
+    "action": "electrical_lead_intake_created",
+    "status": "success",
+    "idempotency_key": null,
+    "details_json": {
+      "leadId": "lead-elec-1786521534395-893",
+      "elecId": "elec-1786521534395-452",
+      "oppId": "opp-elec-1786521534395",
+      "serviceRequested": "200A Electrical Panel Upgrade & EV Charger"
+    },
+    "created_at": "2026-08-12T07:58:54.395Z"
+  },
+  {
+    "id": "audit-1786521442345-b9903c",
+    "tenant_id": "tenant_demo_1",
+    "actor_id": "system",
+    "client_ip": "127.0.0.1",
+    "endpoint": "/api/growth/electrical-leads/intake",
+    "action": "lead_intake_suppressed_no_consent",
+    "status": "blocked",
+    "idempotency_key": null,
+    "details_json": {
+      "email": "[REDACTED_EMAIL]",
+      "reason": "Consent provided is false"
+    },
+    "created_at": "2026-08-12T07:57:22.345Z"
+  },
+  {
+    "id": "audit-1786521442344-a788cd",
+    "tenant_id": "tenant_demo_1",
+    "actor_id": "system",
+    "client_ip": "127.0.0.1",
+    "endpoint": "/api/growth/electrical-leads/intake",
+    "action": "lead_intake_duplicate_detected",
+    "status": "suppressed",
+    "idempotency_key": null,
+    "details_json": {
+      "leadId": "lead-105",
+      "email": "[REDACTED_EMAIL]"
+    },
+    "created_at": "2026-08-12T07:57:22.344Z"
+  },
+  {
+    "id": "audit-1786521442342-f38f7c",
+    "tenant_id": "tenant_demo_1",
+    "actor_id": "system",
+    "client_ip": "127.0.0.1",
+    "endpoint": "/api/growth/electrical-leads/intake",
+    "action": "lead_intake_duplicate_detected",
+    "status": "suppressed",
+    "idempotency_key": null,
+    "details_json": {
+      "leadId": "lead-elec-1786521407799-907",
+      "email": "[REDACTED_EMAIL]"
+    },
+    "created_at": "2026-08-12T07:57:22.342Z"
+  },
+  {
+    "id": "audit-1786521442333-450143",
+    "tenant_id": "tenant_demo_1",
+    "actor_id": "system",
+    "client_ip": "127.0.0.1",
+    "endpoint": "/api/growth/electrical-leads/intake",
+    "action": "lead_intake_duplicate_detected",
+    "status": "suppressed",
+    "idempotency_key": null,
+    "details_json": {
+      "leadId": "lead-elec-1786521407799-907",
+      "email": "[REDACTED_EMAIL]"
+    },
+    "created_at": "2026-08-12T07:57:22.333Z"
+  },
+  {
+    "id": "audit-1786521407868-035e3b",
+    "tenant_id": "tenant_demo_1",
+    "actor_id": "user",
+    "client_ip": "127.0.0.1",
+    "endpoint": "/api/growth/electrical-leads/outcome",
+    "action": "electrical_lead_stage_record_revenue",
+    "status": "success",
+    "idempotency_key": null,
+    "details_json": {
+      "leadId": "lead-elec-1786521407799-907",
+      "stage": "record_revenue",
+      "payload": {
+        "actualRevenue": 2750
+      }
+    },
+    "created_at": "2026-08-12T07:56:47.868Z"
+  },
+  {
+    "id": "audit-1786521407866-c8ae84",
+    "tenant_id": "tenant_demo_1",
+    "actor_id": "user",
+    "client_ip": "127.0.0.1",
+    "endpoint": "/api/growth/electrical-leads/outcome",
+    "action": "electrical_lead_stage_record_booking",
+    "status": "success",
+    "idempotency_key": null,
+    "details_json": {
+      "leadId": "lead-elec-1786521407799-907",
+      "stage": "record_booking",
+      "payload": {
+        "bookedJobValue": 2500
+      }
+    },
+    "created_at": "2026-08-12T07:56:47.866Z"
+  },
+  {
+    "id": "audit-1786521407864-5c5744",
+    "tenant_id": "tenant_demo_1",
+    "actor_id": "user",
+    "client_ip": "127.0.0.1",
+    "endpoint": "/api/growth/electrical-leads/outcome",
+    "action": "electrical_lead_stage_schedule_estimate",
+    "status": "success",
+    "idempotency_key": null,
+    "details_json": {
+      "leadId": "lead-elec-1786521407799-907",
+      "stage": "schedule_estimate",
+      "payload": {
+        "scheduledTime": "2026-08-13T10:00:00Z"
+      }
+    },
+    "created_at": "2026-08-12T07:56:47.864Z"
+  },
+  {
+    "id": "audit-1786521407857-0dbae3",
+    "tenant_id": "tenant_demo_1",
+    "actor_id": "actor_1",
+    "client_ip": "127.0.0.1",
+    "endpoint": "/api/growth/electrical-leads/execute",
+    "action": "electrical_lead_action_executed",
+    "status": "success",
+    "idempotency_key": "exec-idemp-1786521407854",
+    "details_json": {
+      "success": true,
+      "dispatchStatus": "simulated_dispatch_successful",
+      "isSimulation": true,
+      "executionRecord": {
+        "id": "exec-elec-1786521407856",
+        "idempotencyKey": "exec-idemp-1786521407854",
+        "executionMode": "simulated",
+        "outputSummary": "SIMULATED SMS dispatch to +1-503-555-0199. No external telephony message sent.",
+        "dispatchedAt": "2026-08-12T07:56:47.855Z"
+      },
+      "_connectorStatus": {
+        "isSimulation": true,
+        "providerTruthfulness": "simulated_local_environment",
+        "externalVerification": "none_unconfirmed_by_third_party_provider",
+        "notice": "Simulation Mode Active: Actions have no external telephony, email, or database mutations."
+      }
+    },
+    "created_at": "2026-08-12T07:56:47.857Z"
+  },
+  {
+    "id": "audit-1786521407854-0f7e7d",
+    "tenant_id": "tenant_demo_1",
+    "actor_id": "actor_1",
+    "client_ip": "127.0.0.1",
+    "endpoint": "/api/growth/electrical-leads/approve",
+    "action": "electrical_lead_action_approved",
+    "status": "success",
+    "idempotency_key": null,
+    "details_json": {
+      "leadId": "lead-elec-1786521407799-907",
+      "approvalId": "appr-elec-ok-1786521407853",
+      "contentHash": "ebc62089fd1ae36748574a72d3a7693c6f88fbcb55538100278191ffeaa18bf0"
+    },
+    "created_at": "2026-08-12T07:56:47.854Z"
+  },
+  {
+    "id": "audit-1786521407850-c7127b",
+    "tenant_id": "tenant_demo_1",
+    "actor_id": "user",
+    "client_ip": "127.0.0.1",
+    "endpoint": "/api/growth/electrical-leads/draft",
+    "action": "electrical_lead_draft_updated_approval_invalidated",
+    "status": "success",
+    "idempotency_key": null,
+    "details_json": {
+      "leadId": "lead-elec-1786521407799-907",
+      "newHash": "ebc62089fd1ae36748574a72d3a7693c6f88fbcb55538100278191ffeaa18bf0"
+    },
+    "created_at": "2026-08-12T07:56:47.850Z"
+  },
+  {
+    "id": "audit-1786521407846-83b862",
+    "tenant_id": "tenant_demo_1",
+    "actor_id": "actor_1",
+    "client_ip": "127.0.0.1",
+    "endpoint": "/api/growth/electrical-leads/approve",
+    "action": "electrical_lead_action_approved",
+    "status": "success",
+    "idempotency_key": null,
+    "details_json": {
+      "leadId": "lead-elec-1786521407799-907",
+      "approvalId": "appr-elec-ok-1786521407846",
+      "contentHash": "bab327fc4dc4c795edf03ff475be8ed526fb3df04a93a5761df847cbcf6430e7"
+    },
+    "created_at": "2026-08-12T07:56:47.846Z"
+  },
+  {
+    "id": "audit-1786521407826-b1bd99",
+    "tenant_id": "tenant_demo_1",
+    "actor_id": "actor_1",
+    "client_ip": "127.0.0.1",
+    "endpoint": "/api/growth/electrical-leads/execute",
+    "action": "electrical_lead_execution_blocked_unapproved",
+    "status": "blocked",
+    "idempotency_key": null,
+    "details_json": {
+      "leadId": "lead-elec-1786521407799-907",
+      "approvalStatus": "pending"
+    },
+    "created_at": "2026-08-12T07:56:47.826Z"
+  },
+  {
+    "id": "audit-1786521407816-6f9ecb",
+    "tenant_id": "tenant_demo_1",
+    "actor_id": "system",
+    "client_ip": "127.0.0.1",
+    "endpoint": "/api/growth/electrical-leads/intake",
+    "action": "lead_intake_suppressed_no_consent",
+    "status": "blocked",
+    "idempotency_key": null,
+    "details_json": {
+      "email": "[REDACTED_EMAIL]",
+      "reason": "Consent provided is false"
+    },
+    "created_at": "2026-08-12T07:56:47.816Z"
+  },
+  {
+    "id": "audit-1786521407815-bdb5e9",
+    "tenant_id": "tenant_demo_1",
+    "actor_id": "system",
+    "client_ip": "127.0.0.1",
+    "endpoint": "/api/growth/electrical-leads/intake",
+    "action": "lead_intake_duplicate_detected",
+    "status": "suppressed",
+    "idempotency_key": null,
+    "details_json": {
+      "leadId": "lead-105",
+      "email": "[REDACTED_EMAIL]"
+    },
+    "created_at": "2026-08-12T07:56:47.815Z"
+  },
+  {
+    "id": "audit-1786521407813-15fd2f",
+    "tenant_id": "tenant_demo_1",
+    "actor_id": "system",
+    "client_ip": "127.0.0.1",
+    "endpoint": "/api/growth/electrical-leads/intake",
+    "action": "lead_intake_duplicate_detected",
+    "status": "suppressed",
+    "idempotency_key": null,
+    "details_json": {
+      "leadId": "lead-elec-1786521407799-907",
+      "email": "[REDACTED_EMAIL]"
+    },
+    "created_at": "2026-08-12T07:56:47.813Z"
+  },
+  {
+    "id": "audit-1786521407800-918df1",
+    "tenant_id": "tenant_demo_1",
+    "actor_id": "system",
+    "client_ip": "127.0.0.1",
+    "endpoint": "/api/growth/electrical-leads/intake",
+    "action": "electrical_lead_intake_created",
+    "status": "success",
+    "idempotency_key": null,
+    "details_json": {
+      "leadId": "lead-elec-1786521407799-907",
+      "elecId": "elec-1786521407799-621",
+      "oppId": "opp-elec-1786521407799",
+      "serviceRequested": "200A Electrical Panel Upgrade & EV Charger"
+    },
+    "created_at": "2026-08-12T07:56:47.800Z"
+  },
+  {
+    "id": "audit-1786521377577-ee3aad",
+    "tenant_id": "tenant_demo_1",
+    "actor_id": "actor_1",
+    "client_ip": "127.0.0.1",
+    "endpoint": "/execute-rollback",
+    "action": "EMERGENCY_ROLLBACK_EXECUTED",
+    "status": "SUCCESS",
+    "idempotency_key": null,
+    "details_json": {
+      "stageId": "stage-7",
+      "rollbackReason": "Synthetic rollback verification"
+    },
+    "created_at": "2026-08-12T07:56:17.577Z"
+  },
+  {
+    "id": "audit-1786521377573-cbd84e",
+    "tenant_id": "tenant_demo_1",
+    "actor_id": "actor_1",
+    "client_ip": "127.0.0.1",
+    "endpoint": "/generate-offer",
+    "action": "GENERATE_OFFER_SUCCESS",
+    "status": "SUCCESS",
+    "idempotency_key": "key-offer-1786521371357",
+    "details_json": {
+      "nicheName": "Pediatric Dentistry",
+      "offerTitle": "24/7 After-Hours Pediatric Dental AI Triage & Booking System"
+    },
+    "created_at": "2026-08-12T07:56:17.573Z"
+  },
+  {
+    "id": "audit-1786521371344-28e787",
+    "tenant_id": "tenant_demo_1",
+    "actor_id": "actor_1",
+    "client_ip": "127.0.0.1",
+    "endpoint": "/recommend-niche",
+    "action": "VALIDATION_FAILED",
+    "status": "BAD_REQUEST",
+    "idempotency_key": null,
+    "details_json": {
+      "errors": {
+        "_errors": [],
+        "industryPreference": {
+          "_errors": [
+            "industryPreference is required"
+          ]
+        }
+      }
+    },
+    "created_at": "2026-08-12T07:56:11.344Z"
+  },
+  {
+    "id": "audit-1786521371340-27f1f5",
+    "tenant_id": "tenant_demo_1",
+    "actor_id": "actor_1",
+    "client_ip": "127.0.0.1",
+    "endpoint": "/dispatch-outreach",
+    "action": "DISPATCH_OUTREACH_EXECUTED",
+    "status": "SUCCESS",
+    "idempotency_key": "key-dispatch-1786521371337",
+    "details_json": {
+      "outreachId": "outreach-appr-1786521371334",
+      "prospectEmail": "[REDACTED_EMAIL]",
+      "approvalId": "appr-1786521371336-8732a4"
+    },
+    "created_at": "2026-08-12T07:56:11.340Z"
+  },
+  {
+    "id": "audit-1786521371336-8e1f80",
+    "tenant_id": "tenant_demo_1",
+    "actor_id": "actor_1",
+    "client_ip": "127.0.0.1",
+    "endpoint": "/approve-outreach",
+    "action": "APPROVE_OUTREACH_RECORDED",
+    "status": "SUCCESS",
+    "idempotency_key": null,
+    "details_json": {
+      "outreachId": "outreach-appr-1786521371334",
+      "prospectEmail": "[REDACTED_EMAIL]",
+      "contentHash": "cc4b7d425a61652861bc138586482acd28836b4c21e6cc05cb5e9a9bc6f9c76b"
+    },
+    "created_at": "2026-08-12T07:56:11.336Z"
+  },
+  {
+    "id": "audit-1786521371331-df1002",
+    "tenant_id": "tenant_demo_1",
+    "actor_id": "actor_1",
+    "client_ip": "127.0.0.1",
+    "endpoint": "/dispatch-outreach",
+    "action": "UNAPPROVED_DISPATCH_BLOCKED",
+    "status": "FORBIDDEN",
+    "idempotency_key": null,
+    "details_json": {
+      "outreachId": "unapproved-outreach-101",
+      "reason": "NO_APPROVAL_RECORD",
+      "prospectEmail": "[REDACTED_EMAIL]"
+    },
+    "created_at": "2026-08-12T07:56:11.331Z"
+  },
+  {
+    "id": "audit-1786521370399-4db528",
+    "tenant_id": "tenant_demo_1",
+    "actor_id": "actor_1",
+    "client_ip": "127.0.0.1",
+    "endpoint": "/recommend-niche",
+    "action": "IDEMPOTENCY_CONFLICT",
+    "status": "BAD_REQUEST",
+    "idempotency_key": "idemp-key-1786521361285",
+    "details_json": {
+      "errorMessage": "Idempotency key was previously used with a different request payload body."
+    },
+    "created_at": "2026-08-12T07:56:10.399Z"
+  },
+  {
+    "id": "audit-1786521370386-711587",
+    "tenant_id": "tenant_demo_1",
+    "actor_id": "actor_1",
+    "client_ip": "127.0.0.1",
+    "endpoint": "/recommend-niche",
+    "action": "RECOMMEND_NICHE_SUCCESS",
+    "status": "SUCCESS",
+    "idempotency_key": "idemp-key-1786521361285",
+    "details_json": {
+      "industryPreference": "Legal & IP Law",
+      "nicheName": "Boutique IP & Patent Law Firms"
+    },
+    "created_at": "2026-08-12T07:56:10.386Z"
+  },
+  {
+    "id": "audit-1786521361284-96aaa1",
+    "tenant_id": "tenant_demo_1",
+    "actor_id": "actor_1",
+    "client_ip": "127.0.0.1",
+    "endpoint": "/dispatch-outreach",
+    "action": "DISPATCH_OUTREACH_EXECUTED",
+    "status": "SUCCESS",
+    "idempotency_key": null,
+    "details_json": {
+      "outreachId": "outreach-test-1786521361269",
+      "prospectEmail": "[REDACTED_EMAIL]",
+      "approvalId": "appr-1786521361274-1b212f"
+    },
+    "created_at": "2026-08-12T07:56:01.284Z"
+  }
+]

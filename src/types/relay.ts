@@ -13,6 +13,8 @@ export type PlatformId =
   | 'telegram';
 
 export type RelayTab =
+  | 'electrical_workflow'
+  | 'launch_program'
   | 'advisor'
   | 'intelligence'
   | 'revenue'

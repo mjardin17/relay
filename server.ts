@@ -5,6 +5,8 @@ import { createServer as createViteServer } from 'vite';
 import { GoogleGenAI } from '@google/genai';
 import { seedDatabaseIfEmpty } from './src/db/seed';
 import { growthRouter } from './src/routes/growthApi';
+import { launchProgramRouter } from './src/routes/launchProgramApi';
+import { gbpLaunchRouter } from './src/routes/gbpLaunchApi';
 
 dotenv.config();
 
@@ -18,10 +20,13 @@ try {
 const app = express();
 const PORT = 3000;
 
+app.set('trust proxy', 1);
 app.use(express.json({ limit: '10mb' }));
 
 // Mount Growth Engine API Router
 app.use('/api/growth', growthRouter);
+app.use('/api/launch-program', launchProgramRouter);
+app.use('/api/gbp-launch', gbpLaunchRouter);
 
 // Lazy initializer for Gemini client to prevent startup crash if GEMINI_API_KEY is missing
 function getGeminiClient(): GoogleGenAI {

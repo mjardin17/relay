@@ -1,6 +1,6 @@
 {
   "name": "Empire OS: Relay Module",
-  "description": "Intelligent content distribution and social media automation engine for Empire OS.",
+  "description": "AI-powered growth engine and lead lifecycle automation for trade businesses and local services, featuring electrical lead qualification, human approval gates, and GBP launch management.",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

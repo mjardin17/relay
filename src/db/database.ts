@@ -15,6 +15,7 @@ export function getDatabase(): DatabaseSync {
     // Enable WAL mode & foreign keys for performance and durability
     dbInstance.exec('PRAGMA journal_mode = WAL;');
     dbInstance.exec('PRAGMA foreign_keys = ON;');
+    dbInstance.exec('PRAGMA busy_timeout = 5000;');
     initializeDatabaseSchema(dbInstance);
   }
   return dbInstance;
@@ -269,6 +270,218 @@ export function initializeDatabaseSchema(db: DatabaseSync): void {
       FOREIGN KEY (tenant_id) REFERENCES tenants(id) ON DELETE CASCADE
     );
 
+    -- 16. Server-Verified Auth Sessions
+    CREATE TABLE IF NOT EXISTS auth_sessions (
+      token TEXT PRIMARY KEY,
+      actor_id TEXT NOT NULL,
+      tenant_id TEXT NOT NULL,
+      role TEXT NOT NULL,
+      permissions_json TEXT NOT NULL DEFAULT '[]',
+      expires_at TEXT NOT NULL,
+      created_at TEXT NOT NULL,
+      FOREIGN KEY (actor_id) REFERENCES actors(id) ON DELETE CASCADE,
+      FOREIGN KEY (tenant_id) REFERENCES tenants(id) ON DELETE CASCADE
+    );
+
+    -- 17. Server-Side Durable Launch Approvals
+    CREATE TABLE IF NOT EXISTS launch_approvals (
+      id TEXT PRIMARY KEY,
+      tenant_id TEXT NOT NULL,
+      resource_id TEXT NOT NULL,
+      approver_id TEXT NOT NULL,
+      approver_role TEXT NOT NULL,
+      decision TEXT NOT NULL DEFAULT 'approved',
+      content_hash TEXT NOT NULL,
+      metadata_json TEXT NOT NULL DEFAULT '{}',
+      approved_at TEXT NOT NULL,
+      FOREIGN KEY (tenant_id) REFERENCES tenants(id) ON DELETE CASCADE
+    );
+
+    -- 18. Shared Multi-Instance Idempotency Engine
+    CREATE TABLE IF NOT EXISTS launch_idempotency (
+      tenant_id TEXT NOT NULL,
+      operation TEXT NOT NULL,
+      idempotency_key TEXT NOT NULL,
+      request_hash TEXT NOT NULL,
+      response_json TEXT NOT NULL,
+      created_at TEXT NOT NULL,
+      PRIMARY KEY (tenant_id, operation, idempotency_key)
+    );
+
+    -- 19. Redacted & Tamper-Resistant Audit Logs
+    CREATE TABLE IF NOT EXISTS launch_audit_logs (
+      id TEXT PRIMARY KEY,
+      tenant_id TEXT,
+      actor_id TEXT,
+      client_ip TEXT NOT NULL,
+      endpoint TEXT NOT NULL,
+      action TEXT NOT NULL,
+      status TEXT NOT NULL,
+      idempotency_key TEXT,
+      details_json TEXT NOT NULL DEFAULT '{}',
+      created_at TEXT NOT NULL
+    );
+
+    -- 20. Distributed Rate Limiter Table
+    CREATE TABLE IF NOT EXISTS launch_rate_limits (
+      key TEXT PRIMARY KEY,
+      hits INTEGER NOT NULL DEFAULT 1,
+      reset_at TEXT NOT NULL
+    );
+
+    -- 21. Google Business Profiles (Tenant-Isolated)
+    CREATE TABLE IF NOT EXISTS gbp_profiles (
+      id TEXT PRIMARY KEY,
+      tenant_id TEXT NOT NULL,
+      client_id TEXT NOT NULL,
+      company_name TEXT NOT NULL,
+      account_type TEXT NOT NULL DEFAULT 'service_area',
+      existing_listing_status TEXT NOT NULL DEFAULT 'none',
+      google_location_id TEXT,
+      google_account_id TEXT,
+      primary_category TEXT NOT NULL,
+      secondary_categories_json TEXT NOT NULL DEFAULT '[]',
+      public_phone TEXT NOT NULL,
+      website_url TEXT NOT NULL,
+      business_hours_json TEXT NOT NULL DEFAULT '[]',
+      service_areas_json TEXT NOT NULL DEFAULT '[]',
+      services_offered_json TEXT NOT NULL DEFAULT '[]',
+      description TEXT NOT NULL,
+      photos_json TEXT NOT NULL DEFAULT '[]',
+      license_number TEXT,
+      license_state TEXT,
+      private_street_address TEXT NOT NULL,
+      private_unit TEXT,
+      private_city TEXT NOT NULL,
+      private_state TEXT NOT NULL,
+      private_zip TEXT NOT NULL,
+      verification_method TEXT NOT NULL DEFAULT 'manual_guided',
+      verification_state TEXT NOT NULL DEFAULT 'not_started',
+      plan_approval_hash TEXT,
+      verification_code_sent_at TEXT,
+      verified_at TEXT,
+      created_at TEXT NOT NULL,
+      updated_at TEXT NOT NULL,
+      FOREIGN KEY (tenant_id) REFERENCES tenants(id) ON DELETE CASCADE
+    );
+
+    -- 22. Tenant-Scoped GBP OAuth Tokens
+    CREATE TABLE IF NOT EXISTS gbp_oauth_tokens (
+      tenant_id TEXT NOT NULL,
+      client_id TEXT NOT NULL,
+      google_user_email TEXT NOT NULL,
+      google_user_id TEXT,
+      access_token TEXT NOT NULL,
+      refresh_token TEXT,
+      expires_at TEXT NOT NULL,
+      scope TEXT NOT NULL,
+      token_type TEXT NOT NULL DEFAULT 'Bearer',
+      created_at TEXT NOT NULL,
+      updated_at TEXT NOT NULL,
+      PRIMARY KEY (tenant_id, client_id),
+      FOREIGN KEY (tenant_id) REFERENCES tenants(id) ON DELETE CASCADE
+    );
+
+    -- 23. GBP Human Content Approvals
+    CREATE TABLE IF NOT EXISTS gbp_content_approvals (
+      id TEXT PRIMARY KEY,
+      tenant_id TEXT NOT NULL,
+      gbp_profile_id TEXT NOT NULL,
+      content_type TEXT NOT NULL,
+      content_payload_json TEXT NOT NULL,
+      content_hash TEXT NOT NULL,
+      approver_id TEXT NOT NULL,
+      approver_role TEXT NOT NULL,
+      decision TEXT NOT NULL DEFAULT 'pending',
+      dispatch_status TEXT NOT NULL DEFAULT 'pending',
+      dispatched_at TEXT,
+      approved_at TEXT,
+      created_at TEXT NOT NULL,
+      FOREIGN KEY (tenant_id) REFERENCES tenants(id) ON DELETE CASCADE,
+      FOREIGN KEY (gbp_profile_id) REFERENCES gbp_profiles(id) ON DELETE CASCADE
+    );
+
+    -- 24. GBP Local Posts Drafts & Published Records
+    CREATE TABLE IF NOT EXISTS gbp_posts (
+      id TEXT PRIMARY KEY,
+      tenant_id TEXT NOT NULL,
+      gbp_profile_id TEXT NOT NULL,
+      post_type TEXT NOT NULL DEFAULT 'standard',
+      summary TEXT NOT NULL,
+      call_to_action_json TEXT NOT NULL DEFAULT '{}',
+      media_url TEXT,
+      approval_id TEXT,
+      status TEXT NOT NULL DEFAULT 'draft',
+      google_post_id TEXT,
+      published_at TEXT,
+      created_at TEXT NOT NULL,
+      FOREIGN KEY (tenant_id) REFERENCES tenants(id) ON DELETE CASCADE,
+      FOREIGN KEY (gbp_profile_id) REFERENCES gbp_profiles(id) ON DELETE CASCADE
+    );
+
+    -- 25. GBP Reviews Monitoring & Response Drafts
+    CREATE TABLE IF NOT EXISTS gbp_reviews (
+      id TEXT PRIMARY KEY,
+      tenant_id TEXT NOT NULL,
+      gbp_profile_id TEXT NOT NULL,
+      google_review_id TEXT NOT NULL,
+      reviewer_name TEXT NOT NULL,
+      star_rating INTEGER NOT NULL,
+      comment TEXT NOT NULL,
+      review_date TEXT NOT NULL,
+      response_draft TEXT,
+      response_approval_id TEXT,
+      response_status TEXT NOT NULL DEFAULT 'unanswered',
+      replied_at TEXT,
+      created_at TEXT NOT NULL,
+      FOREIGN KEY (tenant_id) REFERENCES tenants(id) ON DELETE CASCADE,
+      FOREIGN KEY (gbp_profile_id) REFERENCES gbp_profiles(id) ON DELETE CASCADE
+    );
+
+    -- 26. Electrical Leads Workflow
+    CREATE TABLE IF NOT EXISTS electrical_leads (
+      id TEXT PRIMARY KEY,
+      tenant_id TEXT NOT NULL,
+      lead_id TEXT NOT NULL UNIQUE,
+      company_name TEXT NOT NULL DEFAULT 'Apex Electrical Solutions',
+      source TEXT NOT NULL,
+      source_reference TEXT NOT NULL,
+      service_requested TEXT NOT NULL,
+      property_type TEXT NOT NULL DEFAULT 'Residential',
+      address_city TEXT NOT NULL,
+      address_state TEXT NOT NULL,
+      address_zip TEXT,
+      consent_provided INTEGER NOT NULL DEFAULT 1,
+      consent_timestamp TEXT NOT NULL,
+      qualification_status TEXT NOT NULL DEFAULT 'qualified',
+      qualification_score INTEGER NOT NULL DEFAULT 85,
+      qualification_confidence TEXT NOT NULL DEFAULT 'High',
+      verified_facts_json TEXT NOT NULL DEFAULT '[]',
+      ai_assumptions_json TEXT NOT NULL DEFAULT '[]',
+      proposed_response_draft TEXT,
+      proposed_response_hash TEXT,
+      response_approval_id TEXT,
+      approval_status TEXT NOT NULL DEFAULT 'pending',
+      execution_status TEXT NOT NULL DEFAULT 'unexecuted',
+      execution_mode TEXT NOT NULL DEFAULT 'simulated',
+      execution_idempotency_key TEXT,
+      scheduling_status TEXT NOT NULL DEFAULT 'unscheduled',
+      scheduled_time TEXT,
+      follow_up_status TEXT NOT NULL DEFAULT 'none',
+      booking_status TEXT NOT NULL DEFAULT 'pending',
+      booked_job_value REAL NOT NULL DEFAULT 0,
+      actual_revenue REAL NOT NULL DEFAULT 0,
+      revenue_recorded_at TEXT,
+      attribution_source TEXT NOT NULL DEFAULT 'Google Business Profile',
+      attribution_method TEXT NOT NULL DEFAULT 'deterministic_source_match',
+      projected_roi_json TEXT NOT NULL DEFAULT '{}',
+      actual_roi_json TEXT NOT NULL DEFAULT '{}',
+      created_at TEXT NOT NULL,
+      updated_at TEXT NOT NULL,
+      FOREIGN KEY (tenant_id) REFERENCES tenants(id) ON DELETE CASCADE,
+      FOREIGN KEY (lead_id) REFERENCES leads(id) ON DELETE CASCADE
+    );
+
     -- Indexes for performance and tenant isolation
     CREATE INDEX IF NOT EXISTS idx_leads_tenant ON leads(tenant_id);
     CREATE INDEX IF NOT EXISTS idx_opps_tenant ON opportunities(tenant_id);
@@ -279,6 +492,14 @@ export function initializeDatabaseSchema(db: DatabaseSync): void {
     CREATE INDEX IF NOT EXISTS idx_attr_tenant ON attribution_records(tenant_id);
     CREATE INDEX IF NOT EXISTS idx_supp_tenant ON suppression_decisions(tenant_id);
     CREATE INDEX IF NOT EXISTS idx_audit_tenant ON audit_events(tenant_id);
+    CREATE INDEX IF NOT EXISTS idx_sessions_actor ON auth_sessions(actor_id);
+    CREATE INDEX IF NOT EXISTS idx_launch_appr_tenant ON launch_approvals(tenant_id, resource_id);
+    CREATE INDEX IF NOT EXISTS idx_launch_audit_tenant ON launch_audit_logs(tenant_id);
+    CREATE INDEX IF NOT EXISTS idx_gbp_prof_tenant ON gbp_profiles(tenant_id);
+    CREATE INDEX IF NOT EXISTS idx_gbp_appr_tenant ON gbp_content_approvals(tenant_id, gbp_profile_id);
+    CREATE INDEX IF NOT EXISTS idx_gbp_posts_tenant ON gbp_posts(tenant_id, gbp_profile_id);
+    CREATE INDEX IF NOT EXISTS idx_gbp_reviews_tenant ON gbp_reviews(tenant_id, gbp_profile_id);
+    CREATE INDEX IF NOT EXISTS idx_elec_leads_tenant ON electrical_leads(tenant_id);
   `;
 
   db.exec(schemaDDL);
