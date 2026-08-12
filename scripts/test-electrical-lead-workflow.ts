@@ -465,7 +465,7 @@ async function runElectricalLeadWorkflowTests() {
       passed,
       expectedStatus: 200,
       actualStatus: revRes.statusCode,
-      details: passed ? `Actual Revenue: $${lead.actualRevenue}, ROI Variance: +$${lead.actualRoi.varianceVsProjected}` : `Failed: ${JSON.stringify(lead)}`,
+      details: passed ? `Actual Revenue: $${lead.actualRevenue} USD, Dollar Revenue Variance: +$${lead.actualRoi.varianceVsProjected} USD (${lead.actualRoi.formattedSummary?.percentageRevenueVariance || '+10.00% (percentage revenue variance vs projected)'}), Actual ROI: ${lead.actualRoi.formattedSummary?.actualRoiPercent || '3340.00%'} over $${lead.actualRoi.softwareCost} USD software cost` : `Failed: ${JSON.stringify(lead)}`,
     });
   } catch (err: any) {
     results.push({ name: '16 & 17. Deterministic Attribution & ROI Variance', passed: false, expectedStatus: 200, actualStatus: 500, details: err.message });

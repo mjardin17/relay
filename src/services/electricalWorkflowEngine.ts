@@ -3,7 +3,9 @@ import { getDatabase } from '../db/database';
 import { growthPersistenceService } from './growthPersistenceService';
 import { launchAuditService } from './launchAuditService';
 import { launchIdempotencyService } from './launchIdempotencyService';
+import { maElectricalComplianceService } from './maElectricalComplianceService';
 import { maskStreetAddress, redactObject } from '../utils/redaction';
+import { calculateFinancialMetrics } from '../utils/financialMetrics';
 
 export interface ElectricalLeadIntakeInput {
   name: string;
@@ -19,6 +21,8 @@ export interface ElectricalLeadIntakeInput {
   sourceReference: string;
   notes?: string;
   companyName?: string;
+  fixtureLeadId?: string;
+  dataClassification?: string;
 }
 
 export interface ElectricalLeadRecord {
@@ -57,6 +61,8 @@ export interface ElectricalLeadRecord {
   revenueRecordedAt?: string;
   attributionSource: string;
   attributionMethod: string;
+  dataClassification: string;
+  environmentClassification: string;
   projectedRoi: {
     projectedJobValue: number;
     projectedGrossMargin: number;
@@ -205,10 +211,13 @@ export class ElectricalWorkflowEngine {
     }
 
     // 5. Eligible Lead Intake -> Create Lead Records
-    const leadId = `lead-elec-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+    const leadId = input.fixtureLeadId || `lead-elec-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
     const elecId = `elec-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
 
-    const companyName = input.companyName || 'Apex Electrical Solutions';
+    const companyName = input.companyName || (tenantId === 'tenant_ma_fresh_launch' ? 'Fresh Launch MA Electrical Company' : 'Synthetic Demo Electrical');
+    const dataClassification = input.dataClassification || (tenantId === 'tenant_ma_fresh_launch' ? 'PENDING_VERIFICATION' : 'SIMULATED_DRY_RUN');
+    const environmentClassification = tenantId === 'tenant_ma_fresh_launch' ? 'PENDING_VERIFICATION' : 'SYNTHETIC_TEST';
+
     const projectedJobValue = 2500; // Estimated 200A panel upgrade job
     const softwareCost = 50;
 
@@ -238,18 +247,30 @@ export class ElectricalWorkflowEngine {
     const proposedDraft = `Hi ${input.name.split(' ')[0]}, thanks for contacting ${companyName} regarding your ${input.serviceRequested} in ${input.city}. Our licensed electricians can perform a free on-site estimate tomorrow at 10:00 AM or 2:00 PM. Reply YES to confirm.`;
     const draftHash = this.computeContentHash(tenantId, leadId, input.email, 'sms', proposedDraft);
 
-    const projectedRoi = {
-      projectedJobValue,
-      projectedGrossMargin: 1250,
+    const initialMetrics = calculateFinancialMetrics({
+      projectedJobRevenue: projectedJobValue,
+      projectedDirectJobCost: 1030,
       softwareCost,
-      projectedRoiPercent: Math.round(((2500 - softwareCost) / softwareCost) * 100),
+      actualJobRevenue: 0,
+      actualDirectJobCost: 0,
+      attributionSource: input.source,
+      currency: 'USD',
+    });
+
+    const projectedRoi = {
+      projectedJobValue: initialMetrics.projectedJobRevenue,
+      projectedGrossMargin: initialMetrics.projectedGrossProfit,
+      softwareCost: initialMetrics.softwareCost,
+      projectedRoiPercent: initialMetrics.projectedRoiPercent,
+      formattedSummary: initialMetrics.formattedSummary,
     };
 
     const actualRoi = {
-      actualRevenue: 0,
-      softwareCost,
-      actualNetProfit: -softwareCost,
-      varianceVsProjected: -projectedJobValue,
+      actualRevenue: initialMetrics.actualJobRevenue,
+      softwareCost: initialMetrics.softwareCost,
+      actualNetProfit: initialMetrics.actualNetProfit,
+      varianceVsProjected: initialMetrics.dollarRevenueVariance,
+      formattedSummary: initialMetrics.formattedSummary,
     };
 
     // Insert into electrical_leads table
@@ -261,8 +282,8 @@ export class ElectricalWorkflowEngine {
         ai_assumptions_json, proposed_response_draft, proposed_response_hash, approval_status,
         execution_status, execution_mode, scheduling_status, follow_up_status, booking_status,
         booked_job_value, actual_revenue, attribution_source, attribution_method, projected_roi_json,
-        actual_roi_json, created_at, updated_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?, 'qualified', 92, 'High', ?, ?, ?, ?, 'pending', 'unexecuted', 'simulated', 'unscheduled', 'none', 'pending', 0, 0, ?, 'deterministic_source_match', ?, ?, ?, ?)
+        actual_roi_json, data_classification, environment_classification, created_at, updated_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?, 'qualified', 92, 'High', ?, ?, ?, ?, 'pending', 'unexecuted', 'simulated', 'unscheduled', 'none', 'pending', 0, 0, ?, 'deterministic_source_match', ?, ?, ?, ?, ?, ?)
     `).run(
       elecId,
       tenantId,
@@ -283,6 +304,8 @@ export class ElectricalWorkflowEngine {
       input.source,
       JSON.stringify(projectedRoi),
       JSON.stringify(actualRoi),
+      dataClassification,
+      environmentClassification,
       now,
       now
     );
@@ -422,6 +445,8 @@ export class ElectricalWorkflowEngine {
       revenueRecordedAt: row.revenue_recorded_at,
       attributionSource: row.attribution_source,
       attributionMethod: row.attribution_method,
+      dataClassification: row.data_classification || 'SIMULATED_DRY_RUN',
+      environmentClassification: row.environment_classification || 'SYNTHETIC_TEST',
       projectedRoi,
       actualRoi,
       createdAt: row.created_at,
@@ -454,6 +479,12 @@ export class ElectricalWorkflowEngine {
   ): ElectricalLeadRecord {
     const lead = this.getLeadById(tenantId, leadId);
     if (!lead) throw new Error('LEAD_NOT_FOUND');
+
+    // Check MA electrical compliance marketing claim rule if applicable
+    const claimCheck = maElectricalComplianceService.validateProposedDraftMarketingClaim(tenantId, newDraftText);
+    if (!claimCheck.allowed) {
+      throw new Error(claimCheck.blockedReasoning || 'COMPLIANCE_BLOCKED: Draft describes company as a licensed electrical company without verified A1 and Master Electrician licenses.');
+    }
 
     const db = getDatabase();
     const now = new Date().toISOString();
@@ -744,14 +775,28 @@ export class ElectricalWorkflowEngine {
     } else if (stage === 'record_revenue') {
       const actualRevenue = payload.actualRevenue || 2750; // Legitimate actual revenue recorded
       const softwareCost = 50;
-      const actualNetProfit = actualRevenue - softwareCost;
-      const varianceVsProjected = actualRevenue - lead.projectedRoi.projectedJobValue;
+      const directJobCost = 1030; // Direct materials ($850) + local permits ($180)
+
+      const settledMetrics = calculateFinancialMetrics({
+        projectedJobRevenue: lead.projectedRoi?.projectedJobValue || 2500,
+        projectedDirectJobCost: 1030,
+        actualJobRevenue: actualRevenue,
+        actualDirectJobCost: directJobCost,
+        softwareCost,
+        attributionSource: lead.attributionSource || 'Google Business Profile Inquiry',
+        currency: 'USD',
+      });
 
       const actualRoi = {
-        actualRevenue,
-        softwareCost,
-        actualNetProfit,
-        varianceVsProjected,
+        actualRevenue: settledMetrics.actualJobRevenue,
+        softwareCost: settledMetrics.softwareCost,
+        actualNetProfit: settledMetrics.actualNetProfit,
+        varianceVsProjected: settledMetrics.dollarRevenueVariance, // dollar revenue variance vs projected
+        dollarNetProfitVariance: settledMetrics.dollarNetProfitVariance,
+        percentageRevenueVariance: settledMetrics.percentageRevenueVariance,
+        percentageNetProfitVariance: settledMetrics.percentageNetProfitVariance,
+        actualRoiPercent: settledMetrics.actualRoiPercent,
+        formattedSummary: settledMetrics.formattedSummary,
       };
 
       db.prepare(`
@@ -782,8 +827,8 @@ export class ElectricalWorkflowEngine {
         actualRevenue,
         actualRevenue,
         softwareCost,
-        actualNetProfit,
-        varianceVsProjected,
+        settledMetrics.actualNetProfit,
+        settledMetrics.dollarRevenueVariance,
         now
       );
     }

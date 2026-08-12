@@ -2,6 +2,7 @@ import { Router, Request, Response } from 'express';
 import { growthPersistenceService } from '../services/growthPersistenceService';
 import { staleLeadRecoveryEngine } from '../services/staleLeadRecoveryEngine';
 import { electricalWorkflowEngine } from '../services/electricalWorkflowEngine';
+import { maElectricalComplianceService } from '../services/maElectricalComplianceService';
 import { authService } from '../services/authService';
 import { redactObject } from '../utils/redaction';
 
@@ -380,6 +381,67 @@ growthRouter.post('/electrical-leads/:id/outcome', (req: Request, res: Response)
     if (err.message === 'LEAD_NOT_FOUND') {
       return res.status(404).json({ success: false, error: 'LEAD_NOT_FOUND' });
     }
+    return res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// ---------------------------------------------------------------------------
+// Massachusetts Electrical Company Intake & Compliance Endpoints
+// ---------------------------------------------------------------------------
+
+growthRouter.post('/ma-compliance/intake', (req: Request, res: Response) => {
+  try {
+    const { tenantId } = getAuthenticatedActor(req);
+    const input = req.body;
+
+    if (!input.legalBusinessName || !input.maA1BusinessLicenseNumber || !input.masterElectricianName || !input.masterElectricianLicenseNumber || !input.sourceUrl) {
+      return res.status(400).json({
+        success: false,
+        error: 'INVALID_INPUT: Missing required fields (legalBusinessName, maA1BusinessLicenseNumber, masterElectricianName, masterElectricianLicenseNumber, sourceUrl).',
+      });
+    }
+
+    const record = maElectricalComplianceService.saveOrUpdateComplianceProfile(tenantId, input);
+    return res.json({ success: true, tenantId, complianceProfile: redactObject(record) });
+  } catch (err: any) {
+    return res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+growthRouter.get('/ma-compliance/profile', (req: Request, res: Response) => {
+  try {
+    const { tenantId } = getAuthenticatedActor(req);
+    const record = maElectricalComplianceService.getComplianceProfile(tenantId);
+    if (!record) {
+      return res.status(404).json({ success: false, error: 'COMPLIANCE_PROFILE_NOT_FOUND' });
+    }
+    return res.json({ success: true, tenantId, complianceProfile: redactObject(record) });
+  } catch (err: any) {
+    return res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+growthRouter.post('/ma-compliance/evaluate', (req: Request, res: Response) => {
+  try {
+    const { tenantId } = getAuthenticatedActor(req);
+    const evaluation = maElectricalComplianceService.evaluateCompliance(tenantId, req.body);
+    return res.json({ success: true, tenantId, evaluation });
+  } catch (err: any) {
+    return res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+growthRouter.post('/ma-compliance/validate-claim', (req: Request, res: Response) => {
+  try {
+    const { tenantId } = getAuthenticatedActor(req);
+    const { proposedText } = req.body;
+    if (!proposedText || typeof proposedText !== 'string') {
+      return res.status(400).json({ success: false, error: 'proposedText string is required' });
+    }
+
+    const validation = maElectricalComplianceService.validateProposedDraftMarketingClaim(tenantId, proposedText);
+    return res.json({ success: true, tenantId, validation });
+  } catch (err: any) {
     return res.status(500).json({ success: false, error: err.message });
   }
 });

@@ -644,6 +644,11 @@ export class GrowthPersistenceService {
 
   // 6. Verified Financial Calculation Engine (NO Hard-coded 3.5 days or 1420% zero-cost ROI!)
   public getROIStats(tenantId: string = this.defaultTenantId, selectedModel: AttributionModelType = 'workflow_comparison') {
+    const db = getDatabase();
+    const tenantRow = db.prepare('SELECT environment_classification FROM tenants WHERE id = ?').get(tenantId) as any;
+    const envClass = tenantRow?.environment_classification || 'SIMULATED_DRY_RUN';
+    const isSimulated = envClass === 'SIMULATED_DRY_RUN' || envClass === 'SYNTHETIC_TEST' || envClass === 'PENDING_VERIFICATION';
+
     const opps = this.getOpportunities(tenantId);
     const ledger = this.getExecutionLedger(tenantId);
 
@@ -686,6 +691,10 @@ export class GrowthPersistenceService {
     }
 
     return {
+      tenantId,
+      environmentClassification: envClass,
+      isSimulated,
+      dataDisclaimer: isSimulated ? 'DEMO / SIMULATED — NOT REAL-WORLD EVIDENCE' : 'LIVE PRODUCTION OPERATIONAL EVIDENCE',
       totalOpportunitiesIdentified: opps.length,
       totalIdentifiedMonthlyValue: totalIdentifiedValue,
       totalActivatedMonthlyValue: totalActivatedValue,
@@ -693,12 +702,14 @@ export class GrowthPersistenceService {
       totalAnnualizedRealized: totalRealizedRevenue * 12,
       totalExecutionCost,
       netRoiPercentage,
-      netRoiDisplay,
+      netRoiDisplay: isSimulated ? `${netRoiDisplay} (Simulated)` : netRoiDisplay,
       averagePaybackDays,
       paybackDisplay,
-      overallConfidence: 'Verified' as ConfidenceLevel,
+      overallConfidence: isSimulated ? ('Unverified' as ConfidenceLevel) : ('Verified' as ConfidenceLevel),
       attributionModelUsed: selectedModel,
-      attributionStatus: totalRealizedRevenue > 0 ? 'Attributed' : 'Instrumented & Awaiting Outcome Data'
+      attributionStatus: totalRealizedRevenue > 0
+        ? (isSimulated ? 'Simulated Attribution' : 'Attributed')
+        : 'Instrumented & Awaiting Outcome Data'
     };
   }
 

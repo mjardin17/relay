@@ -15,38 +15,66 @@ export function seedDatabaseIfEmpty(): void {
   try {
     // 1. Seed Tenants
     db.prepare(`
-      INSERT INTO tenants (id, name, industry, mrr, primary_bottleneck, created_at)
-      VALUES (?, ?, ?, ?, ?, ?)
+      INSERT INTO tenants (id, name, industry, mrr, primary_bottleneck, environment_classification, company_maturity, engagement_model, operating_mode, verification_status, created_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `).run(
       'tenant_demo_1',
       'Apex Horizon Technologies',
       'B2B SaaS & Enterprise AI',
       142000,
       'Lead response latency & stale lead recovery',
+      'SIMULATED_DRY_RUN',
+      'Established Demo',
+      'Simulation Mode',
+      'Automated Simulation',
+      'Simulated Test Environment',
       now
     );
 
     db.prepare(`
-      INSERT INTO tenants (id, name, industry, mrr, primary_bottleneck, created_at)
-      VALUES (?, ?, ?, ?, ?, ?)
+      INSERT INTO tenants (id, name, industry, mrr, primary_bottleneck, environment_classification, company_maturity, engagement_model, operating_mode, verification_status, created_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `).run(
       'tenant_demo_2',
       'Titan Health Systems',
       'Healthcare & Dental Clinics',
       98000,
       'Patient booking cancellation recovery',
+      'SIMULATED_DRY_RUN',
+      'Established Demo',
+      'Simulation Mode',
+      'Automated Simulation',
+      'Simulated Test Environment',
+      now
+    );
+
+    db.prepare(`
+      INSERT INTO tenants (id, name, industry, mrr, primary_bottleneck, environment_classification, company_maturity, engagement_model, operating_mode, verification_status, created_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `).run(
+      'tenant_ma_fresh_launch',
+      'Fresh Launch MA Electrical Company',
+      'Electrical Contracting',
+      0,
+      'Unverified onboarding & credential collection',
+      'PENDING_VERIFICATION',
+      'Fresh Launch',
+      'Full AI Launch',
+      'Guided Manual',
+      'Pending owner confirmation and official-source verification',
       now
     );
 
     // 2. Seed Actors
     const insertActor = db.prepare(`
-      INSERT INTO actors (id, tenant_id, name, role, email, created_at)
-      VALUES (?, ?, ?, ?, ?, ?)
+      INSERT INTO actors (id, tenant_id, name, role, email, user_role_classification, is_licensed_electrician, is_master_electrician, is_licensee_of_record, is_legal_owner, created_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `);
 
-    insertActor.run('actor_1', 'tenant_demo_1', 'Executive Owner', 'owner', 'admin@apexhorizon.com', now);
-    insertActor.run('actor_2', 'tenant_demo_1', 'Growth Specialist', 'member', 'member@apexhorizon.com', now);
-    insertActor.run('actor_3', 'tenant_demo_2', 'Dr. Evelyn Vance', 'owner', 'evelyn@titanhealth.org', now);
+    insertActor.run('actor_1', 'tenant_demo_1', 'Relay Operator', 'operator', 'admin@apexhorizon.com', 'RELAY_OPERATOR', 0, 0, 0, 0, now);
+    insertActor.run('actor_2', 'tenant_demo_1', 'Growth Specialist', 'member', 'member@apexhorizon.com', 'GROWTH_PARTNER', 0, 0, 0, 0, now);
+    insertActor.run('actor_3', 'tenant_demo_2', 'Dr. Evelyn Vance', 'owner', 'evelyn@titanhealth.org', 'LEGAL_BUSINESS_OWNER', 0, 0, 0, 1, now);
+    insertActor.run('actor_ma_1', 'tenant_ma_fresh_launch', 'Relay Operator', 'operator', 'operator@relay.ai', 'UNVERIFIED', 0, 0, 0, 0, now);
 
     // 2b. Seed Auth Sessions (Tokens)
     const insertSession = db.prepare(`
@@ -64,8 +92,62 @@ export function seedDatabaseIfEmpty(): void {
     insertSession.run('token_member_tenant1', 'actor_2', 'tenant_demo_1', 'member', memberPermissions, farFuture, now);
     // Tenant 2 Owner
     insertSession.run('token_owner_tenant2', 'actor_3', 'tenant_demo_2', 'owner', ownerPermissions, farFuture, now);
+    // Fresh Launch MA Owner/Operator
+    insertSession.run('token_ma_fresh_launch', 'actor_ma_1', 'tenant_ma_fresh_launch', 'owner', ownerPermissions, farFuture, now);
     // Expired Token
     insertSession.run('token_expired', 'actor_1', 'tenant_demo_1', 'owner', ownerPermissions, '2020-01-01T00:00:00.000Z', now);
+
+    // 2c. Seed Initial Unverified Compliance Profile for MA Fresh Launch
+    db.prepare(`
+      INSERT INTO ma_electrical_company_compliance (
+        id, tenant_id, legal_business_name, dba_name, entity_registration_status, entity_registration_source_level,
+        ma_a1_business_license_number, business_license_status, business_license_expiration_date, business_license_source_level,
+        master_electrician_name, master_electrician_license_number, master_electrician_license_status, master_electrician_license_expiration_date, master_electrician_source_level,
+        journeyman_licenses_json, corporate_registration_status, corporate_registration_source_level,
+        dba_registration_status, dba_source_level, insurance_status, insurance_source_level,
+        source_url, verification_timestamp, evidence_artifact_json, evidence_classification,
+        can_claim_licensed_company, compliance_notes_json, created_at, updated_at
+      ) VALUES (
+        ?, ?, ?, ?, ?, ?,
+        ?, ?, ?, ?,
+        ?, ?, ?, ?, ?,
+        ?, ?, ?,
+        ?, ?, ?, ?,
+        ?, ?, ?, ?,
+        ?, ?, ?, ?
+      )
+    `).run(
+      'mcomp-fresh-launch-1',
+      'tenant_ma_fresh_launch',
+      'Pending Owner Confirmation',
+      null,
+      'unverified',
+      'self_reported',
+      '',
+      'unverified',
+      null,
+      'self_reported',
+      '',
+      '',
+      'unverified',
+      null,
+      'self_reported',
+      '[]',
+      'unverified',
+      'self_reported',
+      'unverified',
+      'self_reported',
+      'unverified',
+      'self_reported',
+      'https://mass.gov',
+      now,
+      '{}',
+      'SYNTHETIC_TEST',
+      0,
+      JSON.stringify(['Pending owner confirmation and official-source verification']),
+      now,
+      now
+    );
 
     // 3. Seed Source Records / Data Sources
     const insertDs = db.prepare(`

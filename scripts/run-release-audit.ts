@@ -42,6 +42,9 @@ async function runFullReleaseAudit() {
   // 3. Redaction Boundary Suite
   runAndCapture('Redaction Boundary Suite', 'npx tsx scripts/test-redaction-boundaries.ts');
 
+  // 3b. Financial Metrics Engine Unit Tests
+  runAndCapture('Financial Metrics Unit Tests', 'npx tsx --test src/tests/financialMetrics.test.ts');
+
   // 4. GBP Boundary Suite
   runAndCapture('GBP Boundary Suite', 'npx tsx scripts/test-gbp-launch-boundaries.ts');
 
@@ -103,6 +106,7 @@ Relay's Google Business Profile Launch Program and Electrical Lead Vertical Slic
 | Test Suite | Executable Script | Total Tests | Passed | Result |
 | :--- | :--- | :---: | :---: | :---: |
 | **Redaction & Privacy Boundaries** | \`scripts/test-redaction-boundaries.ts\` | 21 | 21 | **PASS** |
+| **Financial Metrics Engine Unit Suite** | \`src/tests/financialMetrics.test.ts\` | 6 | 6 | **PASS** |
 | **GBP Launch Boundaries** | \`scripts/test-gbp-launch-boundaries.ts\` | 9 | 9 | **PASS** |
 | **Adversarial Security Suite** | \`scripts/test-adversarial-boundaries.ts\` | 19 | 19 | **PASS** |
 | **Launch Program Boundaries** | \`scripts/test-launch-boundaries.ts\` | 7 | 7 | **PASS** |

@@ -30,6 +30,11 @@ export function initializeDatabaseSchema(db: DatabaseSync): void {
       industry TEXT NOT NULL,
       mrr REAL NOT NULL DEFAULT 0,
       primary_bottleneck TEXT,
+      environment_classification TEXT NOT NULL DEFAULT 'SIMULATED_DRY_RUN',
+      company_maturity TEXT DEFAULT 'Fresh Launch',
+      engagement_model TEXT DEFAULT 'Full AI Launch',
+      operating_mode TEXT DEFAULT 'Guided Manual',
+      verification_status TEXT DEFAULT 'Pending owner confirmation and official-source verification',
       created_at TEXT NOT NULL
     );
 
@@ -40,6 +45,11 @@ export function initializeDatabaseSchema(db: DatabaseSync): void {
       name TEXT NOT NULL,
       role TEXT NOT NULL,
       email TEXT,
+      user_role_classification TEXT DEFAULT 'UNVERIFIED',
+      is_licensed_electrician INTEGER DEFAULT 0,
+      is_master_electrician INTEGER DEFAULT 0,
+      is_licensee_of_record INTEGER DEFAULT 0,
+      is_legal_owner INTEGER DEFAULT 0,
       created_at TEXT NOT NULL,
       FOREIGN KEY (tenant_id) REFERENCES tenants(id) ON DELETE CASCADE
     );
@@ -443,7 +453,7 @@ export function initializeDatabaseSchema(db: DatabaseSync): void {
       id TEXT PRIMARY KEY,
       tenant_id TEXT NOT NULL,
       lead_id TEXT NOT NULL UNIQUE,
-      company_name TEXT NOT NULL DEFAULT 'Apex Electrical Solutions',
+      company_name TEXT NOT NULL DEFAULT 'Synthetic Demo Electrical',
       source TEXT NOT NULL,
       source_reference TEXT NOT NULL,
       service_requested TEXT NOT NULL,
@@ -476,10 +486,59 @@ export function initializeDatabaseSchema(db: DatabaseSync): void {
       attribution_method TEXT NOT NULL DEFAULT 'deterministic_source_match',
       projected_roi_json TEXT NOT NULL DEFAULT '{}',
       actual_roi_json TEXT NOT NULL DEFAULT '{}',
+      data_classification TEXT NOT NULL DEFAULT 'SIMULATED_DRY_RUN',
+      environment_classification TEXT NOT NULL DEFAULT 'SYNTHETIC_TEST',
       created_at TEXT NOT NULL,
       updated_at TEXT NOT NULL,
       FOREIGN KEY (tenant_id) REFERENCES tenants(id) ON DELETE CASCADE,
       FOREIGN KEY (lead_id) REFERENCES leads(id) ON DELETE CASCADE
+    );
+
+    -- 27. Massachusetts Electrical Company Intake & Compliance Model
+    CREATE TABLE IF NOT EXISTS ma_electrical_company_compliance (
+      id TEXT PRIMARY KEY,
+      tenant_id TEXT NOT NULL UNIQUE,
+      legal_business_name TEXT NOT NULL,
+      dba_name TEXT,
+      entity_registration_status TEXT DEFAULT 'unverified',
+      entity_registration_source_level TEXT DEFAULT 'self_reported',
+      
+      ma_a1_business_license_number TEXT NOT NULL,
+      business_license_status TEXT NOT NULL DEFAULT 'unverified',
+      business_license_expiration_date TEXT,
+      business_license_source_level TEXT NOT NULL DEFAULT 'self_reported',
+      
+      master_electrician_name TEXT NOT NULL,
+      master_electrician_license_number TEXT NOT NULL,
+      master_electrician_license_status TEXT NOT NULL DEFAULT 'unverified',
+      master_electrician_license_expiration_date TEXT,
+      master_electrician_source_level TEXT NOT NULL DEFAULT 'self_reported',
+      
+      journeyman_licenses_json TEXT NOT NULL DEFAULT '[]',
+      
+      corporate_registration_status TEXT DEFAULT 'unverified',
+      corporate_registration_source_level TEXT NOT NULL DEFAULT 'self_reported',
+      
+      dba_registration_status TEXT DEFAULT 'unverified',
+      dba_source_level TEXT NOT NULL DEFAULT 'self_reported',
+      
+      insurance_carrier TEXT,
+      insurance_policy_status TEXT DEFAULT 'unverified',
+      insurance_expiration_date TEXT,
+      insurance_source_level TEXT NOT NULL DEFAULT 'self_reported',
+      
+      source_url TEXT NOT NULL,
+      verification_timestamp TEXT,
+      verification_method TEXT DEFAULT 'unverified',
+      reviewer_id TEXT,
+      evidence_artifact_json TEXT NOT NULL DEFAULT '{}',
+      evidence_classification TEXT NOT NULL DEFAULT 'SYNTHETIC_TEST',
+      
+      can_claim_licensed_company INTEGER NOT NULL DEFAULT 0,
+      compliance_notes_json TEXT NOT NULL DEFAULT '[]',
+      created_at TEXT NOT NULL,
+      updated_at TEXT NOT NULL,
+      FOREIGN KEY (tenant_id) REFERENCES tenants(id) ON DELETE CASCADE
     );
 
     -- Indexes for performance and tenant isolation
@@ -500,7 +559,41 @@ export function initializeDatabaseSchema(db: DatabaseSync): void {
     CREATE INDEX IF NOT EXISTS idx_gbp_posts_tenant ON gbp_posts(tenant_id, gbp_profile_id);
     CREATE INDEX IF NOT EXISTS idx_gbp_reviews_tenant ON gbp_reviews(tenant_id, gbp_profile_id);
     CREATE INDEX IF NOT EXISTS idx_elec_leads_tenant ON electrical_leads(tenant_id);
+    CREATE INDEX IF NOT EXISTS idx_ma_comp_tenant ON ma_electrical_company_compliance(tenant_id);
   `;
 
   db.exec(schemaDDL);
+
+  // Runtime migration helper to add new columns to existing SQLite database if needed
+  const safeAddColumn = (table: string, colDef: string) => {
+    try {
+      db.exec(`ALTER TABLE ${table} ADD COLUMN ${colDef};`);
+    } catch {
+      // Column likely already exists
+    }
+  };
+
+  safeAddColumn('tenants', 'environment_classification TEXT NOT NULL DEFAULT "SIMULATED_DRY_RUN"');
+  safeAddColumn('tenants', 'company_maturity TEXT DEFAULT "Fresh Launch"');
+  safeAddColumn('tenants', 'engagement_model TEXT DEFAULT "Full AI Launch"');
+  safeAddColumn('tenants', 'operating_mode TEXT DEFAULT "Guided Manual"');
+  safeAddColumn('tenants', 'verification_status TEXT DEFAULT "Pending owner confirmation and official-source verification"');
+
+  safeAddColumn('actors', 'user_role_classification TEXT DEFAULT "UNVERIFIED"');
+  safeAddColumn('actors', 'is_licensed_electrician INTEGER DEFAULT 0');
+  safeAddColumn('actors', 'is_master_electrician INTEGER DEFAULT 0');
+  safeAddColumn('actors', 'is_licensee_of_record INTEGER DEFAULT 0');
+  safeAddColumn('actors', 'is_legal_owner INTEGER DEFAULT 0');
+
+  safeAddColumn('electrical_leads', 'data_classification TEXT NOT NULL DEFAULT "SIMULATED_DRY_RUN"');
+  safeAddColumn('electrical_leads', 'environment_classification TEXT NOT NULL DEFAULT "SYNTHETIC_TEST"');
+
+  safeAddColumn('ma_electrical_company_compliance', 'entity_registration_status TEXT DEFAULT "unverified"');
+  safeAddColumn('ma_electrical_company_compliance', 'entity_registration_source_level TEXT DEFAULT "self_reported"');
+  safeAddColumn('ma_electrical_company_compliance', 'insurance_carrier TEXT');
+  safeAddColumn('ma_electrical_company_compliance', 'insurance_policy_status TEXT DEFAULT "unverified"');
+  safeAddColumn('ma_electrical_company_compliance', 'insurance_expiration_date TEXT');
+  safeAddColumn('ma_electrical_company_compliance', 'verification_method TEXT DEFAULT "unverified"');
+  safeAddColumn('ma_electrical_company_compliance', 'reviewer_id TEXT');
+  safeAddColumn('ma_electrical_company_compliance', 'evidence_classification TEXT NOT NULL DEFAULT "SYNTHETIC_TEST"');
 }
