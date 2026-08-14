@@ -51,6 +51,8 @@ export const ContentStudio: React.FC<ContentStudioProps> = ({
   const [loading, setLoading] = useState(false);
   const [copied, setCopied] = useState(false);
   const [activePreviewPlatform, setActivePreviewPlatform] = useState<PlatformId>('linkedin');
+  const [editingCopy, setEditingCopy] = useState(false);
+  const [customPlatformCopies, setCustomPlatformCopies] = useState<Partial<Record<PlatformId, string>>>({});
 
   // Generated output state
   const [generatedOutput, setGeneratedOutput] = useState<{
@@ -174,9 +176,6 @@ Transforming how enterprise brands scale visual and text distribution natively i
       scheduledAt: new Date(Date.now() + 86400000).toISOString()
     });
   };
-
-  const [editingCopy, setEditingCopy] = useState(false);
-  const [customPlatformCopies, setCustomPlatformCopies] = useState<Partial<Record<PlatformId, string>>>({});
 
   const handleCopyChange = (platformId: PlatformId, text: string) => {
     setCustomPlatformCopies((prev) => ({ ...prev, [platformId]: text }));

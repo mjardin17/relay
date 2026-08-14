@@ -75,11 +75,6 @@ export default function App() {
   const [activeEvidence, setActiveEvidence] = useState<EvidenceItem | null>(null);
   const [isEvidenceOpen, setIsEvidenceOpen] = useState(false);
 
-  const handleOpenEvidence = (ev: EvidenceItem) => {
-    setActiveEvidence(ev);
-    setIsEvidenceOpen(true);
-  };
-
   // Application State - Relay Content & Platform
   const [platforms, setPlatforms] = useState(INITIAL_PLATFORMS);
   const [posts, setPosts] = useState<ContentPost[]>(INITIAL_POSTS);
@@ -97,6 +92,11 @@ export default function App() {
   // Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalInitialDate, setModalInitialDate] = useState<string | undefined>(undefined);
+
+  const handleOpenEvidence = (ev: EvidenceItem) => {
+    setActiveEvidence(ev);
+    setIsEvidenceOpen(true);
+  };
 
   const pendingApprovalsPosts = posts.filter((p) => p.status === 'under_review');
 

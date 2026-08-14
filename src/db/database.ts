@@ -517,6 +517,67 @@ export function initializeDatabaseSchema(db: DatabaseSync): void {
       FOREIGN KEY (gbp_profile_id) REFERENCES gbp_profiles(id) ON DELETE CASCADE
     );
 
+    -- 25b. Google Business Authorization Grants (Versioned & Unbundled)
+    CREATE TABLE IF NOT EXISTS gbp_authorization_grants (
+      authorization_id TEXT PRIMARY KEY,
+      tenant_id TEXT NOT NULL,
+      business_id TEXT NOT NULL,
+      authorized_person_id TEXT NOT NULL,
+      asserted_authority_role TEXT NOT NULL,
+      authority_evidence_classification TEXT NOT NULL DEFAULT 'SELF_REPORTED_PENDING_EVIDENCE',
+      permission_purpose TEXT NOT NULL,
+      allowed_actions_json TEXT NOT NULL DEFAULT '[]',
+      prohibited_actions_json TEXT NOT NULL DEFAULT '[]',
+      consent_method TEXT NOT NULL DEFAULT 'OWNER_PORTAL_SIGNATURE',
+      consent_disclosure_version TEXT NOT NULL DEFAULT 'v1.0-2026',
+      consent_disclosure_text_hash TEXT NOT NULL,
+      captured_at TEXT NOT NULL,
+      expires_at TEXT NOT NULL,
+      revoked_at TEXT,
+      revocation_status INTEGER NOT NULL DEFAULT 0,
+      google_account_connected INTEGER NOT NULL DEFAULT 0,
+      google_oauth_grant_id TEXT,
+      approval_status TEXT NOT NULL DEFAULT 'PENDING',
+      approver_id TEXT NOT NULL,
+      approval_content_hash TEXT NOT NULL,
+      source_form_id TEXT NOT NULL,
+      created_at TEXT NOT NULL,
+      updated_at TEXT NOT NULL,
+      FOREIGN KEY (tenant_id) REFERENCES tenants(id) ON DELETE CASCADE
+    );
+
+    -- 25c. Google Business Role Attestations (Independent Roles)
+    CREATE TABLE IF NOT EXISTS gbp_role_attestations (
+      attestation_id TEXT PRIMARY KEY,
+      tenant_id TEXT NOT NULL,
+      person_name TEXT NOT NULL,
+      person_identifier TEXT NOT NULL,
+      role TEXT NOT NULL,
+      status TEXT NOT NULL DEFAULT 'SELF_REPORTED_PENDING_EVIDENCE',
+      evidence_classification TEXT NOT NULL DEFAULT 'SELF_REPORTED_PENDING_EVIDENCE',
+      notes TEXT NOT NULL,
+      attested_at TEXT NOT NULL,
+      verified_at TEXT,
+      verified_by TEXT,
+      FOREIGN KEY (tenant_id) REFERENCES tenants(id) ON DELETE CASCADE
+    );
+
+    -- 25d. Google Business 12-Stage Onboarding Workflows
+    CREATE TABLE IF NOT EXISTS gbp_onboarding_workflows (
+      id TEXT PRIMARY KEY,
+      tenant_id TEXT NOT NULL,
+      business_id TEXT NOT NULL,
+      current_state TEXT NOT NULL DEFAULT 'OWNER_AUTHORIZATION_REQUIRED',
+      current_stage_number INTEGER NOT NULL DEFAULT 1,
+      stages_json TEXT NOT NULL DEFAULT '[]',
+      owner_packet_json TEXT NOT NULL DEFAULT '{}',
+      duplicate_checklist_json TEXT NOT NULL DEFAULT '{}',
+      last_transition_reason TEXT,
+      created_at TEXT NOT NULL,
+      updated_at TEXT NOT NULL,
+      FOREIGN KEY (tenant_id) REFERENCES tenants(id) ON DELETE CASCADE
+    );
+
     -- 26. Electrical Leads Workflow
     CREATE TABLE IF NOT EXISTS electrical_leads (
       id TEXT PRIMARY KEY,

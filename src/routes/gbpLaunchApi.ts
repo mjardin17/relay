@@ -8,13 +8,16 @@ import {
   saveIdempotencyResponse,
 } from './launchProgramApi';
 import { GBPConnectorService } from '../services/gbpConnectorService';
+import { GBPGovernanceService } from '../services/gbpGovernanceService';
 import { LaunchAuditService } from '../services/launchAuditService';
 import { LaunchApprovalService } from '../services/launchApprovalService';
 import { getDatabase } from '../db/database';
+import { ALL_UNBUNDLED_PERMISSIONS, UnbundledGBPPermission } from '../types/gbpGovernance';
 
 export const gbpLaunchRouter = Router();
 
 const gbpService = new GBPConnectorService();
+const governanceService = new GBPGovernanceService();
 const auditService = new LaunchAuditService();
 const approvalService = new LaunchApprovalService();
 
@@ -26,7 +29,10 @@ gbpLaunchRouter.use(authMiddleware);
 // ---------------------------------------------------------------------------
 const BusinessIntakeSchema = z.object({
   clientId: z.string().min(1, 'clientId is required'),
-  companyName: z.string().min(1, 'companyName is required'),
+  companyName: z.string().min(1, 'companyName is required').refine(
+    (name) => !/no job too big|call us|give us a call|24\/7|phone|best electrician/i.test(name),
+    { message: 'Business name cannot include CTAs, slogans, or promotional descriptors (Google Policy 2911778)' }
+  ),
   accountType: z.enum(['storefront', 'service_area']),
   primaryCategory: z.string().min(1, 'primaryCategory is required'),
   secondaryCategories: z.array(z.string()).default([]),
@@ -124,6 +130,81 @@ const SubmitReviewReplySchema = z.object({
   replyText: z.string().min(1, 'replyText is required'),
 });
 
+const CreateGrantSchema = z.object({
+  businessId: z.string().default('smrelec'),
+  authorizedPersonId: z.string().min(1),
+  assertedAuthorityRole: z.enum([
+    'legalBusinessOwner',
+    'googleProfilePrimaryOwner',
+    'googleProfileManager',
+    'relayAdministrator',
+    'authorizedProfileApprover',
+    'authorizedPostApprover',
+    'authorizedReviewResponseApprover',
+    'communicationsApprover',
+    'licensedWorkApprover'
+  ]),
+  authorityEvidenceClassification: z.enum([
+    'SELF_REPORTED_PENDING_EVIDENCE',
+    'DOCUMENT_SUPPORTED',
+    'OFFICIAL_GOVERNMENT_RECORD',
+    'THIRD_PARTY_VERIFIED'
+  ]).optional(),
+  permissionPurpose: z.string().min(3),
+  allowedActions: z.array(z.enum(ALL_UNBUNDLED_PERMISSIONS as [UnbundledGBPPermission, ...UnbundledGBPPermission[]])).min(1),
+  prohibitedActions: z.array(z.enum(ALL_UNBUNDLED_PERMISSIONS as [UnbundledGBPPermission, ...UnbundledGBPPermission[]])).optional(),
+  consentMethod: z.enum(['WEB_FORM_CHECKBOX', 'WRITTEN_CONTRACT', 'VERBAL_RECORDED', 'OWNER_PORTAL_SIGNATURE']).optional(),
+  consentDisclosureVersion: z.string().optional(),
+  consentDisclosureText: z.string().min(10),
+  durationDays: z.number().min(1).max(365).optional(),
+});
+
+const RevokeGrantSchema = z.object({
+  authorizationId: z.string().min(1),
+  reason: z.string().min(3),
+});
+
+const AttestRoleSchema = z.object({
+  personName: z.string().min(1),
+  personIdentifier: z.string().min(1),
+  role: z.enum([
+    'legalBusinessOwner',
+    'googleProfilePrimaryOwner',
+    'googleProfileManager',
+    'relayAdministrator',
+    'authorizedProfileApprover',
+    'authorizedPostApprover',
+    'authorizedReviewResponseApprover',
+    'communicationsApprover',
+    'licensedWorkApprover'
+  ]),
+  status: z.enum(['SELF_REPORTED_PENDING_EVIDENCE', 'VERIFIED_DOCUMENTED', 'REJECTED']).optional(),
+  notes: z.string().min(3),
+});
+
+const TransitionWorkflowSchema = z.object({
+  businessId: z.string().default('smrelec'),
+  newState: z.enum([
+    'NOT_STARTED',
+    'OWNER_AUTHORIZATION_REQUIRED',
+    'OWNER_AUTHORIZED',
+    'BUSINESS_INFO_INCOMPLETE',
+    'DUPLICATE_CHECK_REQUIRED',
+    'POSSIBLE_DUPLICATE_FOUND',
+    'PROFILE_DRAFT_READY',
+    'OWNER_APPROVAL_REQUIRED',
+    'OWNER_APPROVED',
+    'MANUAL_GOOGLE_ACTION_REQUIRED',
+    'GOOGLE_VERIFICATION_PENDING',
+    'GOOGLE_VERIFICATION_REPORTED',
+    'GOOGLE_VERIFICATION_EVIDENCE_REQUIRED',
+    'API_ELIGIBILITY_WAITING',
+    'API_ACCESS_BLOCKED',
+    'AUTHORIZATION_REVOKED'
+  ]),
+  reason: z.string().min(3),
+});
+
 // ---------------------------------------------------------------------------
 // 2. Endpoints
 // ---------------------------------------------------------------------------
@@ -131,16 +212,241 @@ const SubmitReviewReplySchema = z.object({
 // A. Connector Status Endpoint
 gbpLaunchRouter.get('/connector-status', (req: Request, res: Response) => {
   const status = gbpService.getConnectorStatus(req.tenantId!);
-  return res.json({ success: true, tenantId: req.tenantId, connectorStatus: status });
+  return res.json({
+    success: true,
+    tenantId: req.tenantId,
+    connectorStatus: status,
+    mandatoryStatement: "Relay’s Google Business workflow is limited to guided-manual preparation and locally tested DRY_RUN behavior. No Google account was accessed, no Business Profile was created or claimed, no verification was submitted, no public information was changed, and no Google Business API or production OAuth credential was used."
+  });
 });
 
-// B. Business Intake Submission Endpoint
+// B. Official Source Documentation Citation Endpoint
+gbpLaunchRouter.get('/official-sources', (req: Request, res: Response) => {
+  const sources = governanceService.getOfficialSources();
+  return res.json({ success: true, sources });
+});
+
+// C. Authorization Grant Endpoints (Part 4)
+gbpLaunchRouter.get('/authorization', (req: Request, res: Response) => {
+  const grant = governanceService.getLatestGrantForTenant(req.tenantId!);
+  return res.json({ success: true, tenantId: req.tenantId, grant });
+});
+
+gbpLaunchRouter.post(
+  '/authorization/grant',
+  requirePermission('launch:write'),
+  rateLimitMiddleware('gbp_auth_grant', 20, 15 * 60 * 1000),
+  idempotencyCheckMiddleware,
+  async (req: Request, res: Response) => {
+    const parseResult = CreateGrantSchema.safeParse(req.body);
+    if (!parseResult.success) {
+      return res.status(400).json({ success: false, error: 'INVALID_INPUT', details: parseResult.error.format() });
+    }
+
+    try {
+      const data = parseResult.data;
+      const grant = governanceService.createAuthorizationGrant({
+        tenantId: req.tenantId!,
+        businessId: data.businessId,
+        authorizedPersonId: data.authorizedPersonId,
+        assertedAuthorityRole: data.assertedAuthorityRole,
+        authorityEvidenceClassification: data.authorityEvidenceClassification,
+        permissionPurpose: data.permissionPurpose,
+        allowedActions: data.allowedActions,
+        prohibitedActions: data.prohibitedActions,
+        consentMethod: data.consentMethod,
+        consentDisclosureVersion: data.consentDisclosureVersion,
+        consentDisclosureText: data.consentDisclosureText,
+        durationDays: data.durationDays,
+        approverId: req.userId || 'owner_shad',
+      });
+
+      const payload = { success: true, tenantId: req.tenantId, grant };
+      saveIdempotencyResponse(req, payload);
+
+      auditService.recordAudit({
+        tenantId: req.tenantId!,
+        actorId: req.userId,
+        clientIp: req.ip || 'unknown',
+        endpoint: req.path,
+        action: 'GBP_AUTHORIZATION_GRANTED',
+        status: 'SUCCESS',
+        details: {
+          authorizationId: grant.authorizationId,
+          authorizedPersonId: grant.authorizedPersonId,
+          assertedAuthorityRole: grant.assertedAuthorityRole,
+          allowedActionsCount: grant.allowedActions.length,
+          consentDisclosureTextHash: grant.consentDisclosureTextHash,
+          approvalContentHash: grant.approvalContentHash,
+        },
+      });
+
+      return res.json(payload);
+    } catch (err: any) {
+      return res.status(500).json({ success: false, error: err.message });
+    }
+  }
+);
+
+gbpLaunchRouter.post(
+  '/authorization/revoke',
+  requirePermission('launch:write'),
+  rateLimitMiddleware('gbp_auth_revoke', 20, 15 * 60 * 1000),
+  idempotencyCheckMiddleware,
+  async (req: Request, res: Response) => {
+    const parseResult = RevokeGrantSchema.safeParse(req.body);
+    if (!parseResult.success) {
+      return res.status(400).json({ success: false, error: 'INVALID_INPUT', details: parseResult.error.format() });
+    }
+
+    try {
+      const { authorizationId, reason } = parseResult.data;
+      const result = governanceService.revokeAuthorizationGrant(
+        req.tenantId!,
+        authorizationId,
+        req.userId || 'owner_shad',
+        reason
+      );
+
+      const payload = { success: true, tenantId: req.tenantId, ...result };
+      saveIdempotencyResponse(req, payload);
+
+      auditService.recordAudit({
+        tenantId: req.tenantId!,
+        actorId: req.userId,
+        clientIp: req.ip || 'unknown',
+        endpoint: req.path,
+        action: 'GBP_AUTHORIZATION_REVOKED',
+        status: 'SUCCESS',
+        details: { authorizationId, reason, revokedAt: result.revokedAt },
+      });
+
+      return res.json(payload);
+    } catch (err: any) {
+      return res.status(500).json({ success: false, error: err.message });
+    }
+  }
+);
+
+// D. Role Attestation Endpoints (Part 3)
+gbpLaunchRouter.get('/roles', (req: Request, res: Response) => {
+  const roles = governanceService.ensurePilotRoleAttestations(req.tenantId!);
+  return res.json({ success: true, tenantId: req.tenantId, roles });
+});
+
+gbpLaunchRouter.post(
+  '/roles/attest',
+  requirePermission('launch:write'),
+  rateLimitMiddleware('gbp_roles_attest', 20, 15 * 60 * 1000),
+  async (req: Request, res: Response) => {
+    const parseResult = AttestRoleSchema.safeParse(req.body);
+    if (!parseResult.success) {
+      return res.status(400).json({ success: false, error: 'INVALID_INPUT', details: parseResult.error.format() });
+    }
+
+    try {
+      const attestation = governanceService.attestRole({
+        tenantId: req.tenantId!,
+        personName: parseResult.data.personName,
+        personIdentifier: parseResult.data.personIdentifier,
+        role: parseResult.data.role,
+        status: parseResult.data.status,
+        notes: parseResult.data.notes,
+      });
+
+      auditService.recordAudit({
+        tenantId: req.tenantId!,
+        actorId: req.userId,
+        clientIp: req.ip || 'unknown',
+        endpoint: req.path,
+        action: 'GBP_ROLE_ATTESTED',
+        status: 'SUCCESS',
+        details: {
+          attestationId: attestation.attestationId,
+          personName: attestation.personName,
+          role: attestation.role,
+          status: attestation.status,
+        },
+      });
+
+      return res.json({ success: true, attestation });
+    } catch (err: any) {
+      return res.status(500).json({ success: false, error: err.message });
+    }
+  }
+);
+
+// E. 12-Stage Onboarding Workflow & Reis Electric Packet Endpoints (Parts 5 & 6)
+gbpLaunchRouter.get('/workflow-state', (req: Request, res: Response) => {
+  const businessId = (req.query.businessId as string) || 'smrelec';
+  const workflow = governanceService.getOrCreateWorkflow(req.tenantId!, businessId);
+  return res.json({ success: true, tenantId: req.tenantId, workflow });
+});
+
+gbpLaunchRouter.post('/workflow-state/transition', requirePermission('launch:write'), (req: Request, res: Response) => {
+  const parseResult = TransitionWorkflowSchema.safeParse(req.body);
+  if (!parseResult.success) {
+    return res.status(400).json({ success: false, error: 'INVALID_INPUT', details: parseResult.error.format() });
+  }
+
+  try {
+    governanceService.updateWorkflowState(
+      req.tenantId!,
+      parseResult.data.businessId,
+      parseResult.data.newState,
+      parseResult.data.reason
+    );
+
+    const updated = governanceService.getOrCreateWorkflow(req.tenantId!, parseResult.data.businessId);
+
+    auditService.recordAudit({
+      tenantId: req.tenantId!,
+      actorId: req.userId,
+      clientIp: req.ip || 'unknown',
+      endpoint: req.path,
+      action: 'GBP_WORKFLOW_TRANSITIONED',
+      status: 'SUCCESS',
+      details: { newState: parseResult.data.newState, reason: parseResult.data.reason },
+    });
+
+    return res.json({ success: true, workflow: updated });
+  } catch (err: any) {
+    return res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+gbpLaunchRouter.get('/reis-electric-packet', (req: Request, res: Response) => {
+  const packet = governanceService.generateReisElectricOwnerPacket(req.tenantId!);
+  return res.json({ success: true, tenantId: req.tenantId, packet });
+});
+
+// F. Business Intake Submission Endpoint (Requires PREPARE_PROFILE_DRAFT or EDIT_BUSINESS_INFORMATION)
 gbpLaunchRouter.post(
   '/intake',
   requirePermission('launch:write'),
   rateLimitMiddleware('gbp_intake', 30, 15 * 60 * 1000),
   idempotencyCheckMiddleware,
   async (req: Request, res: Response) => {
+    // Check Customer Authorization Grant Gate
+    const permCheck = governanceService.checkActionPermission(req.tenantId!, 'PREPARE_PROFILE_DRAFT');
+    if (!permCheck.permitted) {
+      auditService.recordAudit({
+        tenantId: req.tenantId!,
+        actorId: req.userId,
+        clientIp: req.ip || 'unknown',
+        endpoint: req.path,
+        action: 'GBP_INTAKE_UNAUTHORIZED_BLOCKED',
+        status: 'FORBIDDEN',
+        details: { reason: permCheck.reason },
+      });
+
+      return res.status(403).json({
+        success: false,
+        error: 'CUSTOMER_AUTHORIZATION_REQUIRED',
+        message: permCheck.reason,
+      });
+    }
+
     const parseResult = BusinessIntakeSchema.safeParse(req.body);
     if (!parseResult.success) {
       auditService.recordAudit({
@@ -164,10 +470,13 @@ gbpLaunchRouter.post(
       const intake = parseResult.data;
       const profile = gbpService.saveIntakeProfile(req.tenantId!, intake.clientId, intake);
 
+      // Redact private street address in output payload
+      const redactedProfile = governanceService.redactProfileForLogs(profile);
+
       const payload = {
         success: true,
         tenantId: req.tenantId,
-        profile,
+        profile: redactedProfile,
         _connectorStatus: gbpService.getConnectorStatus(req.tenantId!),
       };
 
@@ -189,22 +498,33 @@ gbpLaunchRouter.post(
   }
 );
 
-// C. Get Profile Endpoint
+// G. Get Profile Endpoint
 gbpLaunchRouter.get('/profile/:id', (req: Request, res: Response) => {
   const profile = gbpService.getProfileById(req.tenantId!, req.params.id);
   if (!profile) {
     return res.status(404).json({ success: false, error: 'GBP_PROFILE_NOT_FOUND' });
   }
-  return res.json({ success: true, profile, _connectorStatus: gbpService.getConnectorStatus(req.tenantId!) });
+  const redacted = governanceService.redactProfileForLogs(profile);
+  return res.json({ success: true, profile: redacted, _connectorStatus: gbpService.getConnectorStatus(req.tenantId!) });
 });
 
-// D. Check Duplicate Listings
+// H. Check Duplicate Listings (Requires DISCOVER_EXISTING_PROFILE)
 gbpLaunchRouter.post(
   '/check-duplicates',
   requirePermission('launch:read'),
   rateLimitMiddleware('gbp_dup_check', 30, 15 * 60 * 1000),
   idempotencyCheckMiddleware,
   async (req: Request, res: Response) => {
+    // Check Customer Authorization Grant Gate
+    const permCheck = governanceService.checkActionPermission(req.tenantId!, 'DISCOVER_EXISTING_PROFILE');
+    if (!permCheck.permitted) {
+      return res.status(403).json({
+        success: false,
+        error: 'CUSTOMER_AUTHORIZATION_REQUIRED',
+        message: permCheck.reason,
+      });
+    }
+
     const parseResult = CheckDuplicatesSchema.safeParse(req.body);
     if (!parseResult.success) {
       return res.status(400).json({ success: false, error: 'INVALID_INPUT', details: parseResult.error.format() });
@@ -239,13 +559,23 @@ gbpLaunchRouter.post(
   }
 );
 
-// E. Generate Profile Plan
+// I. Generate Profile Plan (Requires PREPARE_PROFILE_DRAFT)
 gbpLaunchRouter.post(
   '/generate-profile-plan',
   requirePermission('launch:write'),
   rateLimitMiddleware('gbp_plan_gen', 20, 15 * 60 * 1000),
   idempotencyCheckMiddleware,
   async (req: Request, res: Response) => {
+    // Check Customer Authorization Grant Gate
+    const permCheck = governanceService.checkActionPermission(req.tenantId!, 'PREPARE_PROFILE_DRAFT');
+    if (!permCheck.permitted) {
+      return res.status(403).json({
+        success: false,
+        error: 'CUSTOMER_AUTHORIZATION_REQUIRED',
+        message: permCheck.reason,
+      });
+    }
+
     const parseResult = GeneratePlanSchema.safeParse(req.body);
     if (!parseResult.success) {
       return res.status(400).json({ success: false, error: 'INVALID_INPUT', details: parseResult.error.format() });
@@ -280,7 +610,7 @@ gbpLaunchRouter.post(
   }
 );
 
-// F. Human Plan Approval Gate (Owner Gate)
+// J. Human Plan Approval Gate (Owner Gate - Requires PREPARE_PROFILE_DRAFT + launch:dispatch)
 gbpLaunchRouter.post(
   '/approve-profile-plan',
   requirePermission('launch:dispatch'),
@@ -327,7 +657,7 @@ gbpLaunchRouter.post(
   }
 );
 
-// G. Track Verification Status
+// K. Track Verification Status
 gbpLaunchRouter.post(
   '/track-verification',
   requirePermission('launch:write'),
@@ -348,10 +678,12 @@ gbpLaunchRouter.post(
         verificationState
       );
 
+      const redacted = governanceService.redactProfileForLogs(profile);
+
       const payload = {
         success: true,
         tenantId: req.tenantId,
-        profile,
+        profile: redacted,
         _connectorStatus: gbpService.getConnectorStatus(req.tenantId!),
       };
 
@@ -373,13 +705,22 @@ gbpLaunchRouter.post(
   }
 );
 
-// H. Create Post Draft
+// L. Create Post Draft (Requires PUBLISH_POST authorization)
 gbpLaunchRouter.post(
   '/create-post-draft',
   requirePermission('launch:write'),
   rateLimitMiddleware('gbp_post_draft', 50, 15 * 60 * 1000),
   idempotencyCheckMiddleware,
   async (req: Request, res: Response) => {
+    const permCheck = governanceService.checkActionPermission(req.tenantId!, 'PUBLISH_POST');
+    if (!permCheck.permitted) {
+      return res.status(403).json({
+        success: false,
+        error: 'CUSTOMER_AUTHORIZATION_REQUIRED',
+        message: permCheck.reason,
+      });
+    }
+
     const parseResult = CreatePostSchema.safeParse(req.body);
     if (!parseResult.success) {
       return res.status(400).json({ success: false, error: 'INVALID_INPUT', details: parseResult.error.format() });
@@ -442,13 +783,22 @@ gbpLaunchRouter.post(
   }
 );
 
-// I. Approve Post (Owner Approval with SHA-256 Hash)
+// M. Approve Post (Owner Approval with SHA-256 Hash)
 gbpLaunchRouter.post(
   '/approve-post',
   requirePermission('launch:dispatch'),
   rateLimitMiddleware('gbp_approve_post', 50, 15 * 60 * 1000),
   idempotencyCheckMiddleware,
   async (req: Request, res: Response) => {
+    const permCheck = governanceService.checkActionPermission(req.tenantId!, 'PUBLISH_POST');
+    if (!permCheck.permitted) {
+      return res.status(403).json({
+        success: false,
+        error: 'CUSTOMER_AUTHORIZATION_REQUIRED',
+        message: permCheck.reason,
+      });
+    }
+
     const parseResult = ApprovePostSchema.safeParse(req.body);
     if (!parseResult.success) {
       return res.status(400).json({ success: false, error: 'INVALID_INPUT', details: parseResult.error.format() });
@@ -513,13 +863,22 @@ gbpLaunchRouter.post(
   }
 );
 
-// J. Publish Post (Requires Human Approval + Tamper Verification)
+// N. Publish Post (Requires Human Approval + Tamper Verification + Active Grant)
 gbpLaunchRouter.post(
   '/publish-post',
   requirePermission('launch:dispatch'),
   rateLimitMiddleware('gbp_pub_post', 50, 15 * 60 * 1000),
   idempotencyCheckMiddleware,
   async (req: Request, res: Response) => {
+    const permCheck = governanceService.checkActionPermission(req.tenantId!, 'PUBLISH_POST');
+    if (!permCheck.permitted) {
+      return res.status(403).json({
+        success: false,
+        error: 'CUSTOMER_AUTHORIZATION_REQUIRED',
+        message: permCheck.reason,
+      });
+    }
+
     const parseResult = PublishPostSchema.safeParse(req.body);
     if (!parseResult.success) {
       return res.status(400).json({ success: false, error: 'INVALID_INPUT', details: parseResult.error.format() });
@@ -610,7 +969,7 @@ gbpLaunchRouter.post(
   }
 );
 
-// K. Tenant Audit Logs Endpoint
+// O. Tenant Audit Logs Endpoint
 gbpLaunchRouter.get('/audit-logs', requirePermission('audit:read'), (req: Request, res: Response) => {
   const db = getDatabase();
   const logs = db.prepare(`

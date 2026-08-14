@@ -122,6 +122,14 @@ export function ElectricalWorkflowStudio({ darkMode = true }: { darkMode?: boole
     sourceUrl: 'https://mass.gov',
   });
 
+  // Outcome inputs
+  const [scheduleTimeInput, setScheduleTimeInput] = useState('');
+  const [bookedValueInput, setBookedValueInput] = useState('2500');
+  const [actualRevenueInput, setActualRevenueInput] = useState('2750');
+
+  // Audit Logs State
+  const [auditLogs, setAuditLogs] = useState<any[]>([]);
+
   const fetchMAProfile = async () => {
     try {
       const res = await fetch('/api/growth/ma-compliance/profile', {
@@ -198,14 +206,6 @@ export function ElectricalWorkflowStudio({ darkMode = true }: { darkMode?: boole
       setErrorMsg(err.message);
     }
   };
-
-  // Outcome inputs
-  const [scheduleTimeInput, setScheduleTimeInput] = useState('');
-  const [bookedValueInput, setBookedValueInput] = useState('2500');
-  const [actualRevenueInput, setActualRevenueInput] = useState('2750');
-
-  // Audit Logs State
-  const [auditLogs, setAuditLogs] = useState<any[]>([]);
 
   const fetchLeads = async () => {
     setLoading(true);

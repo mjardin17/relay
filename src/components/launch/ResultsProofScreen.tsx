@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { BarChart3, TrendingUp, Sparkles, CheckCircle2, Award, ArrowUpRight, DollarSign, Repeat } from 'lucide-react';
 import { ClientResultMetrics } from '../../types/launchProgram';
 

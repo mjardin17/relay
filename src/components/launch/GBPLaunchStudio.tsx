@@ -74,7 +74,7 @@ export const GBPLaunchStudio: React.FC<GBPLaunchStudioProps> = ({ darkMode, tena
   const [postPublished, setPostPublished] = useState<boolean>(false);
 
   // Review reply state
-  const [sampleReview] = useState<GBPReview>({
+  const sampleReview: GBPReview = {
     id: 'rev-101',
     tenantId: 'tenant_demo_1',
     gbpProfileId: 'gbp-prof-101',
@@ -85,7 +85,7 @@ export const GBPLaunchStudio: React.FC<GBPLaunchStudioProps> = ({ darkMode, tena
     reviewDate: '2026-08-10',
     responseStatus: 'unanswered',
     createdAt: new Date().toISOString(),
-  });
+  };
   const [reviewReplyDraft, setReviewReplyDraft] = useState<string>('');
   const [replyApproved, setReplyApproved] = useState<boolean>(false);
   const [replySubmitted, setReplySubmitted] = useState<boolean>(false);

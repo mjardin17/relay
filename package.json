@@ -10,7 +10,7 @@
     "preview": "vite preview",
     "clean": "rm -rf dist server.js",
     "lint": "tsc --noEmit",
-    "test": "tsx --test src/tests/growth.test.ts src/tests/buzAgentSuite.test.ts src/tests/auditAndComplianceReconciliation.test.ts"
+    "test": "tsx --test src/tests/growth.test.ts src/tests/buzAgentSuite.test.ts src/tests/auditAndComplianceReconciliation.test.ts src/tests/gbpOnboarding.test.ts"
   },
   "dependencies": {
     "@google/genai": "^2.4.0",

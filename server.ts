@@ -28,6 +28,7 @@ app.use(express.json({ limit: '10mb' }));
 app.use('/api/growth', growthRouter);
 app.use('/api/launch-program', launchProgramRouter);
 app.use('/api/gbp-launch', gbpLaunchRouter);
+app.use('/api/gbp', gbpLaunchRouter);
 app.use('/api/aria', ariaRouter);
 
 // Lazy initializer for Gemini client to prevent startup crash if GEMINI_API_KEY is missing

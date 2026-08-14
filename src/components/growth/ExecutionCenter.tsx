@@ -7,18 +7,18 @@ interface ExecutionCenterProps {
 }
 
 export const ExecutionCenter: React.FC<ExecutionCenterProps> = ({ darkMode }) => {
-  const [, setRefresh] = useState(0);
+  const [refreshCount, setRefreshCount] = useState(0);
   const approvals = growthEvidenceEngine.getApprovalRequests();
   const ledger = growthEvidenceEngine.getExecutionLedger();
 
   const handleApprove = (id: string) => {
     growthEvidenceEngine.approveRequest(id, 'Executive Admin');
-    setRefresh((prev) => prev + 1);
+    setRefreshCount((prev) => prev + 1);
   };
 
   const handleReject = (id: string) => {
     growthEvidenceEngine.rejectRequest(id, 'Executive Admin');
-    setRefresh((prev) => prev + 1);
+    setRefreshCount((prev) => prev + 1);
   };
 
   return (
