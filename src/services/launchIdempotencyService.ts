@@ -79,7 +79,7 @@ export class LaunchIdempotencyService {
       const createdAt = new Date().toISOString();
       db.prepare(`
         INSERT INTO launch_idempotency (tenant_id, operation, idempotency_key, request_hash, response_json, created_at)
-        VALUES (?, ?, ?, ?, NULL, ?)
+        VALUES (?, ?, ?, ?, '{}', ?)
       `).run(tenantId, operation, key, currentHash, createdAt);
 
       db.exec('COMMIT;');

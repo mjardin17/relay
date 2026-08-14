@@ -2,22 +2,31 @@ import { getDatabase } from './database';
 
 export function seedDatabaseIfEmpty(): void {
   const db = getDatabase();
-
-  const tenantCheck = db.prepare('SELECT count(*) as count FROM tenants WHERE id = ?').get('tenant_demo_1') as { count: number };
-  if (tenantCheck && tenantCheck.count > 0) {
-    return; // Already seeded
-  }
-
   const now = new Date().toISOString();
 
-  db.exec('BEGIN TRANSACTION;');
+  try {
+    const existing = db.prepare('SELECT COUNT(*) as count FROM tenants').get() as { count: number } | undefined;
+    if (existing && existing.count > 0) {
+      return; // Already seeded
+    }
+  } catch {
+    // If query fails, proceed with seeding
+  }
+
+  try {
+    db.exec('BEGIN TRANSACTION;');
+  } catch {
+    // Transaction might already be open
+  }
 
   try {
     // 1. Seed Tenants
-    db.prepare(`
-      INSERT INTO tenants (id, name, industry, mrr, primary_bottleneck, environment_classification, company_maturity, engagement_model, operating_mode, verification_status, created_at)
+    const insertTenant = db.prepare(`
+      INSERT OR IGNORE INTO tenants (id, name, industry, mrr, primary_bottleneck, environment_classification, company_maturity, engagement_model, operating_mode, verification_status, created_at)
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `).run(
+    `);
+
+    insertTenant.run(
       'tenant_demo_1',
       'Apex Horizon Technologies',
       'B2B SaaS & Enterprise AI',
@@ -31,10 +40,7 @@ export function seedDatabaseIfEmpty(): void {
       now
     );
 
-    db.prepare(`
-      INSERT INTO tenants (id, name, industry, mrr, primary_bottleneck, environment_classification, company_maturity, engagement_model, operating_mode, verification_status, created_at)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `).run(
+    insertTenant.run(
       'tenant_demo_2',
       'Titan Health Systems',
       'Healthcare & Dental Clinics',
@@ -48,10 +54,7 @@ export function seedDatabaseIfEmpty(): void {
       now
     );
 
-    db.prepare(`
-      INSERT INTO tenants (id, name, industry, mrr, primary_bottleneck, environment_classification, company_maturity, engagement_model, operating_mode, verification_status, created_at)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `).run(
+    insertTenant.run(
       'tenant_ma_fresh_launch',
       'Fresh Launch MA Electrical Company',
       'Electrical Contracting',
@@ -67,18 +70,18 @@ export function seedDatabaseIfEmpty(): void {
 
     // 2. Seed Actors
     const insertActor = db.prepare(`
-      INSERT INTO actors (id, tenant_id, name, role, email, user_role_classification, is_licensed_electrician, is_master_electrician, is_licensee_of_record, is_legal_owner, created_at)
+      INSERT OR IGNORE INTO actors (id, tenant_id, name, role, email, user_role_classification, is_licensed_electrician, is_master_electrician, is_licensee_of_record, is_legal_owner, created_at)
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `);
 
-    insertActor.run('actor_1', 'tenant_demo_1', 'Relay Operator', 'operator', 'admin@apexhorizon.com', 'RELAY_OPERATOR', 0, 0, 0, 0, now);
+    insertActor.run('actor_1', 'tenant_demo_1', 'Relay Operator', 'owner', 'admin@apexhorizon.com', 'RELAY_OPERATOR', 0, 0, 0, 0, now);
     insertActor.run('actor_2', 'tenant_demo_1', 'Growth Specialist', 'member', 'member@apexhorizon.com', 'GROWTH_PARTNER', 0, 0, 0, 0, now);
     insertActor.run('actor_3', 'tenant_demo_2', 'Dr. Evelyn Vance', 'owner', 'evelyn@titanhealth.org', 'LEGAL_BUSINESS_OWNER', 0, 0, 0, 1, now);
-    insertActor.run('actor_ma_1', 'tenant_ma_fresh_launch', 'Relay Operator', 'operator', 'operator@relay.ai', 'UNVERIFIED', 0, 0, 0, 0, now);
+    insertActor.run('actor_ma_1', 'tenant_ma_fresh_launch', 'Relay Operator', 'owner', 'operator@relay.ai', 'UNVERIFIED', 0, 0, 0, 0, now);
 
     // 2b. Seed Auth Sessions (Tokens)
     const insertSession = db.prepare(`
-      INSERT INTO auth_sessions (token, actor_id, tenant_id, role, permissions_json, expires_at, created_at)
+      INSERT OR IGNORE INTO auth_sessions (token, actor_id, tenant_id, role, permissions_json, expires_at, created_at)
       VALUES (?, ?, ?, ?, ?, ?, ?)
     `);
 
@@ -99,22 +102,16 @@ export function seedDatabaseIfEmpty(): void {
 
     // 2c. Seed Initial Unverified Compliance Profile for MA Fresh Launch
     db.prepare(`
-      INSERT INTO ma_electrical_company_compliance (
+      INSERT OR IGNORE INTO ma_electrical_company_compliance (
         id, tenant_id, legal_business_name, dba_name, entity_registration_status, entity_registration_source_level,
         ma_a1_business_license_number, business_license_status, business_license_expiration_date, business_license_source_level,
         master_electrician_name, master_electrician_license_number, master_electrician_license_status, master_electrician_license_expiration_date, master_electrician_source_level,
         journeyman_licenses_json, corporate_registration_status, corporate_registration_source_level,
-        dba_registration_status, dba_source_level, insurance_status, insurance_source_level,
+        dba_registration_status, dba_source_level, insurance_policy_status, insurance_source_level,
         source_url, verification_timestamp, evidence_artifact_json, evidence_classification,
         can_claim_licensed_company, compliance_notes_json, created_at, updated_at
       ) VALUES (
-        ?, ?, ?, ?, ?, ?,
-        ?, ?, ?, ?,
-        ?, ?, ?, ?, ?,
-        ?, ?, ?,
-        ?, ?, ?, ?,
-        ?, ?, ?, ?,
-        ?, ?, ?, ?
+        ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
       )
     `).run(
       'mcomp-fresh-launch-1',
@@ -151,7 +148,7 @@ export function seedDatabaseIfEmpty(): void {
 
     // 3. Seed Source Records / Data Sources
     const insertDs = db.prepare(`
-      INSERT INTO source_records (id, tenant_id, source_type, external_id, name, category, data_payload_json, records_ingested, failed_records, health_score, status, last_sync_at, created_at)
+      INSERT OR IGNORE INTO source_records (id, tenant_id, source_type, external_id, name, category, data_payload_json, records_ingested, failed_records, health_score, status, last_sync_at, created_at)
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `);
 
@@ -163,7 +160,7 @@ export function seedDatabaseIfEmpty(): void {
 
     // 4. Seed Leads (including stale, converted, opted out, and valid active leads for Stale Lead Recovery slice)
     const insertLead = db.prepare(`
-      INSERT INTO leads (id, tenant_id, name, email, company, phone, pipeline_stage, estimated_value, last_interaction_at, response_delay_hours, opted_out, do_not_contact, is_converted, is_duplicate, created_at)
+      INSERT OR IGNORE INTO leads (id, tenant_id, name, email, company, phone, pipeline_stage, estimated_value, last_interaction_at, response_delay_hours, opted_out, do_not_contact, is_converted, is_duplicate, created_at)
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `);
 
@@ -181,7 +178,7 @@ export function seedDatabaseIfEmpty(): void {
 
     // 5. Seed Verified Opportunities
     const insertOpp = db.prepare(`
-      INSERT INTO opportunities (id, tenant_id, title, category, description, action_type, status, effort, risk_level, affected_records_count, estimated_monthly_value, estimated_annual_value, actual_realized_monthly_value, confidence, detected_condition, recommended_playbook, activated_at, created_at)
+      INSERT OR IGNORE INTO opportunities (id, tenant_id, title, category, description, action_type, status, effort, risk_level, affected_records_count, estimated_monthly_value, estimated_annual_value, actual_realized_monthly_value, confidence, detected_condition, recommended_playbook, activated_at, created_at)
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `);
 
@@ -229,7 +226,7 @@ export function seedDatabaseIfEmpty(): void {
 
     // 6. Seed Calculation Formulas & Evidence
     db.prepare(`
-      INSERT INTO calculation_formulas (id, tenant_id, formula_name, formula_expression, input_variables_json, calculated_output, calculated_at)
+      INSERT OR IGNORE INTO calculation_formulas (id, tenant_id, formula_name, formula_expression, input_variables_json, calculated_output, calculated_at)
       VALUES (?, ?, ?, ?, ?, ?, ?)
     `).run(
       'form-stale-lead-1',
@@ -242,7 +239,7 @@ export function seedDatabaseIfEmpty(): void {
     );
 
     db.prepare(`
-      INSERT INTO evidence_items (id, tenant_id, opportunity_id, claim, source_type, sample_size, confidence, formula_id, metadata_json, created_at)
+      INSERT OR IGNORE INTO evidence_items (id, tenant_id, opportunity_id, claim, source_type, sample_size, confidence, formula_id, metadata_json, created_at)
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `).run(
       'ev-stale-1',
@@ -269,7 +266,7 @@ export function seedDatabaseIfEmpty(): void {
 
     // 7. Seed Opportunity Projections
     db.prepare(`
-      INSERT INTO opportunity_projections (id, tenant_id, opportunity_id, conservative_value, expected_value, upside_value, assumptions_json, created_at)
+      INSERT OR IGNORE INTO opportunity_projections (id, tenant_id, opportunity_id, conservative_value, expected_value, upside_value, assumptions_json, created_at)
       VALUES (?, ?, ?, ?, ?, ?, ?, ?)
     `).run(
       'proj-stale-1',
@@ -289,7 +286,7 @@ export function seedDatabaseIfEmpty(): void {
 
     // 8. Seed Recommendation Evaluations
     db.prepare(`
-      INSERT INTO recommendation_evaluations (id, tenant_id, opportunity_id, opportunity_title, predicted_value, realized_value, accuracy_score, feedback_notes, learning_adjustment_applied, evaluated_at)
+      INSERT OR IGNORE INTO recommendation_evaluations (id, tenant_id, opportunity_id, opportunity_title, predicted_value, realized_value, accuracy_score, feedback_notes, learning_adjustment_applied, evaluated_at)
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `).run(
       'rec-eval-1',
@@ -307,7 +304,7 @@ export function seedDatabaseIfEmpty(): void {
     db.exec('COMMIT;');
     console.log('[SQLite Seed] Database successfully initialized and seeded with tenant_demo_1.');
   } catch (err) {
-    db.exec('ROLLBACK;');
+    try { db.exec('ROLLBACK;'); } catch {}
     console.error('[SQLite Seed Error]', err);
     throw err;
   }

@@ -148,47 +148,47 @@ export const DEFAULT_STAGES: LaunchProgramStage[] = [
 ];
 
 export const DEFAULT_PROVIDER_PROFILE: ProviderBusinessProfile = {
-  providerName: 'Alex Vance',
-  agencyBrand: 'Apex Growth OS Partners',
-  serviceGoals: 'Build a $25k/mo recurring AI automation agency with 5-7 high-retainer clients.',
-  availableSkills: ['AI Automation', 'CRM Integration', 'Sales Engineering', 'Lead Recovery'],
-  preferredIndustries: ['Dental & Healthcare', 'Home Services / HVAC', 'Legal Services'],
-  geographicScope: 'North America / Metro Regions',
-  clientCapacityMax: 6,
-  currentClientsCount: 2,
-  targetMonthlyIncome: 25000,
-  currentMonthlyIncome: 8500,
-  hourlyRateBaseline: 250,
-  selectedNicheId: 'niche-dental',
-  constraints: ['No cold phone calling', 'Must use human approval queue for outreach', 'Encrypt credentials strictly'],
+  providerName: 'Shadrick M. Reis & Silent Partner',
+  agencyBrand: 'Reis Electric LLC Operating Platform',
+  serviceGoals: 'Build a $50k/mo high-margin electrical contracting LLC with 2 50/50 partners.',
+  availableSkills: ['MA Journeyman Electrical License', 'Panel Overhauls & EV Chargers', 'Speed-to-Lead Dispatch', 'MA Code Compliance'],
+  preferredIndustries: ['Residential Homeowners', 'Commercial Property & Facility Managers', 'General Contractors'],
+  geographicScope: 'Massachusetts (Norfolk, Worcester, Middlesex & Suffolk Counties)',
+  clientCapacityMax: 20,
+  currentClientsCount: 8,
+  targetMonthlyIncome: 50000,
+  currentMonthlyIncome: 38500,
+  hourlyRateBaseline: 175,
+  selectedNicheId: 'niche-electrical',
+  constraints: ['Must display Shadrick M. Reis, MA Lic. # B-38914 on all public ads', 'Require municipal wire inspector sign-off', 'Maintain 50/50 LLC silent equity partnership split'],
   baselineMetrics: {
-    leadResponseTimeMinutes: 45,
-    avgDealSize: 3500,
-    salesCycleDays: 14
+    leadResponseTimeMinutes: 1,
+    avgDealSize: 2850,
+    salesCycleDays: 3
   }
 };
 
 export const DEFAULT_NICHES: NicheCandidate[] = [
   {
-    id: 'niche-dental',
-    name: 'Dental Practices & Specialty Care',
-    industryCategory: 'Healthcare Services',
-    painSeverityScore: 9,
+    id: 'niche-electrical',
+    name: 'Licensed Electrical Contracting & Commercial Services',
+    industryCategory: 'Massachusetts Trade Services',
+    painSeverityScore: 10,
     abilityToPayScore: 9,
-    easeOfAccessScore: 8,
-    urgencyScore: 9,
-    salesCycleDaysEstimate: 10,
+    easeOfAccessScore: 9,
+    urgencyScore: 10,
+    salesCycleDaysEstimate: 2,
     automationPotentialScore: 9,
-    complianceRiskLevel: 'Medium',
-    estimatedMonthlyRoiPerClient: 8500,
-    overallScore: 94,
+    complianceRiskLevel: 'Low',
+    estimatedMonthlyRoiPerClient: 18500,
+    overallScore: 98,
     keyPainPoints: [
-      '35% of inbound calls go unanswered during peak patient hours',
-      'Weekend emergency leads lost to competitor clinics',
-      'Hygiene recall & reactivation emails ignored'
+      'Homeowners with flickering lights or EV charger needs waiting for responsive contractors',
+      'Commercial facilities needing 200A/400A panel upgrades before new equipment installs',
+      'Unlicensed handyman safety risks and failed municipal wire inspections'
     ],
-    primaryDecisionMakerRole: 'Practice Owner / Managing Partner',
-    evidenceSummary: 'Average dental practice loses $12,400/month in uncaptured implant and cosmetic procedures due to slow phone response.',
+    primaryDecisionMakerRole: 'Homeowner / Commercial Facility Manager',
+    evidenceSummary: 'Average homeowner in MA willing to pay premium $2,800-$4,500 for fast, licensed Journeyman electrical service with clean site cleanup.',
     recommended: true,
     selectedByOwner: true
   },

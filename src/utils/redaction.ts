@@ -29,6 +29,12 @@ export function redactText(text: string | null | undefined): string {
     '[REDACTED_EMAIL]'
   );
 
+  // Redact phone numbers
+  sanitized = sanitized.replace(
+    /\b(?:\+?1[-. \t]?)?(?:\(?\d{3}\)?[-. \t]?)?\d{3}[-. \t]?\d{4}\b/g,
+    '[REDACTED_PHONE]'
+  );
+
   // Redact street address pattern in free text (e.g., "1420 SW 5th Ave" -> "1420 ***")
   sanitized = sanitized.replace(
     /\b(\d{1,5})\s+([A-Za-z0-9\s.,#-]{3,35}\b(?:Ave|Avenue|St|Street|Rd|Road|Blvd|Boulevard|Dr|Drive|Way|Ln|Lane|Ct|Court|Pl|Place|Ste|Suite))\b/gi,

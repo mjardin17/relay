@@ -161,7 +161,13 @@ async function runRedactionBoundaryTests() {
     },
     body: JSON.stringify(testIntakePayload),
   });
-  const intakeData = await intakeRes.json();
+  const intakeText = await intakeRes.text();
+  let intakeData: any = {};
+  try {
+    intakeData = JSON.parse(intakeText);
+  } catch (err) {
+    throw new Error(`Failed to parse intake response JSON: ${intakeText.substring(0, 200)}`);
+  }
   assert.strictEqual(intakeRes.status, 200);
   const profileId = intakeData.profile.id;
 
@@ -182,7 +188,13 @@ async function runRedactionBoundaryTests() {
   const auditRes = await fetch(`${BASE_URL}/api/gbp-launch/audit-logs`, {
     headers: { Authorization: `Bearer ${OWNER_TOKEN}` },
   });
-  const auditData = await auditRes.json();
+  const auditText = await auditRes.text();
+  let auditData: any = {};
+  try {
+    auditData = JSON.parse(auditText);
+  } catch (err) {
+    throw new Error(`Failed to parse audit response JSON: ${auditText.substring(0, 200)}`);
+  }
   assert.strictEqual(auditRes.status, 200);
 
   const auditLogStr = JSON.stringify(auditData.logs);
@@ -196,7 +208,13 @@ async function runRedactionBoundaryTests() {
   const tenant2AuditRes = await fetch(`${BASE_URL}/api/gbp-launch/audit-logs`, {
     headers: { Authorization: `Bearer ${TENANT2_TOKEN}` },
   });
-  const tenant2AuditData = await tenant2AuditRes.json();
+  const tenant2AuditText = await tenant2AuditRes.text();
+  let tenant2AuditData: any = {};
+  try {
+    tenant2AuditData = JSON.parse(tenant2AuditText);
+  } catch (err) {
+    throw new Error(`Failed to parse tenant2 audit response JSON: ${tenant2AuditText.substring(0, 200)}`);
+  }
   assert.strictEqual(tenant2AuditRes.status, 200);
 
   const t2HasT1Logs = tenant2AuditData.logs.some((l: any) => l.tenant_id === 'tenant_demo_1');

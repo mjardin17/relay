@@ -9,138 +9,116 @@ import {
 } from '../types/relay';
 
 export const INITIAL_BUSINESS_PROFILE: BusinessProfile = {
-  name: 'Empire Tech Solutions',
-  industry: 'Enterprise B2B Software & AI Automation',
-  websiteUrl: 'https://empireos.io',
-  mrr: 142000,
-  arr: 1704000,
-  productsCount: 4,
-  activeCustomers: 1240,
-  churnRate: 1.8,
-  averageDealSize: 18500,
-  competitors: ['HubSpot', 'Sprout Social', 'Salesforce Marketing Cloud', 'Hootsuite'],
+  name: 'Reis Electric LLC',
+  industry: 'Licensed Electrical Contracting (MA Journeyman Lic. # B-38914)',
+  websiteUrl: 'https://ReisElectric.com',
+  mrr: 38500,
+  arr: 462000,
+  productsCount: 6,
+  activeCustomers: 340,
+  churnRate: 0.5,
+  averageDealSize: 2850,
+  competitors: ['Local Unlicensed Handymen', 'National Franchise Electricians', 'Regional Electrical Firms'],
   crmConnected: true,
-  primaryBottleneck: 'Lead response latency (>4h delay) and unoptimized trial onboarding dropoff'
+  primaryBottleneck: 'After-hours missed calls and uncaptured web leads while Shadrick M. Reis is on active job sites.'
 };
 
 export const INITIAL_HEALTH_SCORE: BusinessHealthScore = {
-  overall: 86,
+  overall: 92,
   revenueEfficiency: {
-    score: 84,
+    score: 94,
     status: 'Optimal',
-    breakdown: 'LTV:CAC ratio is 4.2x with strong Gross Margin (82%). Organic acquisition accounts for 64% of sales pipeline.'
+    breakdown: '50/50 LLC Partner structure keeps overhead low. Target gross margin sits at 68% on residential service & 58% on commercial panel overhauls.'
   },
   leadVelocity: {
-    score: 79,
-    status: 'Needs Acceleration',
-    breakdown: 'Lead response time averages 4.2 hours. 22% of inbound demo requests drop off before first discovery call.'
+    score: 88,
+    status: 'Optimal',
+    breakdown: 'Guided-manual intake and AI Dispatch Qualifier converts web inquiries into reviewed draft estimates within 60 seconds.'
   },
   operationalMargin: {
-    score: 91,
+    score: 95,
     status: 'Strong',
-    breakdown: 'AI automation handles 72% of routine content repurposing, social posting, and initial lead routing.'
+    breakdown: 'Clean division of responsibilities: Joshua Jardin (reported growth partner) manages strategy/capital backing; Shadrick M. Reis manages public field execution & town permits.'
   },
   brandAuthority: {
-    score: 88,
+    score: 91,
     status: 'Strong',
-    breakdown: 'High engagement across LinkedIn & YouTube. Recognized as top 5 AI workflow platform in B2B tech.'
+    breakdown: 'High customer trust driven by slogan: "No job too big, no job too small — you can call Reis Electric!" and full MA disclosure.'
   },
   customerRetention: {
-    score: 86,
+    score: 92,
     status: 'Optimal',
-    breakdown: 'Monthly churn remains low at 1.8% with Net Dollar Retention (NDR) sitting at a healthy 112%.'
+    breakdown: 'Repeat commercial maintenance and annual residential safety inspection memberships provide recurring revenue.'
   },
   keyBottlenecks: [
     {
-      issue: 'Inbound Lead Delay (>4 hours to response)',
-      impact: '-$14,500/mo in leaked pipeline revenue',
+      issue: 'Unanswered Calls During Active Panel Wiring',
+      impact: '-$4,800/mo in lost emergency service calls',
       priority: 'Critical'
     },
     {
-      issue: 'Dormant Trial Accounts (No onboarding activity in 7 days)',
-      impact: '-$8,200/mo in missed MRR conversion',
+      issue: 'Uncollected Past Estimates (>7 Days Without Follow-up)',
+      impact: '-$6,200/mo in delayed project approvals',
       priority: 'High'
     },
     {
-      issue: 'Manual Invoice & Contract Renewal Reminders',
-      impact: '28 hours/week spent on manual admin tasks',
+      issue: 'Manual Town Permit Filing & Wire Inspector Sign-off Tracking',
+      impact: '12 hours/week spent on municipal admin',
       priority: 'Medium'
     }
   ],
   strengths: [
-    'Net Dollar Retention of 112% (Strong Expansion Revenue)',
-    'High organic search authority in AI & Automation space',
-    'Automated multi-channel social distribution pipeline via Relay'
+    '50/50 Partner Operating Model (Ops/Growth + Journeyman Licensed Master Electrician)',
+    'Immaculate field craftsmanship & 100% MA Board 237 CMR Compliance',
+    'Memorable multi-channel slogan: "No job too big, no job too small — you can call Reis Electric!"'
   ],
-  potentialMonthlyUpside: '+$34,200/mo'
+  potentialMonthlyUpside: '+$18,500/mo'
 };
 
 export const INITIAL_REVENUE_OPPORTUNITIES: RevenueOpportunity[] = [
   {
     id: 'opp-1',
-    title: 'Instant Speed-to-Lead Follow-up Automation',
+    title: 'Instant 60-Second Speed-to-Lead Call & SMS Dispatch',
     category: 'Missed Sales',
-    description: 'Trigger SMS and personalized AI email within 60 seconds of inbound form submission. Reduces lead leakage by 65%.',
-    estimatedMonthlyImpact: 14500,
+    description: 'Instantly text and confirm job site address within 60 seconds when a homeowner submits an inquiry while Shadrick M. Reis is working in the field.',
+    estimatedMonthlyImpact: 6800,
     effort: 'Low',
-    actionableCampaignType: 'Speed-to-Lead AI Sequence',
+    actionableCampaignType: 'Instant Dispatch Sequence',
     activated: true,
-    metrics: { conversionBoost: '+38%', paybackDays: '2 Days' }
+    metrics: { conversionBoost: '+42%', paybackDays: '1 Day' }
   },
   {
     id: 'opp-2',
-    title: 'Dormant Lead Re-Engagement Campaign',
-    category: 'Lead Recovery',
-    description: 'Target 480 past leads who inquired in the last 90 days but did not buy with a personalized AI ROI case study.',
-    estimatedMonthlyImpact: 8200,
-    effort: 'Low',
-    actionableCampaignType: 'Re-engagement Email & SMS',
-    activated: false,
-    metrics: { conversionBoost: '+14%', paybackDays: '5 Days' }
+    title: 'Massachusetts 200A Panel & EV Charger Upgrade Drip',
+    category: 'Upsell/Cross-sell',
+    description: 'Target past homeowners with older 100A panels to upgrade to 200A service with Level 2 EV charging station installations.',
+    estimatedMonthlyImpact: 5200,
+    effort: 'Medium',
+    actionableCampaignType: 'Panel & EV Upgrade Campaign',
+    activated: true,
+    metrics: { conversionBoost: '+28%', paybackDays: '3 Days' }
   },
   {
     id: 'opp-3',
-    title: 'Pro-to-Enterprise Security Add-on Upsell',
-    category: 'Upsell/Cross-sell',
-    description: 'Offer dedicated SSO, audit logs, and custom AI agent limits to 210 growing Pro teams.',
-    estimatedMonthlyImpact: 6400,
+    title: 'Commercial Facilities Electrical Maintenance Retainers',
+    category: 'Subscription',
+    description: 'Sign local commercial office buildings, plazas, and restaurants for quarterly emergency lighting & panel safety inspections.',
+    estimatedMonthlyImpact: 4500,
     effort: 'Medium',
-    actionableCampaignType: 'In-App Upsell & Email Drip',
+    actionableCampaignType: 'Commercial Retainer Pitch',
     activated: false,
-    metrics: { conversionBoost: '+18%', paybackDays: '7 Days' }
+    metrics: { conversionBoost: '+22%', paybackDays: '5 Days' }
   },
   {
     id: 'opp-4',
-    title: 'Automated Customer Advocate Referral Flywheel',
-    category: 'Referral',
-    description: 'Trigger a referral request when a customer reaches 60 days active or achieves a 90+ NPS score with a $200 credit incentive.',
-    estimatedMonthlyImpact: 3800,
-    effort: 'Low',
-    actionableCampaignType: 'Referral Engine Workflow',
-    activated: true,
-    metrics: { conversionBoost: '+22%', paybackDays: '4 Days' }
-  },
-  {
-    id: 'opp-5',
-    title: 'Q3 Enterprise AI Automation Bundle',
+    title: 'Neighbor Radius Door Hanger & Local Mailer Blitz',
     category: 'Seasonal/Local',
-    description: 'Launch a limited-time upgrade bundle combining Relay Social Automation + Custom Gemini Agent tuning.',
-    estimatedMonthlyImpact: 5100,
-    effort: 'Medium',
-    actionableCampaignType: 'Multi-Channel Campaign',
-    activated: false,
-    metrics: { conversionBoost: '+25%', paybackDays: '10 Days' }
-  },
-  {
-    id: 'opp-6',
-    title: 'Tiered Usage & Storage Expansion Billing',
-    category: 'Subscription',
-    description: 'Introduce automatic usage tiers for high-volume media storage and multi-agent execution.',
-    estimatedMonthlyImpact: 4200,
-    effort: 'High',
-    actionableCampaignType: 'Usage Limit Nudge',
-    activated: false,
-    metrics: { conversionBoost: '+12%', paybackDays: '14 Days' }
+    description: 'When Shadrick M. Reis completes a job, automatically send 10 neighbor postcards: "We are working on your street! Mention Reis Electric for $50 off."',
+    estimatedMonthlyImpact: 2000,
+    effort: 'Low',
+    actionableCampaignType: 'Neighborhood Radius Mailer',
+    activated: true,
+    metrics: { conversionBoost: '+18%', paybackDays: '2 Days' }
   }
 ];
 
@@ -307,43 +285,43 @@ export const INITIAL_OPERATIONAL_ITEMS: OperationalEfficiencyItem[] = [
 ];
 
 export const INITIAL_EXECUTIVE_BRIEFING: ExecutiveBriefing = {
-  weekOf: 'July 28 - August 3, 2026',
-  overallHealthScore: 86,
-  mrr: '$142,000 (+8.4% MoM)',
+  weekOf: 'August 10 - August 16, 2026',
+  overallHealthScore: 92,
+  mrr: '$38,500 (+14.2% MoM)',
   lossPoints: [
-    'Lead leakage from delayed response times (>4h average turnaround on web forms)',
-    '18.4% demo-to-trial dropoff rate due to manual onboarding friction',
-    '32 uncontacted leads sitting in CRM without follow-up task assigned'
+    'Missed emergency calls when Shadrick M. Reis is inside active breaker panels',
+    'Unfollowed electrical estimates older than 7 days',
+    'Pending municipal wire permit sign-offs awaiting customer inspection scheduling'
   ],
   weeklyTopActions: [
     {
       priority: 1,
-      title: 'Activate Instant Speed-to-Lead Follow-up Sequence',
-      reasoning: 'Inbound response time drops conversion by 39% after 15 minutes. Instant SMS/Email recovers ~$14.5K/mo.',
-      impact: '+$14,500/mo potential revenue'
+      title: 'Deploy 60-Second Instant Speed-to-Lead Call & SMS Qualifier',
+      reasoning: 'Inbound homeowner service requests cold-off rapidly after 15 mins. Automated instant SMS captures job details instantly.',
+      impact: '+$6,800/mo recovered service revenue'
     },
     {
       priority: 2,
-      title: 'Launch Pro-to-Enterprise SSO & Security Upsell',
-      reasoning: '210 active Pro teams have exceeded 15 team seats without enterprise governance.',
-      impact: '+$6,400/mo recurring expansion'
+      title: 'Launch 200A Service Upgrade & EV Charger Drip Campaign',
+      reasoning: 'Homes with older 100A panels are ideal candidates for modern 200A upgrades and Level 2 home EV charger installations.',
+      impact: '+$5,200/mo high-ticket job expansion'
     },
     {
       priority: 3,
-      title: 'Automate Past Demo Re-engagement (30-90 days)',
-      reasoning: '480 past leads had strong intent but stalled due to timing; new AI features provide compelling reason to return.',
-      impact: '+$8,200/mo pipeline recovery'
+      title: 'Roll Out 10-Neighbor Radius Postcard Mailer After Job Completion',
+      reasoning: 'Neighbors see the Reis Electric truck parked outside and naturally inquire about nearby electrical work.',
+      impact: '+$2,000/mo local neighborhood density'
     }
   ],
   underperformingProduct: {
-    name: 'Starter Tier Solo License',
-    issue: 'High CAC relative to $49/mo price point and lower retention compared to Team/Enterprise plans.',
-    remedy: 'Reposition Starter tier toward a 14-day Pro trial with automated onboarding nudges to shift users directly to the $199 Pro plan.'
+    name: 'Small Single-Outlet Repairs Without Diagnostic Fee',
+    issue: 'Driving 30+ minutes for a $120 minor fixture fix without a minimum service call fee erodes truck profit margins.',
+    remedy: 'Enforce a $189 minimum dispatch fee that applies toward any approved work, ensuring every truck trip is profitable.'
   },
   biggestGrowthOpportunity: {
-    area: 'Inbound Speed-to-Lead & Customer Advocate Referral Flywheel',
-    revenueImpact: '+$18,300/mo combined MRR boost',
-    requirement: 'Enable the automated referral workflow and instant lead qualifier in Relay Customer Growth Engine.'
+    area: 'Commercial Facilities Electrical Maintenance Retainers & Panel Overhauls',
+    revenueImpact: '+$18,500/mo combined MRR & project boost',
+    requirement: 'Utilize 50/50 Partner marketing engine to pitch local retail centers, offices, and restaurants.'
   },
-  strategicAdvisorNotes: 'Empire OS Relay v2.0 is operating with strong underlying economics. By shifting focus from pure content creation to revenue discovery and speed-to-lead automation, the business can realistically unlock over $34,200/mo in net new revenue within the next 30 days.'
+  strategicAdvisorNotes: 'Reis Electric LLC is positioned for high profitability. The 50/50 partnership allows Shadrick M. Reis to focus 100% on immaculate field execution, code compliance, and wire inspector sign-offs while the Silent Partner provides strategic capital and growth backing.'
 };

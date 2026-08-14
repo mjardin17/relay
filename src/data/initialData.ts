@@ -173,184 +173,166 @@ export const INITIAL_PLATFORMS: SocialPlatform[] = [
 export const INITIAL_POSTS: ContentPost[] = [
   {
     id: 'post-101',
-    title: 'Empire OS v4.2 Release Announcement',
-    body: `🚀 Major Update: Empire OS v4.2 is officially live!
+    title: 'Radio & Video Spot: No Job Too Big or Small',
+    body: `⚡ Commercial Script: "No job too big, no job too small — you can call Reis Electric!"
 
-We are rolling out Relay — our native AI Content Distribution & Social Media Automation Module.
+Audio Script:
+[SFX: Crisp electrical hum fading into energetic background beat]
+Voiceover: "Flickering hallway lights? Or planning a full commercial panel overhaul? Don't stress — Reis Electric has you covered with licensed, immaculate craftsmanship.
 
-Key features:
-• Multi-platform auto-repurposing in 1 click
-• Real-time trend intelligence & viral hook scoring
-• AI Agent consultation suite for content strategy
-• Unified cross-platform scheduling & analytics
+[SFX: Light switch click]
+"No job too big, no job too small — you can call Reis Electric!"
 
-Experience the future of enterprise brand distribution today.`,
-    platforms: ['linkedin', 'x', 'facebook', 'discord', 'telegram'],
+Call Reis Electric today at (508) 555-7347 or visit ReisElectric.com for your free quote.
+Owned & operated by Shadrick M. Reis, Licensed Journeyman Electrician (MA Lic. # B-38914).`,
+    platforms: ['facebook', 'instagram', 'youtube', 'x', 'tiktok'],
     platformSpecificCopy: {
-      x: `🚀 Empire OS v4.2 is live!
+      x: `⚡ Flickering lights or full commercial panel upgrade? 
 
-Meet Relay — our native social media distribution & AI automation module.
+"No job too big, no job too small — you can call Reis Electric!" 
 
-✨ 1-click repurposing
-📈 Real-time viral trend scoring
-🤖 AI Strategy Agent suite
-📅 Unified multi-platform calendar
+Call (508) 555-7347 or visit ReisElectric.com
+MA Lic. # B-38914 (Journeyman) 👇`,
+      facebook: `Need an electrician who shows up on time, leaves the job site cleaner than he found it, and delivers 100% code-compliant work?
 
-Empower your brand content engine now 👇`,
-      linkedin: `We are thrilled to announce the official release of Empire OS v4.2 featuring Relay, our flagship Content Distribution & Social Media Automation Engine.
+Whether it's replacing a single light switch or installing a 200A commercial service panel:
 
-Modern enterprise brands waste up to 25 hours per week manually reformatting content across fragmented channels. Relay solves this natively inside Empire OS.
+"No job too big, no job too small — you can call Reis Electric!"
 
-With Relay, your teams can:
-1. Turn 1 long-form article or video into 12 platform-optimized assets instantly.
-2. Maintain strict brand voice guardrails using custom AI Brand Workspaces.
-3. Schedule, track, and measure cross-platform ROI in one unified command center.
-
-Discover how Relay streamlines enterprise social workflows. Link in comments below.`
+Owned & operated by Shadrick M. Reis, Licensed Journeyman Electrician (MA Lic. # B-38914). Call (508) 555-7347 today for a free estimate!`
     },
-    hashtags: ['#EmpireOS', '#ContentStrategy', '#AIAutomation', '#EnterpriseSaaS', '#SocialMediaMarketing'],
+    hashtags: ['#ReisElectric', '#NoJobTooBigNoJobTooSmall', '#MAElectrician', '#LicensedJourneyman', '#PanelsAndPoles'],
     status: 'scheduled',
-    scheduledAt: '2026-07-28T14:30:00.000Z',
-    author: 'Alex Vance (Chief Product Officer)',
+    scheduledAt: '2026-08-15T14:30:00.000Z',
+    author: 'Reis Electric Growth Engine',
     campaignId: 'camp-1',
     aiOptimized: true,
-    engagementScore: 94,
-    notes: ['Approved by Legal & CPO', 'Graphic asset generated via Gemini Image Engine'],
-    createdAt: '2026-07-27T18:00:00.000Z',
-    updatedAt: '2026-07-27T19:30:00.000Z'
+    engagementScore: 98,
+    notes: ['Includes Shadrick M. Reis, MA Lic. # B-38914 self-reported Journeyman disclosure', 'Reviewed by LLC Partners (Shadrick M. Reis + Joshua Jardin)'],
+    createdAt: '2026-08-12T18:00:00.000Z',
+    updatedAt: '2026-08-12T19:30:00.000Z'
   },
   {
     id: 'post-102',
-    title: 'The Death of Manual Social Media Scheduling',
-    body: `If you are still copying and pasting posts into 5 different social media tabs in 2026, you are operating at a massive disadvantage.
+    title: 'Work Truck Showcase: Die-Cut Vinyl & MA Compliance',
+    body: `🚚 Clean trucks reflect clean work! Presenting the official Reis Electric LLC service vehicle layout.
 
-Here is how top 1% marketing teams scale content output by 10x without increasing headcount:
+High-contrast, die-cut vinyl lettering with strict Massachusetts disclosure:
+• REIS ELECTRIC LLC
+• Shadrick M. Reis, Licensed Journeyman Electrician
+• MA Lic. # B-38914
+• "No job too big, no job too small — you can call Reis Electric!"
 
-1. Centralize content creation into a single master prompt or core source.
-2. Utilize AI agents to adjust format rules per platform (character limits, tone, hashtag density).
-3. Automate drip queues with predictive peak engagement scheduling.
-
-What is your team's biggest content bottleneck right now?`,
-    platforms: ['linkedin', 'threads', 'bluesky'],
-    hashtags: ['#Productivity', '#ContentCreator', '#MarketingAutomation', '#Leadership'],
+When you see our truck on your street, you know high-precision craftsmanship is inside.`,
+    platforms: ['instagram', 'facebook', 'linkedin'],
+    hashtags: ['#WorkTruck', '#ReisElectric', '#CraftsmanshipFirst', '#MassElectrician'],
     status: 'published',
-    publishedAt: '2026-07-27T10:00:00.000Z',
-    author: 'Elena Rostova (Head of Growth)',
+    publishedAt: '2026-08-12T10:00:00.000Z',
+    author: 'Shadrick M. Reis (Journeyman Electrician)',
     campaignId: 'camp-2',
     aiOptimized: true,
-    engagementScore: 88,
-    createdAt: '2026-07-26T14:00:00.000Z',
-    updatedAt: '2026-07-27T10:00:00.000Z'
+    engagementScore: 92,
+    createdAt: '2026-08-11T14:00:00.000Z',
+    updatedAt: '2026-08-12T10:00:00.000Z'
   },
   {
     id: 'post-103',
-    title: 'Behind the Scenes: How We Built Relay Module',
-    body: `Drafting an inside look at how Relay integrates with Empire OS shared permissions, Fast API server pipelines, and Gemini 3.6 Flash reasoning models.`,
-    platforms: ['x', 'reddit', 'youtube'],
-    hashtags: ['#SystemArchitecture', '#BuildingInPublic', '#DevRel'],
+    title: 'Commercial Panel Upgrade Case Study',
+    body: `Before & After Transformation: Replacing a dangerous, outdated 100A fuse box with a crisp 200A main service panel featuring perfectly combed, color-coded wiring and laser-straight conduit bends.
+
+Every connection torqued to code, full drop-cloth protection, and signed off by the municipal wire inspector.`,
+    platforms: ['instagram', 'linkedin', 'facebook'],
+    hashtags: ['#PanelUpgrade', '#ElectricalCraftsmanship', '#CodeCompliant', '#ReisElectric'],
     status: 'under_review',
-    author: 'Marcus Chen (Lead Systems Architect)',
-    campaignId: 'camp-1',
+    author: 'Shadrick M. Reis (Journeyman Electrician)',
+    campaignId: 'camp-3',
     aiOptimized: false,
-    engagementScore: 76,
-    notes: ['Waiting for final screenshot from frontend team'],
-    createdAt: '2026-07-27T20:15:00.000Z',
-    updatedAt: '2026-07-27T21:00:00.000Z'
-  },
-  {
-    id: 'post-104',
-    title: '5 AI Repurposing Hacks for Founders',
-    body: `Turn your weekly podcast episode into 3 LinkedIn carousels, 5 TikTok shorts scripts, and 1 comprehensive newsletter post in under 10 minutes.`,
-    platforms: ['tiktok', 'instagram', 'x'],
-    hashtags: ['#FounderTips', '#AICreators', '#SocialGrowth'],
-    status: 'draft',
-    author: 'Sarah Jenkins (Content Specialist)',
-    aiOptimized: true,
-    engagementScore: 82,
-    createdAt: '2026-07-27T21:10:00.000Z',
-    updatedAt: '2026-07-27T21:10:00.000Z'
+    engagementScore: 89,
+    notes: ['Waiting for municipal wire inspector final sign-off photo'],
+    createdAt: '2026-08-12T20:15:00.000Z',
+    updatedAt: '2026-08-12T21:00:00.000Z'
   }
 ];
 
 export const INITIAL_CAMPAIGNS: Campaign[] = [
   {
     id: 'camp-1',
-    name: 'Empire OS v4.2 Global Launch',
-    description: 'Omnichannel product launch campaign targeting enterprise tech leaders, growth executives, and creator teams.',
+    name: 'Reis Electric Commercials & Radio Launch',
+    description: 'Omnichannel advertising campaign across local radio, video ads, and social spots built around the slogan: "No job too big, no job too small — you can call Reis Electric!"',
     status: 'active',
-    startDate: '2026-07-25',
-    endDate: '2026-08-15',
-    targetPlatforms: ['linkedin', 'x', 'youtube', 'facebook', 'instagram', 'discord'],
-    goal: 'Generate 50,000 product signups and 1M cross-platform impressions',
-    budget: '$15,000',
-    postIds: ['post-101', 'post-103'],
-    color: '#6366F1'
+    startDate: '2026-08-15',
+    endDate: '2026-09-30',
+    targetPlatforms: ['facebook', 'instagram', 'youtube', 'x', 'tiktok'],
+    goal: 'Generate 120 qualified service inquiries and 50,000 local video/audio impressions',
+    budget: '$3,500',
+    postIds: ['post-101'],
+    color: '#F59E0B'
   },
   {
     id: 'camp-2',
-    name: 'Thought Leadership & Founder Stories',
-    description: 'Weekly educational series sharing deep insights on marketing engineering, AI content systems, and productivity.',
+    name: 'Massachusetts 200A Service & EV Charger Drive',
+    description: 'Targeted campaign educating homeowners on electrical panel upgrades, EV charger installs, and utility rebate programs in Massachusetts.',
     status: 'active',
-    startDate: '2026-07-01',
-    endDate: '2026-12-31',
-    targetPlatforms: ['linkedin', 'threads', 'bluesky', 'reddit'],
-    goal: 'Establish Empire OS brand domain authority and grow executive audience by 25%',
-    budget: '$5,000',
-    postIds: ['post-102', 'post-104'],
+    startDate: '2026-08-01',
+    endDate: '2026-11-30',
+    targetPlatforms: ['facebook', 'instagram', 'linkedin'],
+    goal: 'Secure 15 panel upgrade contracts ($3,200 avg ticket)',
+    budget: '$2,000',
+    postIds: ['post-102'],
     color: '#10B981'
   },
   {
     id: 'camp-3',
-    name: 'Q3 Viral Shorts & Video Blitz',
-    description: 'High-frequency short-form video releases across TikTok, Instagram Reels, and YouTube Shorts.',
+    name: 'Immaculate Craftsmanship & Truck Branding',
+    description: 'Visual showcase of real panel wiring art, clean job site drop cloths, and official Reis Electric vehicle decals.',
     status: 'planning',
-    startDate: '2026-08-01',
-    endDate: '2026-09-30',
-    targetPlatforms: ['tiktok', 'instagram', 'youtube'],
-    goal: 'Achieve 3M total video views and viral community growth',
-    budget: '$8,000',
-    postIds: [],
-    color: '#EC4899'
+    startDate: '2026-08-20',
+    endDate: '2026-10-31',
+    targetPlatforms: ['instagram', 'facebook', 'youtube'],
+    goal: 'Establish top-tier quality reputation in Norfolk & Worcester counties',
+    budget: '$1,200',
+    postIds: ['post-103'],
+    color: '#6366F1'
   }
 ];
 
 export const INITIAL_BRAND_VOICE: BrandVoice = {
-  name: 'Empire OS Official Brand Style',
-  primaryTone: 'Authoritative & Visionary',
-  secondaryTones: ['Technical Precision', 'Forward-Thinking', 'Action-Oriented', 'Empathetic Leader'],
+  name: 'Reis Electric LLC - Brand & MA Compliance',
+  primaryTone: 'Immaculate Craftsmanship & Code Safety',
+  secondaryTones: ['MA Code Compliant', 'Conversational & Approachable', 'Prompt & Professional', '50/50 Partner Managed'],
   styleGuardrails: [
-    'Use strong, decisive verbs; avoid passive voice.',
-    'Format text with line breaks and scannable bullet points.',
-    'Back bold assertions with data points or operational frameworks.',
-    'Never use hyper-generic SaaS fluff like "synergize" or "disrupt".',
-    'Maintain high standards for typographic clarity and formatting.'
+    'ALWAYS emphasize slogan: "No job too big, no job too small — you can call Reis Electric!"',
+    'ALWAYS include MA License Disclosure: Owned & operated by Shadrick M. Reis, Licensed Journeyman Electrician (MA Lic. # B-38914).',
+    'Highlight pride in craftsmanship: clean 90-degree conduit bends, combed breaker panels, drop cloths, and leaving job sites spotless.',
+    'Reassure homeowners with minor fixes (single outlet/ceiling fan) and commercial managers needing 200A/400A service upgrades.',
+    'Maintain strict 50/50 LLC Partnership clarity: Joshua Jardin serves as reported 50/50 business or growth partner; Shadrick M. Reis serves as reported public operator and electrician (MA Lic. # B-38914 self-reported).'
   ],
   targetAudiences: [
     {
-      personaName: 'Enterprise CPO & Tech Executives',
-      description: 'Senior leaders overseeing software engineering, operations, and brand distribution.',
-      painPoints: ['Fragmented tools', 'Compliance risks', 'Slow execution', 'High overhead']
+      personaName: 'Massachusetts Homeowners & Residential Clients',
+      description: 'Homeowners needing reliable electrical repairs, EV charger installs, recessed lighting, or service upgrades.',
+      painPoints: ['Unresponsive contractors', 'Messy drywall dust', 'Hidden safety hazards', 'Overcharging for small jobs']
     },
     {
-      personaName: 'Growth & Content Directors',
-      description: 'Marketing leads responsible for multi-channel acquisition and content velocity.',
-      painPoints: ['Bottlenecked reformatting', 'Inconsistent brand voice', 'Lack of real-time ROI analytics']
+      personaName: 'Commercial Property & Facility Managers',
+      description: 'Business owners requiring 200A/400A panel overhauls, dedicated circuit lines, and strict town wire inspector sign-offs.',
+      painPoints: ['Unpermitted work risks', 'Costly downtime', 'Code non-compliance', 'Failed municipal inspections']
     }
   ],
-  approvedHashtags: ['#EmpireOS', '#ContentEngine', '#AIAutomation', '#MarketingTech', '#FutureOfWork', '#EnterpriseSoftware'],
-  bannedKeywords: ['synergy', 'game-changer', 'revolutionary magic', 'cheap hack', 'growth hack secrets'],
+  approvedHashtags: ['#ReisElectric', '#NoJobTooBigNoJobTooSmall', '#MAElectrician', '#LicensedJourneyman', '#ElectricalCraftsmanship', '#MassCodeCompliant'],
+  bannedKeywords: ['sloppy wiring', 'unlicensed handyman', 'unpermitted shortcut', 'cheap quick hack', 'messy site'],
   defaultCTAs: [
-    'Explore Relay inside Empire OS today 👉 empireos.io/relay',
-    'Transform your team content workflow. Schedule a demo with our architects.',
-    'Drop your thoughts in the comments below 👇'
+    'No job too big, no job too small — call Reis Electric today at (508) 555-7347 or visit ReisElectric.com!',
+    'Get your free estimate from Shadrick M. Reis, Licensed Journeyman Electrician (MA Lic. # B-38914).',
+    'Schedule your code-compliant electrical service call today 👉 ReisElectric.com'
   ],
   colorPalette: [
-    { name: 'Empire Sapphire', hex: '#3B82F6' },
-    { name: 'Deep Onyx', hex: '#0F172A' },
-    { name: 'Emerald Peak', hex: '#10B981' },
-    { name: 'Electric Violet', hex: '#8B5CF6' }
+    { name: 'Electrical Amber', hex: '#F59E0B' },
+    { name: 'Navy Steel', hex: '#0F172A' },
+    { name: 'High-Voltage Gold', hex: '#EAB308' },
+    { name: 'Pure Signal White', hex: '#F8FAFC' }
   ],
-  logoUrl: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=300&q=80',
+  logoUrl: 'https://images.unsplash.com/photo-1621905251189-08b45d6a269e?auto=format&fit=crop&w=300&q=80',
   fontFamily: 'Plus Jakarta Sans'
 };
 
@@ -551,54 +533,54 @@ export const INITIAL_WORKFLOWS: AutomationWorkflow[] = [
 
 export const INITIAL_AI_AGENTS: AIAgent[] = [
   {
-    id: 'agent-copywriter',
+    id: 'agent-dispatch',
     name: 'Aria',
-    role: 'Master Copywriting Specialist',
-    description: 'Expert at crafting viral hooks, irresistible CTAs, and highly compelling social storytelling across all formats.',
+    role: 'Speed-to-Lead & Electrical Dispatch Specialist Profile',
+    description: 'Controlled guided-manual dispatch workflow. Receives lead intake, triages hazard signals, and prepares hash-bound draft responses for authorized human approval.',
     avatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=200&q=80',
-    badge: 'COPYWRITING AGENT',
-    capabilities: ['Hook Optimization', 'Tone Manipulation', 'CTA Engineering', 'Thread Design'],
-    promptSystem: 'You are Aria, Chief Copywriter at Empire OS. You craft razor-sharp, high-converting social copy adhering to strict platform nuances.'
+    badge: 'GUIDED DISPATCH PILOT',
+    capabilities: ['Lead Intake & Consent Check', 'Emergency Hazard Triage', 'Hash-Bound Response Approval', 'DRY_RUN Dispatch'],
+    promptSystem: 'You are Aria, Dispatch & Lead Intake Specialist for Reis Electric LLC. You prepare draft responses, check communication consent, triage safety hazards, and request authorized human approval before any simulated dispatch.'
   },
   {
     id: 'agent-strategist',
     name: 'Kaelen',
-    role: 'Growth & Campaign Strategist',
-    description: 'Specializes in audience segmentation, campaign cadence, multi-touch funnel positioning, and growth strategy.',
+    role: 'Trade Revenue & Growth Partner Specialist Profile',
+    description: 'Configured UI profile for analyzing job margins, growth strategies, and partnership equity models.',
     avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=200&q=80',
-    badge: 'STRATEGY AGENT',
-    capabilities: ['Campaign Architecture', 'Frequency Planning', 'Funnel Mapping', 'Audience Profiling'],
-    promptSystem: 'You are Kaelen, Lead Growth Strategist. You provide actionable, data-backed campaign frameworks and distribution models.'
+    badge: 'CONFIGURED PROFILE',
+    capabilities: ['Margin Modeling (UI)', 'Growth Strategy (UI)', 'Partnership Structure (UI)'],
+    promptSystem: 'You are Kaelen, Growth Specialist Profile for Reis Electric LLC. You provide strategy recommendations for business growth and margin optimization.'
   },
   {
     id: 'agent-seo',
     name: 'Nexus',
-    role: 'SEO & Hashtag Optimization Agent',
-    description: 'Analyzes keyword search volume, algorithmic indexing rules, tag relevance, and semantic search visibility.',
+    role: 'Google Business Profile & Local SEO Specialist Profile',
+    description: 'Configured UI profile for local SEO and Google Maps optimization recommendations.',
     avatar: 'https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?auto=format&fit=crop&w=200&q=80',
-    badge: 'SEO AGENT',
-    capabilities: ['Hashtag Clustering', 'Keyword Placement', 'Algorithmic Indexing', 'Metadata Audit'],
-    promptSystem: 'You are Nexus, AI SEO & Discovery Architect. You optimize content metadata to maximize organic discoverability.'
+    badge: 'CONFIGURED PROFILE',
+    capabilities: ['Local SEO Recommendations', 'Map Audit Framework', 'Review Workflow Strategy'],
+    promptSystem: 'You are Nexus, Local SEO Specialist Profile for Reis Electric LLC. You analyze local search visibility frameworks.'
   },
   {
-    id: 'agent-trend',
+    id: 'agent-rebate',
     name: 'Vortex',
-    role: 'Viral Trend Intelligence Specialist',
-    description: 'Monitors real-time internet sentiment, rising industry topics, newsjacking opportunities, and competitor content gaps.',
+    role: 'Mass Save Rebate & Utility Incentive Specialist Profile',
+    description: 'Configured UI profile for querying verified utility rebate policies and incentive eligibility disclaimers.',
     avatar: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=200&q=80',
-    badge: 'TREND AGENT',
-    capabilities: ['Real-time Newsjacking', 'Competitor Analysis', 'Viral Format Spotting', 'Content Gap Identification'],
-    promptSystem: 'You are Vortex, Trend Analyst. You spot explosive viral topics before they saturate the market.'
+    badge: 'CONFIGURED PROFILE',
+    capabilities: ['Rebate Knowledge Query', 'Utility Source Verification', 'Eligibility Disclaimers'],
+    promptSystem: 'You are Vortex, Rebate Specialist Profile for Reis Electric LLC. You provide informational summaries of utility rebate programs.'
   },
   {
     id: 'agent-brand',
     name: 'Sentinella',
-    role: 'Brand Compliance & Style Guard',
-    description: 'Audits copy for strict adherence to company brand guidelines, banned phrases, tone consistency, and legal alignment.',
+    role: 'MA Compliance & Licensing Specialist Profile',
+    description: 'Configured UI profile for checking required license disclosures and MA Board 237 CMR compliance rules.',
     avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=200&q=80',
-    badge: 'BRAND GUARD',
-    capabilities: ['Compliance Audit', 'Banned Keyword Check', 'Tone Consistency', 'Voice Alignment'],
-    promptSystem: 'You are Sentinella, Chief Brand Inspector. You enforce brand voice integrity and legal governance across all copy.'
+    badge: 'CONFIGURED PROFILE',
+    capabilities: ['License Disclosure Audit', 'A1 Business License Gate', 'Slogan Integrity'],
+    promptSystem: 'You are Sentinella, Compliance Guard Profile for Reis Electric LLC. You enforce Massachusetts license disclosure rules and slogan integrity.'
   }
 ];
 

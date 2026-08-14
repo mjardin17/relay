@@ -7,16 +7,68 @@ const DB_PATH = process.env.DATABASE_PATH || path.join(process.cwd(), 'relay.db'
 let dbInstance: DatabaseSync | null = null;
 let currentDbPath: string | null = null;
 
+function removeDatabaseFiles(targetPath: string): void {
+  try {
+    const filesToRemove = [
+      targetPath,
+      `${targetPath}-wal`,
+      `${targetPath}-shm`,
+      `${targetPath}-journal`
+    ];
+    for (const f of filesToRemove) {
+      if (fs.existsSync(f)) {
+        try {
+          fs.unlinkSync(f);
+        } catch {
+          // Ignore unlink errors
+        }
+      }
+    }
+  } catch {
+    // Ignore errors
+  }
+}
+
+function openAndInitDatabase(targetPath: string): DatabaseSync {
+  let db: DatabaseSync;
+  try {
+    db = new DatabaseSync(targetPath);
+    // Configure SQLite pragmas
+    db.exec('PRAGMA busy_timeout = 5000;');
+    db.exec('PRAGMA foreign_keys = ON;');
+    db.exec('PRAGMA journal_mode = WAL;');
+    // Verify file integrity
+    db.exec('PRAGMA quick_check;');
+    initializeDatabaseSchema(db);
+  } catch (err: any) {
+    console.warn(`[Database] Error initializing database at ${targetPath} (${err?.message || err}). Recreating fresh database...`);
+    try {
+      if (db!) {
+        (db as any).close?.();
+      }
+    } catch {}
+    removeDatabaseFiles(targetPath);
+    db = new DatabaseSync(targetPath);
+    db.exec('PRAGMA busy_timeout = 5000;');
+    db.exec('PRAGMA foreign_keys = ON;');
+    db.exec('PRAGMA journal_mode = WAL;');
+    initializeDatabaseSchema(db);
+  }
+  return db;
+}
+
 export function getDatabase(): DatabaseSync {
   const targetPath = process.env.DATABASE_PATH || path.join(process.cwd(), 'relay.db');
   if (!dbInstance || currentDbPath !== targetPath) {
-    dbInstance = new DatabaseSync(targetPath);
+    dbInstance = openAndInitDatabase(targetPath);
     currentDbPath = targetPath;
-    // Enable WAL mode & foreign keys for performance and durability
-    dbInstance.exec('PRAGMA journal_mode = WAL;');
-    dbInstance.exec('PRAGMA foreign_keys = ON;');
-    dbInstance.exec('PRAGMA busy_timeout = 5000;');
-    initializeDatabaseSchema(dbInstance);
+    try {
+      // Import dynamically or invoke seed if empty
+      const { seedDatabaseIfEmpty } = require('./seed');
+      seedDatabaseIfEmpty();
+    } catch {
+      // Ignore cyclic loading or seed errors
+    }
   }
   return dbInstance;
 }
@@ -321,6 +373,11 @@ export function initializeDatabaseSchema(db: DatabaseSync): void {
     -- 19. Redacted & Tamper-Resistant Audit Logs
     CREATE TABLE IF NOT EXISTS launch_audit_logs (
       id TEXT PRIMARY KEY,
+      sequence_number INTEGER,
+      previous_event_hash TEXT,
+      event_hash TEXT,
+      canonical_payload_hash TEXT,
+      execution_mode TEXT NOT NULL DEFAULT 'DRY_RUN',
       tenant_id TEXT,
       actor_id TEXT,
       client_ip TEXT NOT NULL,
@@ -331,6 +388,18 @@ export function initializeDatabaseSchema(db: DatabaseSync): void {
       details_json TEXT NOT NULL DEFAULT '{}',
       created_at TEXT NOT NULL
     );
+
+    CREATE TRIGGER IF NOT EXISTS prevent_launch_audit_logs_update
+    BEFORE UPDATE ON launch_audit_logs
+    BEGIN
+      SELECT RAISE(FAIL, 'AUDIT_LOG_IMMUTABLE: UPDATE operations are strictly prohibited on audit logs.');
+    END;
+
+    CREATE TRIGGER IF NOT EXISTS prevent_launch_audit_logs_delete
+    BEFORE DELETE ON launch_audit_logs
+    BEGIN
+      SELECT RAISE(FAIL, 'AUDIT_LOG_IMMUTABLE: DELETE operations are strictly prohibited on audit logs.');
+    END;
 
     -- 20. Distributed Rate Limiter Table
     CREATE TABLE IF NOT EXISTS launch_rate_limits (
@@ -596,4 +665,10 @@ export function initializeDatabaseSchema(db: DatabaseSync): void {
   safeAddColumn('ma_electrical_company_compliance', 'verification_method TEXT DEFAULT "unverified"');
   safeAddColumn('ma_electrical_company_compliance', 'reviewer_id TEXT');
   safeAddColumn('ma_electrical_company_compliance', 'evidence_classification TEXT NOT NULL DEFAULT "SYNTHETIC_TEST"');
+
+  safeAddColumn('launch_audit_logs', 'sequence_number INTEGER');
+  safeAddColumn('launch_audit_logs', 'previous_event_hash TEXT');
+  safeAddColumn('launch_audit_logs', 'event_hash TEXT');
+  safeAddColumn('launch_audit_logs', 'canonical_payload_hash TEXT');
+  safeAddColumn('launch_audit_logs', 'execution_mode TEXT NOT NULL DEFAULT "DRY_RUN"');
 }

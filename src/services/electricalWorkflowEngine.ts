@@ -483,7 +483,7 @@ export class ElectricalWorkflowEngine {
     // Check MA electrical compliance marketing claim rule if applicable
     const claimCheck = maElectricalComplianceService.validateProposedDraftMarketingClaim(tenantId, newDraftText);
     if (!claimCheck.allowed) {
-      throw new Error(claimCheck.blockedReasoning || 'COMPLIANCE_BLOCKED: Draft describes company as a licensed electrical company without verified A1 and Master Electrician licenses.');
+      throw new Error(claimCheck.blockedReason || 'COMPLIANCE_BLOCKED: Draft describes company as a licensed electrical company without verified A1 and Master Electrician licenses.');
     }
 
     const db = getDatabase();
