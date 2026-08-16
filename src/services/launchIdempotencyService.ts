@@ -11,6 +11,14 @@ export interface IdempotencyCheckResult {
 }
 
 export class LaunchIdempotencyService {
+  private static instance: LaunchIdempotencyService;
+
+  public static getInstance(): LaunchIdempotencyService {
+    if (!LaunchIdempotencyService.instance) {
+      LaunchIdempotencyService.instance = new LaunchIdempotencyService();
+    }
+    return LaunchIdempotencyService.instance;
+  }
   computeRequestHash(body: any): string {
     const serialized = typeof body === 'string' ? body.replace(/\r\n/g, '\n') : canonicalize(body || {});
     return crypto.createHash('sha256').update(serialized).digest('hex');

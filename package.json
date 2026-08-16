@@ -10,11 +10,13 @@
     "preview": "vite preview",
     "clean": "rm -rf dist server.js",
     "lint": "tsc --noEmit",
-    "test": "tsx --test src/tests/growth.test.ts src/tests/buzAgentSuite.test.ts src/tests/auditAndComplianceReconciliation.test.ts src/tests/gbpOnboarding.test.ts"
+    "test": "tsx --test src/tests/growth.test.ts src/tests/buzAgentSuite.test.ts src/tests/auditAndComplianceReconciliation.test.ts src/tests/gbpOnboarding.test.ts src/tests/apiSecurityAndIsolation.test.ts src/tests/locationResolution.test.ts src/tests/spatialAndGeocodingReuse.test.ts src/tests/financialMetrics.test.ts src/tests/controlledLiveOperationsAndConnectors.test.ts src/tests/realPilotActivationAndEvidenceCapture.test.ts src/tests/websiteBuilderValidation.test.ts src/tests/jardinOutpostDogfood.test.ts"
   },
   "dependencies": {
     "@google/genai": "^2.4.0",
+    "@googlemaps/google-maps-services-js": "^3.4.2",
     "@tailwindcss/vite": "^4.1.14",
+    "@turf/turf": "^7.4.0",
     "@vitejs/plugin-react": "^5.0.4",
     "dotenv": "^17.2.3",
     "express": "^4.21.2",

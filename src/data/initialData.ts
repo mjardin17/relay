@@ -177,53 +177,37 @@ export const INITIAL_POSTS: ContentPost[] = [
     body: `⚡ Commercial Script: "No job too big, no job too small — you can call Reis Electric!"
 
 Audio Script:
-[SFX: Crisp electrical hum fading into energetic background beat]
-Voiceover: "Flickering hallway lights? Or planning a full commercial panel overhaul? Don't stress — Reis Electric has you covered with licensed, immaculate craftsmanship.
+[SFX: Crisp electrical hum fading into background tone]
+Voiceover: "In need of electrical service or panel upgrades? Contact Shadrick M. Reis Electric for code-compliant craftsmanship.
 
-[SFX: Light switch click]
-"No job too big, no job too small — you can call Reis Electric!"
-
-Call Reis Electric today at (508) 555-7347 or visit ReisElectric.com for your free quote.
-Owned & operated by Shadrick M. Reis, Licensed Journeyman Electrician (MA Lic. # B-38914).`,
-    platforms: ['facebook', 'instagram', 'youtube', 'x', 'tiktok'],
+Contact Shadrick M. Reis Electric at contact@example.org or visit example.org for inquiries.
+Applies configured Massachusetts claim and workflow gates. Requires official-source evidence and qualified human review. Not a legal determination.`,
+    platforms: ['facebook', 'instagram', 'youtube', 'x', 'linkedin'],
     platformSpecificCopy: {
-      x: `⚡ Flickering lights or full commercial panel upgrade? 
+      x: `⚡ Electrical inquiries & service options. Contact Shadrick M. Reis Electric at example.org 👇`,
+      facebook: `Looking for reliable, code-compliant electrical services?
 
-"No job too big, no job too small — you can call Reis Electric!" 
-
-Call (508) 555-7347 or visit ReisElectric.com
-MA Lic. # B-38914 (Journeyman) 👇`,
-      facebook: `Need an electrician who shows up on time, leaves the job site cleaner than he found it, and delivers 100% code-compliant work?
-
-Whether it's replacing a single light switch or installing a 200A commercial service panel:
-
-"No job too big, no job too small — you can call Reis Electric!"
-
-Owned & operated by Shadrick M. Reis, Licensed Journeyman Electrician (MA Lic. # B-38914). Call (508) 555-7347 today for a free estimate!`
+Contact Shadrick M. Reis Electric today at contact@example.org or visit example.org to request a consultation. (Applies configured Massachusetts claim and workflow gates.)`
     },
-    hashtags: ['#ReisElectric', '#NoJobTooBigNoJobTooSmall', '#MAElectrician', '#LicensedJourneyman', '#PanelsAndPoles'],
+    hashtags: ['#ElectricalServices', '#Craftsmanship', '#CodeCompliant'],
     status: 'scheduled',
     scheduledAt: '2026-08-15T14:30:00.000Z',
-    author: 'Reis Electric Growth Engine',
+    author: 'Relay Growth Engine',
     campaignId: 'camp-1',
     aiOptimized: true,
     engagementScore: 98,
-    notes: ['Includes Shadrick M. Reis, MA Lic. # B-38914 self-reported Journeyman disclosure', 'Reviewed by LLC Partners (Shadrick M. Reis + Joshua Jardin)'],
+    notes: ['Standard synthetic sample post', 'Controlled DRY_RUN evaluation'],
     createdAt: '2026-08-12T18:00:00.000Z',
     updatedAt: '2026-08-12T19:30:00.000Z'
   },
   {
     id: 'post-102',
-    title: 'Work Truck Showcase: Die-Cut Vinyl & MA Compliance',
-    body: `🚚 Clean trucks reflect clean work! Presenting the official Reis Electric LLC service vehicle layout.
+    title: 'Service Showcase: Standard Presentation',
+    body: `🚚 Quality work and professional standards. Presenting Shadrick M. Reis Electric service operations.
 
-High-contrast, die-cut vinyl lettering with strict Massachusetts disclosure:
-• REIS ELECTRIC LLC
-• Shadrick M. Reis, Licensed Journeyman Electrician
-• MA Lic. # B-38914
-• "No job too big, no job too small — you can call Reis Electric!"
-
-When you see our truck on your street, you know high-precision craftsmanship is inside.`,
+• Shadrick M. Reis Electric
+• Professional electrical service operations
+• Controlled DRY_RUN evaluation sample`,
     platforms: ['instagram', 'facebook', 'linkedin'],
     hashtags: ['#WorkTruck', '#ReisElectric', '#CraftsmanshipFirst', '#MassElectrician'],
     status: 'published',
@@ -297,34 +281,31 @@ export const INITIAL_CAMPAIGNS: Campaign[] = [
 ];
 
 export const INITIAL_BRAND_VOICE: BrandVoice = {
-  name: 'Reis Electric LLC - Brand & MA Compliance',
-  primaryTone: 'Immaculate Craftsmanship & Code Safety',
-  secondaryTones: ['MA Code Compliant', 'Conversational & Approachable', 'Prompt & Professional', '50/50 Partner Managed'],
+  name: 'Shadrick M. Reis Electric - Brand Voice',
+  primaryTone: 'Craftsmanship & Standards Compliance',
+  secondaryTones: ['Code Compliant', 'Approachable', 'Professional', 'Controlled DRY_RUN'],
   styleGuardrails: [
-    'ALWAYS emphasize slogan: "No job too big, no job too small — you can call Reis Electric!"',
-    'ALWAYS include MA License Disclosure: Owned & operated by Shadrick M. Reis, Licensed Journeyman Electrician (MA Lic. # B-38914).',
-    'Highlight pride in craftsmanship: clean 90-degree conduit bends, combed breaker panels, drop cloths, and leaving job sites spotless.',
-    'Reassure homeowners with minor fixes (single outlet/ceiling fan) and commercial managers needing 200A/400A service upgrades.',
-    'Maintain strict 50/50 LLC Partnership clarity: Joshua Jardin serves as reported 50/50 business or growth partner; Shadrick M. Reis serves as reported public operator and electrician (MA Lic. # B-38914 self-reported).'
+    'Applies configured Massachusetts claim and workflow gates. Requires official-source evidence and qualified human review. Not a legal determination.',
+    'Highlight focus on quality, clean conduit work, drop cloths, and organized job sites.',
+    'Reassure clients regarding residential and commercial service options.'
   ],
   targetAudiences: [
     {
-      personaName: 'Massachusetts Homeowners & Residential Clients',
-      description: 'Homeowners needing reliable electrical repairs, EV charger installs, recessed lighting, or service upgrades.',
-      painPoints: ['Unresponsive contractors', 'Messy drywall dust', 'Hidden safety hazards', 'Overcharging for small jobs']
+      personaName: 'Homeowners & Residential Inquirers',
+      description: 'Homeowners seeking electrical service and estimates.',
+      painPoints: ['Unresponsive contractors', 'Messy job sites', 'Unclear pricing']
     },
     {
-      personaName: 'Commercial Property & Facility Managers',
-      description: 'Business owners requiring 200A/400A panel overhauls, dedicated circuit lines, and strict town wire inspector sign-offs.',
-      painPoints: ['Unpermitted work risks', 'Costly downtime', 'Code non-compliance', 'Failed municipal inspections']
+      personaName: 'Commercial Property & Facility Inquirers',
+      description: 'Commercial facilities requiring electrical installations and upgrades.',
+      painPoints: ['Code non-compliance', 'Downtime risks', 'Scheduling delays']
     }
   ],
-  approvedHashtags: ['#ReisElectric', '#NoJobTooBigNoJobTooSmall', '#MAElectrician', '#LicensedJourneyman', '#ElectricalCraftsmanship', '#MassCodeCompliant'],
+  approvedHashtags: ['#ElectricalServices', '#Craftsmanship', '#CodeCompliant'],
   bannedKeywords: ['sloppy wiring', 'unlicensed handyman', 'unpermitted shortcut', 'cheap quick hack', 'messy site'],
   defaultCTAs: [
-    'No job too big, no job too small — call Reis Electric today at (508) 555-7347 or visit ReisElectric.com!',
-    'Get your free estimate from Shadrick M. Reis, Licensed Journeyman Electrician (MA Lic. # B-38914).',
-    'Schedule your code-compliant electrical service call today 👉 ReisElectric.com'
+    'Contact Shadrick M. Reis Electric at contact@example.org or visit example.org for inquiries.',
+    'Schedule your electrical consultation today at example.org'
   ],
   colorPalette: [
     { name: 'Electrical Amber', hex: '#F59E0B' },
@@ -540,17 +521,17 @@ export const INITIAL_AI_AGENTS: AIAgent[] = [
     avatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=200&q=80',
     badge: 'GUIDED DISPATCH PILOT',
     capabilities: ['Lead Intake & Consent Check', 'Emergency Hazard Triage', 'Hash-Bound Response Approval', 'DRY_RUN Dispatch'],
-    promptSystem: 'You are Aria, Dispatch & Lead Intake Specialist for Reis Electric LLC. You prepare draft responses, check communication consent, triage safety hazards, and request authorized human approval before any simulated dispatch.'
+    promptSystem: 'You are Aria, Dispatch & Lead Intake Specialist for Shadrick M. Reis Electric. You prepare draft responses, check communication consent, triage safety hazards, and request authorized human approval before any simulated dispatch.'
   },
   {
     id: 'agent-strategist',
     name: 'Kaelen',
-    role: 'Trade Revenue & Growth Partner Specialist Profile',
-    description: 'Configured UI profile for analyzing job margins, growth strategies, and partnership equity models.',
+    role: 'Trade Revenue & Growth Specialist Profile',
+    description: 'Configured UI profile for analyzing job margins and growth strategies.',
     avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=200&q=80',
     badge: 'CONFIGURED PROFILE',
-    capabilities: ['Margin Modeling (UI)', 'Growth Strategy (UI)', 'Partnership Structure (UI)'],
-    promptSystem: 'You are Kaelen, Growth Specialist Profile for Reis Electric LLC. You provide strategy recommendations for business growth and margin optimization.'
+    capabilities: ['Margin Modeling (UI)', 'Growth Strategy (UI)'],
+    promptSystem: 'You are Kaelen, Growth Specialist Profile for Shadrick M. Reis Electric. You provide strategy recommendations for business growth and margin optimization.'
   },
   {
     id: 'agent-seo',
@@ -560,7 +541,7 @@ export const INITIAL_AI_AGENTS: AIAgent[] = [
     avatar: 'https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?auto=format&fit=crop&w=200&q=80',
     badge: 'CONFIGURED PROFILE',
     capabilities: ['Local SEO Recommendations', 'Map Audit Framework', 'Review Workflow Strategy'],
-    promptSystem: 'You are Nexus, Local SEO Specialist Profile for Reis Electric LLC. You analyze local search visibility frameworks.'
+    promptSystem: 'You are Nexus, Local SEO Specialist Profile for Shadrick M. Reis Electric. You analyze local search visibility frameworks.'
   },
   {
     id: 'agent-rebate',
@@ -570,7 +551,7 @@ export const INITIAL_AI_AGENTS: AIAgent[] = [
     avatar: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=200&q=80',
     badge: 'CONFIGURED PROFILE',
     capabilities: ['Rebate Knowledge Query', 'Utility Source Verification', 'Eligibility Disclaimers'],
-    promptSystem: 'You are Vortex, Rebate Specialist Profile for Reis Electric LLC. You provide informational summaries of utility rebate programs.'
+    promptSystem: 'You are Vortex, Rebate Specialist Profile for Shadrick M. Reis Electric. You provide informational summaries of utility rebate programs.'
   },
   {
     id: 'agent-brand',
@@ -580,7 +561,7 @@ export const INITIAL_AI_AGENTS: AIAgent[] = [
     avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=200&q=80',
     badge: 'CONFIGURED PROFILE',
     capabilities: ['License Disclosure Audit', 'A1 Business License Gate', 'Slogan Integrity'],
-    promptSystem: 'You are Sentinella, Compliance Guard Profile for Reis Electric LLC. You enforce Massachusetts license disclosure rules and slogan integrity.'
+    promptSystem: 'You are Sentinella, Compliance Guard Profile for Shadrick M. Reis Electric. You enforce Massachusetts license disclosure rules and slogan integrity.'
   }
 ];
 

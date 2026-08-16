@@ -27,6 +27,8 @@ import { ExecutionCenter } from './components/growth/ExecutionCenter';
 import { DataQualityCenter } from './components/growth/DataQualityCenter';
 import { RecommendationHistory } from './components/growth/RecommendationHistory';
 import { ElectricalWorkflowStudio } from './components/growth/ElectricalWorkflowStudio';
+import { PilotCommandCenter } from './components/pilot/PilotCommandCenter';
+import { WebsiteBuilderHub } from './components/website/WebsiteBuilderHub';
 import { EvidenceDrawer } from './components/evidence/EvidenceDrawer';
 import { EvidenceItem } from './types/evidence';
 
@@ -196,6 +198,19 @@ export default function App() {
 
         {/* Main Workspace View */}
         <main className="flex-1 p-4 md:p-6 overflow-y-auto max-h-[calc(100vh-64px)]">
+          {/* Relay v2.0 Website Builder & Web Presence Engine */}
+          {activeTab === 'website_builder' && (
+            <WebsiteBuilderHub
+              currentTenantId="tenant_ma_fresh_launch"
+              onNavigateToLeads={() => setActiveTab('pilot_command')}
+            />
+          )}
+
+          {/* Real Pilot Command Center & Evidence Capture */}
+          {activeTab === 'pilot_command' && (
+            <PilotCommandCenter tenantId="tenant_ma_fresh_launch" />
+          )}
+
           {/* Electrical Company Workflow Vertical Slice */}
           {activeTab === 'electrical_workflow' && (
             <ElectricalWorkflowStudio darkMode={darkMode} />

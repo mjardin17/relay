@@ -671,6 +671,220 @@ export function initializeDatabaseSchema(db: DatabaseSync): void {
       FOREIGN KEY (tenant_id) REFERENCES tenants(id) ON DELETE CASCADE
     );
 
+    -- 28. Evidence Graph Nodes (Build 1)
+    CREATE TABLE IF NOT EXISTS evidence_nodes (
+      id TEXT PRIMARY KEY,
+      tenant_id TEXT NOT NULL,
+      type TEXT NOT NULL,
+      label TEXT NOT NULL,
+      timestamp TEXT NOT NULL,
+      source TEXT NOT NULL,
+      evidence_status TEXT NOT NULL DEFAULT 'OBSERVED',
+      actor TEXT NOT NULL,
+      metadata_json TEXT NOT NULL DEFAULT '{}',
+      provenance_json TEXT NOT NULL DEFAULT '{}',
+      audit_link_id TEXT,
+      audit_hash TEXT,
+      created_at TEXT NOT NULL,
+      FOREIGN KEY (tenant_id) REFERENCES tenants(id) ON DELETE CASCADE
+    );
+
+    -- 29. Evidence Graph Edges (Build 1)
+    CREATE TABLE IF NOT EXISTS evidence_edges (
+      id TEXT PRIMARY KEY,
+      tenant_id TEXT NOT NULL,
+      source_node_id TEXT NOT NULL,
+      target_node_id TEXT NOT NULL,
+      edge_type TEXT NOT NULL,
+      weight REAL NOT NULL DEFAULT 1.0,
+      confidence REAL NOT NULL DEFAULT 1.0,
+      provenance_json TEXT NOT NULL DEFAULT '{}',
+      created_at TEXT NOT NULL,
+      FOREIGN KEY (tenant_id) REFERENCES tenants(id) ON DELETE CASCADE,
+      FOREIGN KEY (source_node_id) REFERENCES evidence_nodes(id) ON DELETE CASCADE,
+      FOREIGN KEY (target_node_id) REFERENCES evidence_nodes(id) ON DELETE CASCADE
+    );
+
+    -- 30. Execution Evidence Ledger (Build 2)
+    CREATE TABLE IF NOT EXISTS execution_evidence (
+      id TEXT PRIMARY KEY,
+      tenant_id TEXT NOT NULL,
+      actor TEXT NOT NULL,
+      agent_name TEXT NOT NULL,
+      triggering_lead_or_opportunity_id TEXT NOT NULL,
+      action_type TEXT NOT NULL,
+      execution_mode TEXT NOT NULL DEFAULT 'DRY_RUN',
+      timestamp TEXT NOT NULL,
+      approval_state TEXT NOT NULL DEFAULT 'NOT_REQUIRED',
+      approval_id TEXT,
+      authorization_grant_id TEXT,
+      consent_evidence_ref TEXT,
+      input_fingerprint TEXT NOT NULL,
+      output_fingerprint TEXT NOT NULL,
+      target_system_or_channel TEXT NOT NULL,
+      connector_type TEXT NOT NULL,
+      connector_auth_status TEXT NOT NULL DEFAULT 'SIMULATED_NO_CREDENTIALS',
+      result_status TEXT NOT NULL DEFAULT 'SIMULATED',
+      failure_reason TEXT,
+      immutable_audit_reference TEXT NOT NULL,
+      metadata_json TEXT NOT NULL DEFAULT '{}',
+      created_at TEXT NOT NULL,
+      FOREIGN KEY (tenant_id) REFERENCES tenants(id) ON DELETE CASCADE
+    );
+
+    -- 31. Structured Pipeline Outcomes (Build 3)
+    CREATE TABLE IF NOT EXISTS structured_outcomes (
+      id TEXT PRIMARY KEY,
+      tenant_id TEXT NOT NULL,
+      stage TEXT NOT NULL,
+      timestamp TEXT NOT NULL,
+      actor_or_source TEXT NOT NULL,
+      evidence_type TEXT NOT NULL,
+      evidence_status TEXT NOT NULL DEFAULT 'OBSERVED',
+      confidence REAL NOT NULL DEFAULT 1.0,
+      related_lead_id TEXT NOT NULL,
+      related_customer_id TEXT,
+      related_job_id TEXT,
+      pipeline_value REAL NOT NULL DEFAULT 0,
+      quoted_value REAL NOT NULL DEFAULT 0,
+      booked_value REAL NOT NULL DEFAULT 0,
+      invoiced_value REAL NOT NULL DEFAULT 0,
+      collected_revenue REAL NOT NULL DEFAULT 0,
+      supporting_evidence_refs_json TEXT NOT NULL DEFAULT '[]',
+      notes TEXT,
+      created_at TEXT NOT NULL,
+      FOREIGN KEY (tenant_id) REFERENCES tenants(id) ON DELETE CASCADE
+    );
+
+    -- 32. Explainable Attribution Records (Build 4 & 5)
+    CREATE TABLE IF NOT EXISTS explainable_attributions (
+      id TEXT PRIMARY KEY,
+      tenant_id TEXT NOT NULL,
+      business_id TEXT NOT NULL,
+      lead_id TEXT NOT NULL,
+      opportunity_or_job_id TEXT NOT NULL,
+      revenue_event_id TEXT NOT NULL,
+      candidate_contributing_actions_json TEXT NOT NULL DEFAULT '[]',
+      attribution_classification TEXT NOT NULL DEFAULT 'DIRECT',
+      confidence_score REAL NOT NULL DEFAULT 1.0,
+      confidence_level TEXT NOT NULL DEFAULT 'HIGH',
+      evidence_references_json TEXT NOT NULL DEFAULT '[]',
+      conflicting_evidence_json TEXT NOT NULL DEFAULT '[]',
+      explanation TEXT NOT NULL,
+      calculation_method TEXT NOT NULL,
+      attributed_amount REAL NOT NULL DEFAULT 0,
+      timestamp TEXT NOT NULL,
+      model_version TEXT NOT NULL DEFAULT 'v2.0-deterministic',
+      audit_hash_reference TEXT NOT NULL,
+      created_at TEXT NOT NULL,
+      FOREIGN KEY (tenant_id) REFERENCES tenants(id) ON DELETE CASCADE
+    );
+
+    -- 33. Defensible ROI Snapshots (Build 6)
+    CREATE TABLE IF NOT EXISTS defensible_roi_snapshots (
+      id TEXT PRIMARY KEY,
+      tenant_id TEXT NOT NULL,
+      metrics_json TEXT NOT NULL,
+      is_simulated INTEGER NOT NULL DEFAULT 0,
+      data_classification TEXT NOT NULL DEFAULT 'SIMULATED_DRY_RUN',
+      calculated_at TEXT NOT NULL,
+      created_at TEXT NOT NULL,
+      FOREIGN KEY (tenant_id) REFERENCES tenants(id) ON DELETE CASCADE
+    );
+
+    -- 34. Global Tenant Locations (Location Intelligence)
+    CREATE TABLE IF NOT EXISTS tenant_locations (
+      id TEXT PRIMARY KEY,
+      tenant_id TEXT NOT NULL,
+      location_type TEXT NOT NULL,
+      label TEXT NOT NULL,
+      street_address TEXT,
+      unit TEXT,
+      city TEXT NOT NULL,
+      municipality TEXT,
+      county TEXT,
+      state_province TEXT NOT NULL,
+      postal_code TEXT,
+      country TEXT NOT NULL DEFAULT 'US',
+      timezone TEXT NOT NULL DEFAULT 'America/New_York',
+      latitude REAL,
+      longitude REAL,
+      source TEXT NOT NULL,
+      confidence REAL NOT NULL DEFAULT 1.0,
+      verification_state TEXT NOT NULL DEFAULT 'SELF_REPORTED',
+      verified_at TEXT,
+      verified_by TEXT,
+      is_redacted INTEGER NOT NULL DEFAULT 0,
+      evidence_refs_json TEXT NOT NULL DEFAULT '[]',
+      metadata_json TEXT NOT NULL DEFAULT '{}',
+      created_at TEXT NOT NULL,
+      updated_at TEXT NOT NULL,
+      FOREIGN KEY (tenant_id) REFERENCES tenants(id) ON DELETE CASCADE
+    );
+
+    -- 35. Configured Tenant Service Areas
+    CREATE TABLE IF NOT EXISTS tenant_service_areas (
+      id TEXT PRIMARY KEY,
+      tenant_id TEXT NOT NULL,
+      branch_id TEXT,
+      name TEXT NOT NULL,
+      area_type TEXT NOT NULL,
+      rule TEXT NOT NULL DEFAULT 'INCLUSION',
+      value TEXT NOT NULL,
+      radius_km REAL,
+      coordinates_json TEXT DEFAULT '[]',
+      notes TEXT,
+      created_at TEXT NOT NULL,
+      FOREIGN KEY (tenant_id) REFERENCES tenants(id) ON DELETE CASCADE
+    );
+
+    -- 36. Dynamic Jurisdiction Resolutions Ledger
+    CREATE TABLE IF NOT EXISTS jurisdiction_resolutions (
+      id TEXT PRIMARY KEY,
+      tenant_id TEXT NOT NULL,
+      action_type TEXT NOT NULL,
+      target_entity_type TEXT,
+      target_entity_id TEXT,
+      resolved_country TEXT NOT NULL,
+      resolved_state_province TEXT,
+      resolved_county TEXT,
+      resolved_municipality TEXT,
+      resolved_timezone TEXT NOT NULL,
+      service_area_status TEXT NOT NULL,
+      jurisdiction_ids_json TEXT NOT NULL DEFAULT '[]',
+      requires_human_review INTEGER NOT NULL DEFAULT 0,
+      confidence REAL NOT NULL DEFAULT 1.0,
+      source_level TEXT NOT NULL,
+      evidence_refs_json TEXT NOT NULL DEFAULT '[]',
+      resolution_notes TEXT,
+      created_at TEXT NOT NULL,
+      FOREIGN KEY (tenant_id) REFERENCES tenants(id) ON DELETE CASCADE
+    );
+
+    -- 37. Durable Asynchronous Workflows (Resonate-Informed HITL Engine)
+    CREATE TABLE IF NOT EXISTS durable_approval_workflows (
+      workflow_id TEXT PRIMARY KEY,
+      tenant_id TEXT NOT NULL,
+      workflow_type TEXT NOT NULL,
+      action_title TEXT NOT NULL,
+      proposer_id TEXT NOT NULL,
+      proposer_role TEXT NOT NULL,
+      required_approver_role TEXT NOT NULL,
+      status TEXT NOT NULL DEFAULT 'PENDING_APPROVAL',
+      resumption_token TEXT NOT NULL UNIQUE,
+      payload_json TEXT NOT NULL,
+      payload_hash TEXT NOT NULL,
+      approval_record_id TEXT,
+      approver_id TEXT,
+      decision_reason TEXT,
+      execution_result_json TEXT,
+      created_at TEXT NOT NULL,
+      decided_at TEXT,
+      resumed_at TEXT,
+      expires_at TEXT NOT NULL,
+      FOREIGN KEY (tenant_id) REFERENCES tenants(id) ON DELETE CASCADE
+    );
+
     -- Indexes for performance and tenant isolation
     CREATE INDEX IF NOT EXISTS idx_leads_tenant ON leads(tenant_id);
     CREATE INDEX IF NOT EXISTS idx_opps_tenant ON opportunities(tenant_id);
@@ -690,6 +904,471 @@ export function initializeDatabaseSchema(db: DatabaseSync): void {
     CREATE INDEX IF NOT EXISTS idx_gbp_reviews_tenant ON gbp_reviews(tenant_id, gbp_profile_id);
     CREATE INDEX IF NOT EXISTS idx_elec_leads_tenant ON electrical_leads(tenant_id);
     CREATE INDEX IF NOT EXISTS idx_ma_comp_tenant ON ma_electrical_company_compliance(tenant_id);
+    CREATE INDEX IF NOT EXISTS idx_ev_nodes_tenant ON evidence_nodes(tenant_id);
+    CREATE INDEX IF NOT EXISTS idx_ev_edges_tenant ON evidence_edges(tenant_id, source_node_id, target_node_id);
+    CREATE INDEX IF NOT EXISTS idx_exec_ev_tenant ON execution_evidence(tenant_id);
+    CREATE INDEX IF NOT EXISTS idx_struct_outcomes_tenant ON structured_outcomes(tenant_id, related_lead_id);
+    CREATE INDEX IF NOT EXISTS idx_expl_attr_tenant ON explainable_attributions(tenant_id, lead_id);
+    CREATE INDEX IF NOT EXISTS idx_roi_snap_tenant ON defensible_roi_snapshots(tenant_id);
+    CREATE INDEX IF NOT EXISTS idx_tenant_locations ON tenant_locations(tenant_id, location_type);
+    CREATE INDEX IF NOT EXISTS idx_tenant_service_areas ON tenant_service_areas(tenant_id);
+    CREATE INDEX IF NOT EXISTS idx_jurisdiction_res ON jurisdiction_resolutions(tenant_id, action_type);
+
+    -- 38. First-Class Connector Registry (Truthful State & Capability Isolation)
+    CREATE TABLE IF NOT EXISTS connector_records (
+      id TEXT PRIMARY KEY,
+      tenant_id TEXT NOT NULL,
+      provider TEXT NOT NULL,
+      capability TEXT NOT NULL,
+      connector_type TEXT NOT NULL,
+      configuration_state TEXT NOT NULL DEFAULT 'UNCONFIGURED',
+      authentication_state TEXT NOT NULL DEFAULT 'NOT_APPLICABLE',
+      execution_mode TEXT NOT NULL DEFAULT 'DRY_RUN',
+      health_status TEXT NOT NULL DEFAULT 'UNKNOWN',
+      last_verification_at TEXT,
+      last_successful_request_at TEXT,
+      permissions_json TEXT NOT NULL DEFAULT '[]',
+      scopes_json TEXT NOT NULL DEFAULT '[]',
+      evidence_refs_json TEXT NOT NULL DEFAULT '[]',
+      metadata_json TEXT NOT NULL DEFAULT '{}',
+      created_at TEXT NOT NULL,
+      updated_at TEXT NOT NULL,
+      FOREIGN KEY (tenant_id) REFERENCES tenants(id) ON DELETE CASCADE
+    );
+
+    -- 39. Connector Verification Audit Ledger
+    CREATE TABLE IF NOT EXISTS connector_verifications (
+      id TEXT PRIMARY KEY,
+      tenant_id TEXT NOT NULL,
+      connector_id TEXT NOT NULL,
+      verification_status TEXT NOT NULL,
+      failure_classification TEXT,
+      latency_ms INTEGER NOT NULL DEFAULT 0,
+      scopes_granted_json TEXT NOT NULL DEFAULT '[]',
+      scopes_missing_json TEXT NOT NULL DEFAULT '[]',
+      evidence_ref TEXT,
+      sanitized_message TEXT NOT NULL,
+      verified_at TEXT NOT NULL,
+      FOREIGN KEY (tenant_id) REFERENCES tenants(id) ON DELETE CASCADE,
+      FOREIGN KEY (connector_id) REFERENCES connector_records(id) ON DELETE CASCADE
+    );
+
+    -- 40. Durable External Execution Queue (Crash-Resilient & Concurrency-Safe)
+    CREATE TABLE IF NOT EXISTS durable_execution_queue (
+      id TEXT PRIMARY KEY,
+      tenant_id TEXT NOT NULL,
+      connector_id TEXT NOT NULL,
+      operation TEXT NOT NULL,
+      target TEXT NOT NULL,
+      payload_json TEXT NOT NULL,
+      payload_hash TEXT NOT NULL,
+      idempotency_key TEXT NOT NULL,
+      execution_mode TEXT NOT NULL DEFAULT 'DRY_RUN',
+      status TEXT NOT NULL DEFAULT 'QUEUED',
+      approval_id TEXT,
+      proposer_id TEXT NOT NULL,
+      proposer_role TEXT NOT NULL,
+      attempts INTEGER NOT NULL DEFAULT 0,
+      max_attempts INTEGER NOT NULL DEFAULT 3,
+      next_retry_at TEXT,
+      last_error TEXT,
+      last_error_classification TEXT,
+      result_payload_json TEXT,
+      evidence_refs_json TEXT NOT NULL DEFAULT '[]',
+      audit_log_ref TEXT,
+      created_at TEXT NOT NULL,
+      updated_at TEXT NOT NULL,
+      FOREIGN KEY (tenant_id) REFERENCES tenants(id) ON DELETE CASCADE
+    );
+
+    -- 41. Dead Letter Queue (Durable Terminal Failure State)
+    CREATE TABLE IF NOT EXISTS dead_letter_queue (
+      id TEXT PRIMARY KEY,
+      queue_item_id TEXT NOT NULL UNIQUE,
+      tenant_id TEXT NOT NULL,
+      connector_id TEXT NOT NULL,
+      operation TEXT NOT NULL,
+      sanitized_failure_classification TEXT NOT NULL,
+      retry_count INTEGER NOT NULL DEFAULT 0,
+      last_attempt_at TEXT NOT NULL,
+      next_operator_action TEXT NOT NULL DEFAULT 'INSPECT',
+      evidence_refs_json TEXT NOT NULL DEFAULT '[]',
+      audit_log_ref TEXT NOT NULL,
+      status TEXT NOT NULL DEFAULT 'ACTIVE',
+      resolution_notes TEXT,
+      created_at TEXT NOT NULL,
+      resolved_at TEXT,
+      FOREIGN KEY (tenant_id) REFERENCES tenants(id) ON DELETE CASCADE
+    );
+
+    -- 42. Global & Scoped Emergency Controls (Emergency Stop / Pause)
+    CREATE TABLE IF NOT EXISTS emergency_controls (
+      id TEXT PRIMARY KEY,
+      tenant_id TEXT,
+      scope TEXT NOT NULL,
+      target_identifier TEXT,
+      is_paused INTEGER NOT NULL DEFAULT 0,
+      reason TEXT NOT NULL,
+      paused_by TEXT NOT NULL,
+      audit_log_ref TEXT NOT NULL,
+      paused_at TEXT NOT NULL,
+      resumed_at TEXT,
+      resumed_by TEXT
+    );
+
+    -- 43. Tenant Pilot State & Activation Lifecycle
+    CREATE TABLE IF NOT EXISTS tenant_pilot_states (
+      tenant_id TEXT PRIMARY KEY,
+      current_state TEXT NOT NULL DEFAULT 'NOT_CONFIGURED',
+      activated_at TEXT,
+      activated_by TEXT,
+      activation_evidence_refs_json TEXT NOT NULL DEFAULT '[]',
+      last_readiness_check_json TEXT NOT NULL DEFAULT '{}',
+      notes TEXT,
+      created_at TEXT NOT NULL,
+      updated_at TEXT NOT NULL,
+      FOREIGN KEY (tenant_id) REFERENCES tenants(id) ON DELETE CASCADE
+    );
+
+    -- 44. Production Lead Intake Boundary
+    CREATE TABLE IF NOT EXISTS pilot_lead_intake (
+      lead_id TEXT PRIMARY KEY,
+      tenant_id TEXT NOT NULL,
+      source TEXT NOT NULL,
+      source_type TEXT NOT NULL,
+      source_evidence_json TEXT NOT NULL DEFAULT '{}',
+      received_at TEXT NOT NULL,
+      normalized_contact_json TEXT NOT NULL DEFAULT '{}',
+      service_requested TEXT NOT NULL,
+      property_type TEXT NOT NULL DEFAULT 'Residential',
+      data_environment TEXT NOT NULL DEFAULT 'PILOT',
+      consent_state TEXT NOT NULL DEFAULT 'PENDING_VERIFICATION',
+      consent_evidence_ref TEXT,
+      location_evidence_json TEXT NOT NULL DEFAULT '{}',
+      deduplication_fingerprint TEXT NOT NULL,
+      duplicate_status TEXT NOT NULL DEFAULT 'NEW',
+      duplicate_details_json TEXT NOT NULL DEFAULT '{}',
+      identity_resolution_json TEXT NOT NULL DEFAULT '{}',
+      qualification_status TEXT NOT NULL DEFAULT 'UNQUALIFIED',
+      lifecycle_status TEXT NOT NULL DEFAULT 'LEAD_RECEIVED',
+      estimated_value REAL NOT NULL DEFAULT 0,
+      audit_ref TEXT NOT NULL,
+      created_at TEXT NOT NULL,
+      updated_at TEXT NOT NULL,
+      FOREIGN KEY (tenant_id) REFERENCES tenants(id) ON DELETE CASCADE
+    );
+
+    -- 45. Cryptographically-Bound Production Approvals
+    CREATE TABLE IF NOT EXISTS production_approvals (
+      id TEXT PRIMARY KEY,
+      tenant_id TEXT NOT NULL,
+      lead_id TEXT NOT NULL,
+      proposed_action TEXT NOT NULL,
+      action_payload_json TEXT NOT NULL,
+      canonical_payload_hash TEXT NOT NULL,
+      aria_reasoning TEXT NOT NULL,
+      connector_id TEXT NOT NULL,
+      recipient TEXT NOT NULL,
+      consent_evidence_ref TEXT NOT NULL,
+      authorization_evidence_ref TEXT NOT NULL,
+      jurisdiction_context TEXT NOT NULL,
+      expected_external_effect TEXT NOT NULL,
+      execution_mode TEXT NOT NULL DEFAULT 'DRY_RUN',
+      policy_findings_json TEXT NOT NULL DEFAULT '[]',
+      proposer_id TEXT NOT NULL,
+      proposer_role TEXT NOT NULL,
+      approved_by TEXT,
+      approved_at TEXT,
+      approval_status TEXT NOT NULL DEFAULT 'PENDING',
+      created_at TEXT NOT NULL,
+      updated_at TEXT NOT NULL,
+      FOREIGN KEY (tenant_id) REFERENCES tenants(id) ON DELETE CASCADE
+    );
+
+    -- 46. Production Idempotency Ledger
+    CREATE TABLE IF NOT EXISTS production_idempotency (
+      tenant_id TEXT NOT NULL,
+      connector_id TEXT NOT NULL,
+      operation TEXT NOT NULL,
+      idempotency_key TEXT NOT NULL,
+      canonical_request_hash TEXT NOT NULL,
+      target TEXT NOT NULL,
+      result_json TEXT NOT NULL,
+      execution_id TEXT NOT NULL,
+      created_at TEXT NOT NULL,
+      PRIMARY KEY (tenant_id, connector_id, idempotency_key)
+    );
+
+    -- 47. Pilot Lead Event Timeline
+    CREATE TABLE IF NOT EXISTS pilot_timeline_events (
+      id TEXT PRIMARY KEY,
+      tenant_id TEXT NOT NULL,
+      lead_id TEXT NOT NULL,
+      timestamp TEXT NOT NULL,
+      stage TEXT NOT NULL,
+      title TEXT NOT NULL,
+      description TEXT NOT NULL,
+      actor_or_source TEXT NOT NULL,
+      evidence_ref TEXT,
+      audit_ref TEXT NOT NULL,
+      data_environment TEXT NOT NULL DEFAULT 'PILOT',
+      metadata_json TEXT NOT NULL DEFAULT '{}',
+      created_at TEXT NOT NULL,
+      FOREIGN KEY (tenant_id) REFERENCES tenants(id) ON DELETE CASCADE
+    );
+
+    -- 48. Manual Outcome Records
+    CREATE TABLE IF NOT EXISTS manual_outcome_records (
+      id TEXT PRIMARY KEY,
+      tenant_id TEXT NOT NULL,
+      lead_id TEXT NOT NULL,
+      outcome_type TEXT NOT NULL,
+      status TEXT NOT NULL DEFAULT 'OPERATOR_REPORTED',
+      operator_id TEXT NOT NULL,
+      operator_role TEXT NOT NULL,
+      amount REAL NOT NULL DEFAULT 0,
+      confidence REAL NOT NULL DEFAULT 1.0,
+      notes TEXT NOT NULL,
+      evidence_attachment_ref TEXT,
+      payment_evidence_state TEXT,
+      recorded_at TEXT NOT NULL,
+      audit_event_id TEXT NOT NULL,
+      FOREIGN KEY (tenant_id) REFERENCES tenants(id) ON DELETE CASCADE
+    );
+
+    -- 49. Payment Evidence Records
+    CREATE TABLE IF NOT EXISTS payment_evidence_records (
+      id TEXT PRIMARY KEY,
+      tenant_id TEXT NOT NULL,
+      lead_id TEXT NOT NULL,
+      payment_amount REAL NOT NULL DEFAULT 0,
+      evidence_state TEXT NOT NULL DEFAULT 'REPORTED',
+      processor_name TEXT,
+      transaction_reference TEXT,
+      bank_deposit_reference TEXT,
+      operator_id TEXT,
+      notes TEXT,
+      verified_at TEXT,
+      verified_by TEXT,
+      data_environment TEXT NOT NULL DEFAULT 'PILOT',
+      created_at TEXT NOT NULL,
+      updated_at TEXT NOT NULL,
+      FOREIGN KEY (tenant_id) REFERENCES tenants(id) ON DELETE CASCADE
+    );
+
+    -- 29. Website Projects
+    CREATE TABLE IF NOT EXISTS website_projects (
+      id TEXT PRIMARY KEY,
+      tenant_id TEXT NOT NULL,
+      business_id TEXT NOT NULL,
+      site_name TEXT NOT NULL,
+      site_type TEXT NOT NULL DEFAULT 'LOCAL_SERVICE',
+      status TEXT NOT NULL DEFAULT 'DRAFT',
+      current_version_id TEXT,
+      domain TEXT,
+      deployment_provider TEXT NOT NULL DEFAULT 'STATIC_EXPORT',
+      data_environment TEXT NOT NULL DEFAULT 'PILOT',
+      brand_profile_id TEXT NOT NULL,
+      business_context_id TEXT NOT NULL,
+      approval_status TEXT NOT NULL DEFAULT 'DRAFT',
+      deployment_status TEXT NOT NULL DEFAULT 'UNCONFIGURED',
+      evidence_refs TEXT DEFAULT '[]',
+      audit_refs TEXT DEFAULT '[]',
+      created_at TEXT NOT NULL,
+      updated_at TEXT NOT NULL,
+      FOREIGN KEY (tenant_id) REFERENCES tenants(id) ON DELETE CASCADE
+    );
+
+    -- 30. Website Brand Profiles
+    CREATE TABLE IF NOT EXISTS website_brand_profiles (
+      id TEXT PRIMARY KEY,
+      tenant_id TEXT NOT NULL,
+      brand_name TEXT NOT NULL,
+      logo_url TEXT,
+      alternate_logo_url TEXT,
+      favicon_url TEXT,
+      typography TEXT NOT NULL, -- JSON
+      colors TEXT NOT NULL,     -- JSON
+      imagery_style TEXT NOT NULL DEFAULT 'AUTHENTIC_FIELD',
+      writing_tone TEXT NOT NULL DEFAULT 'DIRECT_PROFESSIONAL',
+      cta_style TEXT NOT NULL,  -- JSON
+      approved_terminology TEXT DEFAULT '[]', -- JSON array
+      prohibited_claims TEXT DEFAULT '[]',    -- JSON array
+      disclaimers TEXT DEFAULT '[]',          -- JSON array
+      created_at TEXT NOT NULL,
+      updated_at TEXT NOT NULL,
+      FOREIGN KEY (tenant_id) REFERENCES tenants(id) ON DELETE CASCADE
+    );
+
+    -- 31. Website Business Contexts
+    CREATE TABLE IF NOT EXISTS website_business_contexts (
+      id TEXT PRIMARY KEY,
+      tenant_id TEXT NOT NULL,
+      context_json TEXT NOT NULL,
+      compiled_at TEXT NOT NULL,
+      FOREIGN KEY (tenant_id) REFERENCES tenants(id) ON DELETE CASCADE
+    );
+
+    -- 32. Website Pages
+    CREATE TABLE IF NOT EXISTS website_pages (
+      id TEXT PRIMARY KEY,
+      project_id TEXT NOT NULL,
+      tenant_id TEXT NOT NULL,
+      slug TEXT NOT NULL,
+      title TEXT NOT NULL,
+      nav_order INTEGER NOT NULL DEFAULT 0,
+      is_published INTEGER NOT NULL DEFAULT 1,
+      is_index INTEGER NOT NULL DEFAULT 0,
+      meta_title TEXT NOT NULL,
+      meta_description TEXT NOT NULL,
+      canonical_url TEXT,
+      page_type TEXT NOT NULL DEFAULT 'PAGE',
+      components TEXT NOT NULL DEFAULT '[]', -- JSON array of WebsiteComponent
+      created_at TEXT NOT NULL,
+      updated_at TEXT NOT NULL,
+      FOREIGN KEY (project_id) REFERENCES website_projects(id) ON DELETE CASCADE,
+      FOREIGN KEY (tenant_id) REFERENCES tenants(id) ON DELETE CASCADE
+    );
+
+    -- 33. Website Versions (Audited Snapshots with SHA-256 bound hashes)
+    CREATE TABLE IF NOT EXISTS website_versions (
+      id TEXT PRIMARY KEY,
+      project_id TEXT NOT NULL,
+      tenant_id TEXT NOT NULL,
+      version_number INTEGER NOT NULL,
+      content_hash TEXT NOT NULL,
+      pages_snapshot TEXT NOT NULL,   -- JSON
+      brand_snapshot TEXT NOT NULL,   -- JSON
+      context_snapshot TEXT NOT NULL, -- JSON
+      claims_analysis TEXT,           -- JSON
+      approved_by TEXT,
+      approver_role TEXT,
+      approved_at TEXT,
+      approval_status TEXT NOT NULL DEFAULT 'DRAFT',
+      deployment_status TEXT NOT NULL DEFAULT 'UNCONFIGURED',
+      deployment_provider TEXT,
+      deployment_result TEXT,
+      previous_version_id TEXT,
+      created_at TEXT NOT NULL,
+      FOREIGN KEY (project_id) REFERENCES website_projects(id) ON DELETE CASCADE,
+      FOREIGN KEY (tenant_id) REFERENCES tenants(id) ON DELETE CASCADE
+    );
+
+    -- 34. Website Domains
+    CREATE TABLE IF NOT EXISTS website_domains (
+      id TEXT PRIMARY KEY,
+      project_id TEXT NOT NULL,
+      tenant_id TEXT NOT NULL,
+      requested_domain TEXT NOT NULL,
+      registered_domain TEXT,
+      status TEXT NOT NULL DEFAULT 'UNCONFIGURED',
+      dns_records TEXT DEFAULT '[]', -- JSON
+      ssl_status TEXT NOT NULL DEFAULT 'NOT_PROVISIONED',
+      ownership_verified INTEGER NOT NULL DEFAULT 0,
+      verified_at TEXT,
+      created_at TEXT NOT NULL,
+      updated_at TEXT NOT NULL,
+      FOREIGN KEY (project_id) REFERENCES website_projects(id) ON DELETE CASCADE,
+      FOREIGN KEY (tenant_id) REFERENCES tenants(id) ON DELETE CASCADE
+    );
+
+    -- 35. Website Form Submissions
+    CREATE TABLE IF NOT EXISTS website_form_submissions (
+      submission_id TEXT PRIMARY KEY,
+      tenant_id TEXT NOT NULL,
+      project_id TEXT NOT NULL,
+      page_slug TEXT NOT NULL,
+      form_type TEXT NOT NULL,
+      form_data TEXT NOT NULL, -- JSON
+      consent TEXT NOT NULL,   -- JSON
+      tracking TEXT NOT NULL,  -- JSON
+      security TEXT NOT NULL,  -- JSON
+      routed_lead_id TEXT,
+      submitted_at TEXT NOT NULL,
+      FOREIGN KEY (project_id) REFERENCES website_projects(id) ON DELETE CASCADE,
+      FOREIGN KEY (tenant_id) REFERENCES tenants(id) ON DELETE CASCADE
+    );
+
+    -- 36. Website Analytics Events
+    CREATE TABLE IF NOT EXISTS website_analytics_events (
+      id TEXT PRIMARY KEY,
+      tenant_id TEXT NOT NULL,
+      project_id TEXT NOT NULL,
+      page_slug TEXT NOT NULL,
+      event_type TEXT NOT NULL,
+      target_identifier TEXT,
+      utm_source TEXT,
+      utm_medium TEXT,
+      utm_campaign TEXT,
+      referrer_domain TEXT,
+      session_id TEXT NOT NULL,
+      timestamp TEXT NOT NULL,
+      FOREIGN KEY (project_id) REFERENCES website_projects(id) ON DELETE CASCADE,
+      FOREIGN KEY (tenant_id) REFERENCES tenants(id) ON DELETE CASCADE
+    );
+
+    -- 37. Web Presence Agent Recommendations
+    CREATE TABLE IF NOT EXISTS website_recommendations (
+      id TEXT PRIMARY KEY,
+      tenant_id TEXT NOT NULL,
+      project_id TEXT NOT NULL,
+      category TEXT NOT NULL,
+      target_page_slug TEXT,
+      title TEXT NOT NULL,
+      rationale TEXT NOT NULL,
+      proposed_action TEXT NOT NULL,
+      proposed_content_delta TEXT,
+      priority TEXT NOT NULL DEFAULT 'MEDIUM',
+      status TEXT NOT NULL DEFAULT 'PENDING_REVIEW',
+      guardrail_checks TEXT NOT NULL, -- JSON
+      created_at TEXT NOT NULL,
+      FOREIGN KEY (project_id) REFERENCES website_projects(id) ON DELETE CASCADE,
+      FOREIGN KEY (tenant_id) REFERENCES tenants(id) ON DELETE CASCADE
+    );
+
+    -- 38. Website Proof Items (First-Class Structured Proof of Work Records)
+    CREATE TABLE IF NOT EXISTS website_proof_items (
+      id TEXT PRIMARY KEY,
+      tenant_id TEXT NOT NULL,
+      project_id TEXT NOT NULL,
+      title TEXT NOT NULL,
+      type TEXT NOT NULL,
+      verification_status TEXT NOT NULL,
+      summary TEXT NOT NULL,
+      source_type TEXT NOT NULL,
+      source_reference TEXT NOT NULL,
+      observed_at TEXT NOT NULL,
+      public_safe INTEGER NOT NULL DEFAULT 1,
+      approved_for_publication INTEGER NOT NULL DEFAULT 0,
+      evidence_hash TEXT NOT NULL,
+      product_slug TEXT,
+      metadata_json TEXT NOT NULL DEFAULT '{}',
+      created_at TEXT NOT NULL,
+      updated_at TEXT NOT NULL,
+      FOREIGN KEY (project_id) REFERENCES website_projects(id) ON DELETE CASCADE,
+      FOREIGN KEY (tenant_id) REFERENCES tenants(id) ON DELETE CASCADE
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_connector_tenant ON connector_records(tenant_id, provider, capability);
+    CREATE INDEX IF NOT EXISTS idx_conn_verif_tenant ON connector_verifications(tenant_id, connector_id);
+    CREATE INDEX IF NOT EXISTS idx_exec_q_tenant_status ON durable_execution_queue(tenant_id, status);
+    CREATE INDEX IF NOT EXISTS idx_exec_q_idempotency ON durable_execution_queue(tenant_id, connector_id, idempotency_key);
+    CREATE INDEX IF NOT EXISTS idx_dlq_tenant_status ON dead_letter_queue(tenant_id, status);
+    CREATE INDEX IF NOT EXISTS idx_emergency_scope ON emergency_controls(scope, target_identifier);
+    CREATE INDEX IF NOT EXISTS idx_pilot_leads_tenant ON pilot_lead_intake(tenant_id, data_environment, lifecycle_status);
+    CREATE INDEX IF NOT EXISTS idx_pilot_leads_fingerprint ON pilot_lead_intake(tenant_id, deduplication_fingerprint);
+    CREATE INDEX IF NOT EXISTS idx_prod_appr_tenant ON production_approvals(tenant_id, lead_id, approval_status);
+    CREATE INDEX IF NOT EXISTS idx_pilot_timeline_lead ON pilot_timeline_events(tenant_id, lead_id, timestamp);
+    CREATE INDEX IF NOT EXISTS idx_manual_outcomes_lead ON manual_outcome_records(tenant_id, lead_id);
+    CREATE INDEX IF NOT EXISTS idx_payment_evidence_lead ON payment_evidence_records(tenant_id, lead_id, evidence_state);
+    CREATE INDEX IF NOT EXISTS idx_web_proj_tenant ON website_projects(tenant_id, status);
+    CREATE INDEX IF NOT EXISTS idx_web_pages_proj ON website_pages(project_id, tenant_id, slug);
+    CREATE INDEX IF NOT EXISTS idx_web_vers_proj ON website_versions(project_id, version_number);
+    CREATE INDEX IF NOT EXISTS idx_web_dom_proj ON website_domains(project_id, requested_domain);
+    CREATE INDEX IF NOT EXISTS idx_web_sub_tenant ON website_form_submissions(tenant_id, project_id, submitted_at);
+    CREATE INDEX IF NOT EXISTS idx_web_analytics_proj ON website_analytics_events(tenant_id, project_id, timestamp);
+    CREATE INDEX IF NOT EXISTS idx_web_recs_proj ON website_recommendations(tenant_id, project_id, status);
+    CREATE INDEX IF NOT EXISTS idx_web_proof_proj ON website_proof_items(tenant_id, project_id, product_slug);
   `;
 
   db.exec(schemaDDL);

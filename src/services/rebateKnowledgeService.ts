@@ -32,7 +32,7 @@ export class RebateKnowledgeService {
     });
 
     const disclaimer =
-      'INFORMATIONAL DISCLAIMER: Rebate information is provided for educational and estimation purposes only. Reis Electric LLC does not guarantee customer eligibility, utility application approval, rebate payment amounts, or specific cost savings. Customers must apply directly with the utility or program administrator.';
+      'INFORMATIONAL DISCLAIMER: Rebate information is provided for educational and estimation purposes only. Shadrick M. Reis Electric does not guarantee customer eligibility, utility application approval, rebate payment amounts, or specific cost savings. Customers must apply directly with the utility or program administrator. (Applies configured Massachusetts claim and workflow gates. Requires official-source evidence and qualified human review. Not a legal determination.)';
 
     return {
       matchingPrograms,

@@ -3,13 +3,21 @@ import path from 'path';
 import dotenv from 'dotenv';
 import { createServer as createViteServer } from 'vite';
 import { GoogleGenAI } from '@google/genai';
+import { zeroNetworkGuard } from './src/utils/zeroNetworkGuard';
 import { seedDatabaseIfEmpty } from './src/db/seed';
 import { growthRouter } from './src/routes/growthApi';
 import { launchProgramRouter } from './src/routes/launchProgramApi';
 import { gbpLaunchRouter } from './src/routes/gbpLaunchApi';
 import { ariaRouter } from './src/routes/ariaApi';
+import { controlledOperationsRouter } from './src/routes/controlledOperationsApi';
+import { pilotApiRouter } from './src/routes/pilotApi';
+import { websiteBuilderApiRouter } from './src/routes/websiteBuilderApi';
+import { publicWebsiteFormsApiRouter } from './src/routes/publicWebsiteFormsApi';
 
 dotenv.config();
+
+// Activate fail-closed Zero-Network Guard for external egress containment
+zeroNetworkGuard.activate();
 
 // Initialize durable SQLite database and seed initial workspace if empty
 try {
@@ -19,7 +27,7 @@ try {
 }
 
 const app = express();
-const PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : 3000;
+const PORT = 3000;
 
 app.set('trust proxy', 1);
 app.use(express.json({ limit: '10mb' }));
@@ -30,6 +38,11 @@ app.use('/api/launch-program', launchProgramRouter);
 app.use('/api/gbp-launch', gbpLaunchRouter);
 app.use('/api/gbp', gbpLaunchRouter);
 app.use('/api/aria', ariaRouter);
+app.use('/api/controlled-ops', controlledOperationsRouter);
+app.use('/api/operations', controlledOperationsRouter);
+app.use('/api/pilot', pilotApiRouter);
+app.use('/api/website-builder', websiteBuilderApiRouter);
+app.use('/api/public', publicWebsiteFormsApiRouter);
 
 // Lazy initializer for Gemini client to prevent startup crash if GEMINI_API_KEY is missing
 function getGeminiClient(): GoogleGenAI {

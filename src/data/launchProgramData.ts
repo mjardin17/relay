@@ -148,19 +148,19 @@ export const DEFAULT_STAGES: LaunchProgramStage[] = [
 ];
 
 export const DEFAULT_PROVIDER_PROFILE: ProviderBusinessProfile = {
-  providerName: 'Shadrick M. Reis & Silent Partner',
-  agencyBrand: 'Reis Electric LLC Operating Platform',
-  serviceGoals: 'Build a $50k/mo high-margin electrical contracting LLC with 2 50/50 partners.',
-  availableSkills: ['MA Journeyman Electrical License', 'Panel Overhauls & EV Chargers', 'Speed-to-Lead Dispatch', 'MA Code Compliance'],
-  preferredIndustries: ['Residential Homeowners', 'Commercial Property & Facility Managers', 'General Contractors'],
-  geographicScope: 'Massachusetts (Norfolk, Worcester, Middlesex & Suffolk Counties)',
+  providerName: 'Shadrick M. Reis Electric',
+  agencyBrand: 'Shadrick M. Reis Electric Operating Platform',
+  serviceGoals: 'Evaluate electrical service operations under controlled DRY_RUN.',
+  availableSkills: ['Electrical Installations', 'Panel Upgrades', 'Speed-to-Lead Triage'],
+  preferredIndustries: ['Residential Homeowners', 'Commercial Property Managers'],
+  geographicScope: 'Massachusetts (Evaluation Scope)',
   clientCapacityMax: 20,
   currentClientsCount: 8,
   targetMonthlyIncome: 50000,
   currentMonthlyIncome: 38500,
   hourlyRateBaseline: 175,
   selectedNicheId: 'niche-electrical',
-  constraints: ['Must display Shadrick M. Reis, MA Lic. # B-38914 on all public ads', 'Require municipal wire inspector sign-off', 'Maintain 50/50 LLC silent equity partnership split'],
+  constraints: ['Applies configured Massachusetts claim and workflow gates. Requires official-source evidence and qualified human review. Not a legal determination.'],
   baselineMetrics: {
     leadResponseTimeMinutes: 1,
     avgDealSize: 2850,

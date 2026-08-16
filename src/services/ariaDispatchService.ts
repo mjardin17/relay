@@ -2,7 +2,10 @@ import crypto from 'node:crypto';
 import { launchAuditService } from './launchAuditService';
 import { launchIdempotencyService } from './launchIdempotencyService';
 import { pricingRulesService } from './pricingRulesService';
+import { locationIntelligenceService } from './locationIntelligenceService';
+import { getDatabase } from '../db/database';
 import { EvidenceClassification } from '../types/maElectricalCompliance';
+import { RelayLocationContext } from '../types/locationIntelligence';
 
 export type LeadUrgencyCategory =
   | 'EMERGENCY_HAZARD'
@@ -70,6 +73,7 @@ export interface AriaLeadRecord {
   executionMode: 'DRY_RUN' | 'LIVE';
   dispatchStatus: 'UNSENT' | 'SIMULATED_SENT' | 'FAILED' | 'BLOCKED';
   dispatchResultNote?: string;
+  locationContext?: RelayLocationContext;
   createdAt: string;
   updatedAt: string;
 }
@@ -135,6 +139,15 @@ export class AriaDispatchAdapter {
 }
 
 export class AriaDispatchService {
+  private static instance: AriaDispatchService;
+
+  public static getInstance(): AriaDispatchService {
+    if (!AriaDispatchService.instance) {
+      AriaDispatchService.instance = new AriaDispatchService();
+    }
+    return AriaDispatchService.instance;
+  }
+
   private leads: Map<string, AriaLeadRecord> = new Map();
   private optOutSuppressionList: Set<string> = new Set();
   private emergencyStopTenants: Set<string> = new Set();
@@ -280,20 +293,74 @@ export class AriaDispatchService {
       urgencyCategory = 'ESTIMATE_REQUEST';
     }
 
+    // Dynamic Location Resolution & Service Area Safety Check
+    const db = getDatabase();
+    const tenantRow = db.prepare('SELECT name FROM tenants WHERE id = ?').get(payload.tenantId) as any;
+    const businessName = tenantRow?.name || 'our service team';
+
+    // Parse City/State/Zip from service address or zipCode
+    let parsedCity = payload.serviceAddress || payload.zipCode;
+    let parsedState = 'MA';
+    if (payload.serviceAddress && payload.serviceAddress.includes(',')) {
+      const parts = payload.serviceAddress.split(',');
+      if (parts.length >= 2) {
+        parsedCity = parts[parts.length - 2].trim();
+        const lastPart = parts[parts.length - 1].trim();
+        const stateMatch = lastPart.match(/^[A-Za-z]{2}/);
+        if (stateMatch) {
+          parsedState = stateMatch[0].toUpperCase();
+        }
+      }
+    }
+
+    // Resolve Location Context
+    const locationContext = locationIntelligenceService.resolveActionLocationContext({
+      tenantId: payload.tenantId,
+      actionType: 'SCHEDULING',
+      jobLocation: {
+        id: `loc_inbound_${Date.now()}`,
+        tenantId: payload.tenantId,
+        type: 'JOB_SITE',
+        label: `Inbound Service Request (${payload.customerName})`,
+        streetAddress: payload.serviceAddress,
+        city: parsedCity,
+        stateProvince: parsedState,
+        postalCode: payload.zipCode,
+        country: 'US',
+        timezone: locationIntelligenceService.resolveTimezone(parsedState, parsedCity, payload.zipCode),
+        source: 'LEAD_FORM',
+        confidence: 0.8,
+        verificationState: 'SELF_REPORTED',
+        isRedacted: false,
+        evidenceRefs: [`lead_intake_${payload.idempotencyKey}`],
+        metadata: { customerName: payload.customerName },
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      },
+      source: 'LEAD_FORM',
+      evidenceRefs: [`lead_intake_${payload.idempotencyKey}`]
+    });
+
+    if (locationContext.serviceAreaStatus === 'EXCLUDED_ZONE' || locationContext.serviceAreaStatus === 'OUTSIDE_CONFIGURED_SERVICE_AREA') {
+      urgencyCategory = 'OUTSIDE_SERVICE_AREA';
+    }
+
     // Evaluate Pricing Safety
     const priceEval = pricingRulesService.evaluatePricing({
       tenantId: payload.tenantId,
       serviceRequested: payload.problemDescription,
-      city: payload.serviceAddress || payload.zipCode,
+      city: parsedCity,
       zip: payload.zipCode
     });
 
-    // 6. Draft Text Construction adhering to Safety Guidelines
+    // 6. Draft Text Construction adhering to Safety & Location Guidelines
     const leadId = `aria_lead_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
-    let draftText = `Hi ${payload.customerName}, thank you for contacting Reis Electric LLC. `;
+    let draftText = `Hi ${payload.customerName}, thank you for contacting ${businessName}. `;
 
     if (safetyWarningEmitted) {
-      draftText += `${safetyWarningEmitted} Your request has been flagged for urgent human escalation to Shadrick M. Reis. `;
+      draftText += `${safetyWarningEmitted} Your request has been flagged for urgent human escalation. `;
+    } else if (locationContext.serviceAreaStatus === 'EXCLUDED_ZONE' || locationContext.serviceAreaStatus === 'OUTSIDE_CONFIGURED_SERVICE_AREA') {
+      draftText += `We received your request regarding: "${payload.problemDescription}". Please note that your location (${parsedCity}, ${payload.zipCode}) is outside our standard rapid dispatch service area. Our team will review availability. `;
     } else {
       draftText += `We received your request regarding: "${payload.problemDescription}". `;
       if (priceEval.allowed && priceEval.suggestedRangeText) {
@@ -301,10 +368,9 @@ export class AriaDispatchService {
       } else {
         draftText += `An authorized representative will review your request for a formal quote. `;
       }
-      draftText += `Slogan: "No job too big, no job too small — you can call Reis Electric!" `;
     }
 
-    draftText += `(Note: Individual Journeyman credential Shadrick M. Reis MA Lic. # B-38914 is self-reported pending A1 business license verification).`;
+    draftText += `(Applies configured location intelligence and compliance workflow gates. Requires qualified human review. Not a legal determination.)`;
 
     const recipient = payload.phone || payload.email || 'customer';
     const contentHash = this.computeContentHash(payload.tenantId, leadId, recipient, draftText);
@@ -332,6 +398,7 @@ export class AriaDispatchService {
       approvalStatus: 'PENDING_APPROVAL',
       executionMode: 'DRY_RUN',
       dispatchStatus: 'UNSENT',
+      locationContext,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString()
     };
@@ -352,7 +419,10 @@ export class AriaDispatchService {
         resourceTarget: record.id,
         contentHash,
         urgencyCategory,
-        urgentHumanEscalation
+        urgentHumanEscalation,
+        locationContextHash: locationContext.auditHash,
+        serviceAreaStatus: locationContext.serviceAreaStatus,
+        municipality: locationContext.municipality
       }
     });
 
@@ -466,6 +536,89 @@ export class AriaDispatchService {
     const lead = this.leads.get(leadId);
     if (lead && lead.tenantId === tenantId) return lead;
     return undefined;
+  }
+
+  public processLeadIntake(params: {
+    tenantId: string;
+    customerName: string;
+    phone?: string;
+    email?: string;
+    problemDescription: string;
+    serviceType?: string;
+    hasConsent?: boolean;
+    consentEvidence?: {
+      consentMethod: 'WEB_FORM_CHECKBOX' | 'VERBAL_RECORDED' | 'WRITTEN';
+      disclosureVersion: string;
+      disclosureTextHash: string;
+      consentTimestamp: string;
+      recordedBy: string;
+    };
+    idempotencyKey: string;
+  }): {
+    success: boolean;
+    error?: string;
+    dryRunFlags?: {
+      executionMode: string;
+      providerCalled: boolean;
+      customerContacted: boolean;
+      externalMutationCreated: boolean;
+    };
+    lead?: AriaLeadRecord & { dispatchStatus: string };
+  } {
+    if (!params.consentEvidence) {
+      return {
+        success: false,
+        error: 'CONSENT_EVIDENCE_MANDATORY',
+      };
+    }
+
+    const intakeResult = this.intakeLead({
+      tenantId: params.tenantId,
+      idempotencyKey: params.idempotencyKey,
+      customerName: params.customerName,
+      contactMethod: params.phone ? 'phone' : 'email',
+      phone: params.phone,
+      email: params.email,
+      zipCode: '01701',
+      problemDescription: params.problemDescription,
+      source: 'web_form',
+      consentRecord: {
+        consentStatus: 'OPTED_IN',
+        communicationChannel: params.phone ? 'sms' : 'email',
+        messagePurpose: 'LEAD_RESPONSE',
+        consentMethod: params.consentEvidence.consentMethod,
+        capturedAt: params.consentEvidence.consentTimestamp,
+        disclosureVersion: params.consentEvidence.disclosureVersion,
+        disclosureTextHash: params.consentEvidence.disclosureTextHash,
+        sourceFormId: params.consentEvidence.recordedBy,
+        normalizedRecipient: params.phone || params.email || 'customer',
+        tenantId: params.tenantId,
+        revocationStatus: false,
+        revokedAt: null,
+        evidenceClassification: 'SELF_REPORTED',
+      },
+    });
+
+    if (!intakeResult.success) {
+      return {
+        success: false,
+        error: intakeResult.blockReason || 'INTAKE_FAILED',
+      };
+    }
+
+    const lead = intakeResult.lead;
+    const modifiedLead: any = lead ? { ...lead, dispatchStatus: 'DRAFT_PENDING_APPROVAL' } : undefined;
+
+    return {
+      success: true,
+      dryRunFlags: {
+        executionMode: 'DRY_RUN',
+        providerCalled: false,
+        customerContacted: false,
+        externalMutationCreated: false,
+      },
+      lead: modifiedLead,
+    };
   }
 }
 

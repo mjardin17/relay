@@ -301,6 +301,66 @@ export function seedDatabaseIfEmpty(): void {
       now
     );
 
+    // 9. Seed Initial Connector Records (Truthful states)
+    const insertConnector = db.prepare(`
+      INSERT OR IGNORE INTO connector_records (
+        id, tenant_id, provider, capability, connector_type, configuration_state,
+        authentication_state, execution_mode, health_status, permissions_json,
+        scopes_json, evidence_refs_json, metadata_json, created_at, updated_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, '[]', ?, ?, ?)
+    `);
+
+    insertConnector.run(
+      'conn_reis_maps',
+      'tenant_ma_fresh_launch',
+      'GOOGLE_MAPS',
+      'GEOCODING',
+      'LOCAL_FIXTURE',
+      'CONFIGURED',
+      'AUTHENTICATED',
+      'DRY_RUN',
+      'HEALTHY',
+      JSON.stringify(['geocoding:read']),
+      JSON.stringify(['https://maps.googleapis.com/maps/api/geocode']),
+      JSON.stringify({ providerName: 'Local Deterministic Geocoder & Fallback' }),
+      now,
+      now
+    );
+
+    insertConnector.run(
+      'conn_reis_gbp',
+      'tenant_ma_fresh_launch',
+      'GOOGLE_GBP',
+      'GBP_MANAGEMENT',
+      'OFFICIAL_API',
+      'UNCONFIGURED',
+      'NOT_APPLICABLE',
+      'DRY_RUN',
+      'UNKNOWN',
+      JSON.stringify(['businessinformation:manage', 'posts:write']),
+      JSON.stringify(['https://www.googleapis.com/auth/business.manage']),
+      JSON.stringify({ notes: 'Pending owner OAuth connection' }),
+      now,
+      now
+    );
+
+    insertConnector.run(
+      'conn_reis_sms',
+      'tenant_ma_fresh_launch',
+      'TWILIO_SMS',
+      'CUSTOMER_DISPATCH',
+      'OFFICIAL_API',
+      'UNCONFIGURED',
+      'NOT_APPLICABLE',
+      'DRY_RUN',
+      'UNKNOWN',
+      JSON.stringify(['messages:create']),
+      JSON.stringify(['sms:outbound']),
+      JSON.stringify({ notes: 'Simulated fail-closed DRY_RUN active' }),
+      now,
+      now
+    );
+
     db.exec('COMMIT;');
     console.log('[SQLite Seed] Database successfully initialized and seeded with tenant_demo_1.');
   } catch (err) {

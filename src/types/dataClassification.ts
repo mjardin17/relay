@@ -1,3 +1,10 @@
+export type DataEnvironment =
+  | 'SYNTHETIC'
+  | 'TEST'
+  | 'DEMO'
+  | 'PILOT'
+  | 'PRODUCTION';
+
 export type DataClassification =
   | 'SYNTHETIC_TEST'
   | 'SIMULATED_DRY_RUN'

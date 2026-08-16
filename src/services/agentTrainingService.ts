@@ -171,7 +171,7 @@ export class AgentTrainingService {
         'NEVER promise condition is safe.',
         'EMERGENCY HAZARD (fire/smoke/sparks) triggers immediate safety warning and 911 / utility escalation.'
       ],
-      licensingEvidence: ['Individual Journeyman Shadrick M. Reis MA Lic # B-38914 (SELF_REPORTED). A1 Business License unverified.'],
+      licensingEvidence: ['Applies configured Massachusetts claim and workflow gates. Requires official-source evidence and qualified human review. Not a legal determination.'],
       rebateSources: ['Official Mass Save portal URLs required for rebate references.'],
       geographicServiceRules: ['Norfolk, Worcester, Middlesex, Suffolk Counties.'],
       agentInstructions: 'Aria Speed-to-Lead dispatch instructions version-controlled in AgentTrainingService.',

@@ -20,7 +20,8 @@ import {
   FileCheck,
   Database,
   Rocket,
-  Zap
+  Zap,
+  Globe
 } from 'lucide-react';
 import { RelayTab } from '../../types/relay';
 
@@ -38,6 +39,8 @@ export const EmpireSidebar: React.FC<EmpireSidebarProps> = ({
   pendingApprovalsCount
 }) => {
   const growthEngineNav = [
+    { id: 'website_builder', label: 'Website Builder & Agent', icon: Globe, badge: 'v2.0 Web', badgeColor: 'bg-emerald-500/20 text-emerald-400 font-bold border border-emerald-500/30' },
+    { id: 'pilot_command', label: 'Pilot Command Center', icon: ShieldAlert, badge: 'Real Ops', badgeColor: 'bg-amber-500/20 text-amber-400 font-bold border border-amber-500/30' },
     { id: 'electrical_workflow', label: 'Electrical Lead Studio', icon: Zap, badge: 'Vertical Slice', badgeColor: 'bg-amber-500/20 text-amber-400 font-bold border border-amber-500/30' },
     { id: 'launch_program', label: '60-Day AI Launch', icon: Rocket, badge: 'Program', badgeColor: 'bg-gradient-to-r from-indigo-500/30 to-purple-500/30 text-indigo-300 font-bold border border-indigo-500/30' },
     { id: 'advisor', label: 'Executive AI Advisor', icon: BrainCircuit, badge: 'C-Suite', badgeColor: 'bg-indigo-500/20 text-indigo-400' },

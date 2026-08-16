@@ -3,6 +3,10 @@ import { growthPersistenceService } from '../services/growthPersistenceService';
 import { staleLeadRecoveryEngine } from '../services/staleLeadRecoveryEngine';
 import { electricalWorkflowEngine } from '../services/electricalWorkflowEngine';
 import { maElectricalComplianceService } from '../services/maElectricalComplianceService';
+import { evidenceGraphService } from '../services/evidenceGraphService';
+import { geminiAttributionAdvisor } from '../services/geminiAttributionAdvisor';
+import { reisElectricPilotService } from '../services/reisElectricPilotService';
+import { locationIntelligenceService } from '../services/locationIntelligenceService';
 import { authService } from '../services/authService';
 import { redactObject } from '../utils/redaction';
 
@@ -445,3 +449,335 @@ growthRouter.post('/ma-compliance/validate-claim', (req: Request, res: Response)
     return res.status(500).json({ success: false, error: err.message });
   }
 });
+
+// ---------------------------------------------------------------------------
+// BUILD 1: EVIDENCE GRAPH ENDPOINTS
+// ---------------------------------------------------------------------------
+
+growthRouter.get('/evidence-graph', (req: Request, res: Response) => {
+  try {
+    const { tenantId } = getAuthenticatedActor(req);
+    const graph = evidenceGraphService.getGraph(tenantId);
+    return res.json({ success: true, tenantId, graph: redactObject(graph) });
+  } catch (err: any) {
+    return res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+growthRouter.get('/evidence-graph/lineage/:nodeId', (req: Request, res: Response) => {
+  try {
+    const { tenantId } = getAuthenticatedActor(req);
+    const lineage = evidenceGraphService.findTraceableLineage(tenantId, req.params.nodeId);
+    return res.json({ success: true, tenantId, lineage: redactObject(lineage) });
+  } catch (err: any) {
+    return res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// ---------------------------------------------------------------------------
+// BUILD 2: EXECUTION EVIDENCE LEDGER ENDPOINTS
+// ---------------------------------------------------------------------------
+
+growthRouter.get('/execution-evidence', (req: Request, res: Response) => {
+  try {
+    const { tenantId } = getAuthenticatedActor(req);
+    const records = evidenceGraphService.getExecutionEvidenceList(tenantId);
+    return res.json({ success: true, tenantId, records: redactObject(records) });
+  } catch (err: any) {
+    return res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+growthRouter.post('/execution-evidence', (req: Request, res: Response) => {
+  try {
+    const { tenantId, actorId } = getAuthenticatedActor(req);
+    const input = req.body;
+    if (!input.actionType || !input.targetSystemOrChannel || !input.connectorType) {
+      return res.status(400).json({ success: false, error: 'actionType, targetSystemOrChannel, and connectorType are required.' });
+    }
+
+    const record = evidenceGraphService.recordExecutionEvidence(tenantId, {
+      ...input,
+      actor: input.actor || actorId
+    });
+    return res.json({ success: true, tenantId, record: redactObject(record) });
+  } catch (err: any) {
+    return res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// ---------------------------------------------------------------------------
+// BUILD 3: STRUCTURED OUTCOMES ENDPOINTS
+// ---------------------------------------------------------------------------
+
+growthRouter.get('/structured-outcomes', (req: Request, res: Response) => {
+  try {
+    const { tenantId } = getAuthenticatedActor(req);
+    const leadId = req.query.leadId as string | undefined;
+    const outcomes = evidenceGraphService.getStructuredOutcomes(tenantId, leadId);
+    return res.json({ success: true, tenantId, outcomes: redactObject(outcomes) });
+  } catch (err: any) {
+    return res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+growthRouter.post('/structured-outcomes', (req: Request, res: Response) => {
+  try {
+    const { tenantId, actorId } = getAuthenticatedActor(req);
+    const input = req.body;
+    if (!input.stage || !input.relatedLeadId || !input.evidenceType) {
+      return res.status(400).json({ success: false, error: 'stage, relatedLeadId, and evidenceType are required.' });
+    }
+
+    const outcome = evidenceGraphService.recordStageOutcome(tenantId, {
+      ...input,
+      actorOrSource: input.actorOrSource || actorId
+    });
+    return res.json({ success: true, tenantId, outcome: redactObject(outcome) });
+  } catch (err: any) {
+    return res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// ---------------------------------------------------------------------------
+// BUILD 4 & 5: ATTRIBUTION ENGINE ENDPOINTS
+// ---------------------------------------------------------------------------
+
+growthRouter.post('/evaluate-attribution', (req: Request, res: Response) => {
+  try {
+    const { tenantId } = getAuthenticatedActor(req);
+    const { leadId, revenueEventId, isPreExistingCustomer, disputedReason } = req.body;
+    if (!leadId || !revenueEventId) {
+      return res.status(400).json({ success: false, error: 'leadId and revenueEventId are required.' });
+    }
+
+    const record = evidenceGraphService.evaluateAttribution(tenantId, leadId, revenueEventId, {
+      isPreExistingCustomer: !!isPreExistingCustomer,
+      disputedReason
+    });
+    return res.json({ success: true, tenantId, attribution: redactObject(record) });
+  } catch (err: any) {
+    return res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// ---------------------------------------------------------------------------
+// BUILD 6: DEFENSIBLE ROI ENDPOINT
+// ---------------------------------------------------------------------------
+
+growthRouter.get('/defensible-roi', (req: Request, res: Response) => {
+  try {
+    const { tenantId } = getAuthenticatedActor(req);
+    const metrics = evidenceGraphService.calculateDefensibleROI(tenantId);
+    return res.json({ success: true, tenantId, metrics: redactObject(metrics) });
+  } catch (err: any) {
+    return res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// ---------------------------------------------------------------------------
+// BUILD 8: OUTCOME RECONCILIATION ENDPOINT
+// ---------------------------------------------------------------------------
+
+growthRouter.get('/reconciliation', (req: Request, res: Response) => {
+  try {
+    const { tenantId } = getAuthenticatedActor(req);
+    const report = evidenceGraphService.reconcileTenantOutcomes(tenantId);
+    return res.json({ success: true, tenantId, report: redactObject(report) });
+  } catch (err: any) {
+    return res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// ---------------------------------------------------------------------------
+// BUILD 9: GEMINI ADVISOR SUMMARY
+// ---------------------------------------------------------------------------
+
+growthRouter.get('/advisor/executive-summary', async (req: Request, res: Response) => {
+  try {
+    const { tenantId } = getAuthenticatedActor(req);
+    const metrics = evidenceGraphService.calculateDefensibleROI(tenantId);
+    const reconciliation = evidenceGraphService.reconcileTenantOutcomes(tenantId);
+    const attributions = evidenceGraphService.getStructuredOutcomes(tenantId);
+
+    const summary = await geminiAttributionAdvisor.generateAttributionExecutiveSummary(
+      metrics,
+      reconciliation,
+      []
+    );
+    return res.json({ success: true, tenantId, summary: redactObject(summary) });
+  } catch (err: any) {
+    return res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// ---------------------------------------------------------------------------
+// BUILD 10: REIS ELECTRIC PILOT SEEDING & RESET
+// ---------------------------------------------------------------------------
+
+growthRouter.post('/pilot/seed-reis-electric', (req: Request, res: Response) => {
+  try {
+    const { tenantId } = getAuthenticatedActor(req);
+    const result = reisElectricPilotService.seedPilotScenario(tenantId);
+    return res.json({ success: true, tenantId, result: redactObject(result) });
+  } catch (err: any) {
+    return res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// ---------------------------------------------------------------------------
+// GLOBAL LOCATION INTELLIGENCE & JURISDICTION RESOLUTION ENDPOINTS
+// ---------------------------------------------------------------------------
+
+growthRouter.post('/pilot/seed-second-tenant', (req: Request, res: Response) => {
+  try {
+    const tenantId = (req.body.tenantId as string) || 'tenant_desert_comfort_az';
+    const result = reisElectricPilotService.seedSecondTenantScenario(tenantId);
+    return res.json({ success: true, tenantId, result: redactObject(result) });
+  } catch (err: any) {
+    return res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+growthRouter.get('/locations', (req: Request, res: Response) => {
+  try {
+    const { tenantId } = getAuthenticatedActor(req);
+    const type = req.query.type as any;
+    const locations = locationIntelligenceService.listLocations(tenantId, type);
+    return res.json({ success: true, tenantId, locations: redactObject(locations) });
+  } catch (err: any) {
+    return res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+growthRouter.post('/locations', (req: Request, res: Response) => {
+  try {
+    const { tenantId } = getAuthenticatedActor(req);
+    const location = locationIntelligenceService.saveLocation(tenantId, req.body);
+    return res.json({ success: true, tenantId, location: redactObject(location) });
+  } catch (err: any) {
+    return res.status(400).json({ success: false, error: err.message });
+  }
+});
+
+growthRouter.delete('/locations/:id', (req: Request, res: Response) => {
+  try {
+    const { tenantId } = getAuthenticatedActor(req);
+    const deleted = locationIntelligenceService.deleteLocation(tenantId, req.params.id);
+    return res.json({ success: deleted, tenantId, locationId: req.params.id });
+  } catch (err: any) {
+    return res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+growthRouter.get('/service-areas', (req: Request, res: Response) => {
+  try {
+    const { tenantId } = getAuthenticatedActor(req);
+    const branchId = req.query.branchId as string;
+    const serviceAreas = locationIntelligenceService.listServiceAreas(tenantId, branchId);
+    return res.json({ success: true, tenantId, serviceAreas: redactObject(serviceAreas) });
+  } catch (err: any) {
+    return res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+growthRouter.post('/service-areas', (req: Request, res: Response) => {
+  try {
+    const { tenantId } = getAuthenticatedActor(req);
+    const serviceArea = locationIntelligenceService.saveServiceArea(tenantId, req.body);
+    return res.json({ success: true, tenantId, serviceArea: redactObject(serviceArea) });
+  } catch (err: any) {
+    return res.status(400).json({ success: false, error: err.message });
+  }
+});
+
+growthRouter.delete('/service-areas/:id', (req: Request, res: Response) => {
+  try {
+    const { tenantId } = getAuthenticatedActor(req);
+    const deleted = locationIntelligenceService.deleteServiceArea(tenantId, req.params.id);
+    return res.json({ success: deleted, tenantId, serviceAreaId: req.params.id });
+  } catch (err: any) {
+    return res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+growthRouter.post('/service-areas/evaluate', (req: Request, res: Response) => {
+  try {
+    const { tenantId } = getAuthenticatedActor(req);
+    const match = locationIntelligenceService.evaluateServiceArea(tenantId, req.body);
+    return res.json({ success: true, tenantId, match: redactObject(match) });
+  } catch (err: any) {
+    return res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+growthRouter.post('/resolve-location', (req: Request, res: Response) => {
+  try {
+    const { tenantId } = getAuthenticatedActor(req);
+    const { actionType, branchId, jobLocation, customerLocation, operatorLocation, campaignTarget, overrideLocation } = req.body;
+
+    if (!actionType) {
+      return res.status(400).json({ success: false, error: 'actionType is required' });
+    }
+
+    const context = locationIntelligenceService.resolveActionLocationContext({
+      tenantId,
+      actionType,
+      branchId,
+      jobLocation,
+      customerLocation,
+      operatorLocation,
+      campaignTarget,
+      overrideLocation
+    });
+
+    return res.json({ success: true, tenantId, locationContext: redactObject(context) });
+  } catch (err: any) {
+    return res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+growthRouter.post('/operator-device-location', (req: Request, res: Response) => {
+  try {
+    const { tenantId, actorId } = getAuthenticatedActor(req);
+    const { latitude, longitude, accuracyMeters, hasPermission, city, stateProvince, isRedacted } = req.body;
+
+    const result = locationIntelligenceService.recordOperatorDeviceLocation({
+      tenantId,
+      actorId: actorId || 'operator_user',
+      latitude,
+      longitude,
+      accuracyMeters,
+      hasPermission: !!hasPermission,
+      city,
+      stateProvince,
+      isRedacted
+    });
+
+    return res.json({ success: result.success, tenantId, ...redactObject(result) });
+  } catch (err: any) {
+    return res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+growthRouter.post('/advisor/location-guidance', async (req: Request, res: Response) => {
+  try {
+    const { tenantId } = getAuthenticatedActor(req);
+    const { prompt, locationContext } = req.body;
+
+    if (!locationContext) {
+      return res.status(400).json({ success: false, error: 'locationContext is required' });
+    }
+
+    const guidance = await locationIntelligenceService.adviseGeographicContext(
+      tenantId,
+      prompt || 'Explain jurisdiction and service coverage for this action.',
+      locationContext
+    );
+
+    return res.json({ success: true, tenantId, guidance: redactObject(guidance) });
+  } catch (err: any) {
+    return res.status(500).json({ success: false, error: err.message });
+  }
+});
+

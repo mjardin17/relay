@@ -17,7 +17,7 @@ export const AIAgentsHub: React.FC<AIAgentsHubProps> = ({
   const [messages, setMessages] = useState<Array<{ sender: 'user' | 'agent'; text: string }>>([
     {
       sender: 'agent',
-      text: `Hello! I am ${agents[0].name}, your ${agents[0].role}. How can I assist with Reis Electric LLC guided dispatch, growth strategy, or MA compliance verification today?`
+      text: `Hello! I am ${agents[0].name}, your ${agents[0].role}. How can I assist with Shadrick M. Reis Electric evaluation, strategy, or workflow gates today?`
     }
   ]);
   const [input, setInput] = useState('');
@@ -31,7 +31,7 @@ export const AIAgentsHub: React.FC<AIAgentsHubProps> = ({
     setMessages([
       {
         sender: 'agent',
-        text: `Hello! I am ${agent.name}, your ${agent.role}. How can I assist with Reis Electric LLC guided dispatch, growth strategy, or MA compliance verification today?`
+        text: `Hello! I am ${agent.name}, your ${agent.role}. How can I assist with Shadrick M. Reis Electric evaluation, strategy, or workflow gates today?`
       }
     ]);
   };
@@ -67,11 +67,11 @@ export const AIAgentsHub: React.FC<AIAgentsHubProps> = ({
       }`}>
         <div>
           <span className="text-[10px] font-mono uppercase px-2 py-0.5 rounded bg-violet-500/20 text-violet-400 font-bold">
-            REIS ELECTRIC AGENT SUITE & CAPABILITY REGISTRY
+            AGENT SUITE & CAPABILITY REGISTRY
           </span>
-          <h1 className="text-xl font-extrabold tracking-tight mt-1">Reis Electric Business AI Agents</h1>
+          <h1 className="text-xl font-extrabold tracking-tight mt-1">Business AI Agents</h1>
           <p className="text-xs text-slate-400">
-            Guided-manual agent profiles and capability status layer for Reis Electric LLC. All capabilities are classified via the Product Truth Capability Registry.
+            Guided-manual agent profiles and capability status layer for Shadrick M. Reis Electric. All capabilities are classified via the Product Truth Capability Registry.
           </p>
         </div>
       </div>

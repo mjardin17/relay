@@ -10,6 +10,24 @@ export interface VerifiedSession {
 }
 
 export class AuthService {
+  private static instance: AuthService;
+
+  public static getInstance(): AuthService {
+    if (!AuthService.instance) {
+      AuthService.instance = new AuthService();
+    }
+    return AuthService.instance;
+  }
+
+  validateSession(token: string): (VerifiedSession & { actorId: string }) | null {
+    const s = this.verifySession(token);
+    if (!s) return null;
+    return {
+      ...s,
+      actorId: s.userId
+    };
+  }
+
   verifySession(token: string): VerifiedSession | null {
     if (!token || typeof token !== 'string' || token.trim() === '') return null;
 

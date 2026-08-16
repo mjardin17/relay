@@ -9,18 +9,18 @@ import {
 } from '../types/relay';
 
 export const INITIAL_BUSINESS_PROFILE: BusinessProfile = {
-  name: 'Reis Electric LLC',
-  industry: 'Licensed Electrical Contracting (MA Journeyman Lic. # B-38914)',
-  websiteUrl: 'https://ReisElectric.com',
+  name: 'Shadrick M. Reis Electric',
+  industry: 'Electrical Services (Guided Evaluation Profile)',
+  websiteUrl: 'https://example.org',
   mrr: 38500,
   arr: 462000,
   productsCount: 6,
   activeCustomers: 340,
   churnRate: 0.5,
   averageDealSize: 2850,
-  competitors: ['Local Unlicensed Handymen', 'National Franchise Electricians', 'Regional Electrical Firms'],
-  crmConnected: true,
-  primaryBottleneck: 'After-hours missed calls and uncaptured web leads while Shadrick M. Reis is on active job sites.'
+  competitors: ['Local Providers', 'Regional Electrical Firms'],
+  crmConnected: false,
+  primaryBottleneck: 'After-hours lead triage and dispatch scheduling.'
 };
 
 export const INITIAL_HEALTH_SCORE: BusinessHealthScore = {
@@ -28,12 +28,12 @@ export const INITIAL_HEALTH_SCORE: BusinessHealthScore = {
   revenueEfficiency: {
     score: 94,
     status: 'Optimal',
-    breakdown: '50/50 LLC Partner structure keeps overhead low. Target gross margin sits at 68% on residential service & 58% on commercial panel overhauls.'
+    breakdown: 'Target gross margin sits at 68% on residential service & 58% on commercial panel overhauls.'
   },
   leadVelocity: {
     score: 88,
     status: 'Optimal',
-    breakdown: 'Guided-manual intake and AI Dispatch Qualifier converts web inquiries into reviewed draft estimates within 60 seconds.'
+    breakdown: 'Guided-manual intake and speed-to-lead qualification in DRY_RUN evaluation mode.'
   },
   operationalMargin: {
     score: 95,
@@ -68,9 +68,8 @@ export const INITIAL_HEALTH_SCORE: BusinessHealthScore = {
     }
   ],
   strengths: [
-    '50/50 Partner Operating Model (Ops/Growth + Journeyman Licensed Master Electrician)',
-    'Immaculate field craftsmanship & 100% MA Board 237 CMR Compliance',
-    'Memorable multi-channel slogan: "No job too big, no job too small — you can call Reis Electric!"'
+    'Quality electrical craftsmanship and standard compliance workflows',
+    'Focused residential service and commercial installations'
   ],
   potentialMonthlyUpside: '+$18,500/mo'
 };
@@ -321,7 +320,7 @@ export const INITIAL_EXECUTIVE_BRIEFING: ExecutiveBriefing = {
   biggestGrowthOpportunity: {
     area: 'Commercial Facilities Electrical Maintenance Retainers & Panel Overhauls',
     revenueImpact: '+$18,500/mo combined MRR & project boost',
-    requirement: 'Utilize 50/50 Partner marketing engine to pitch local retail centers, offices, and restaurants.'
+    requirement: 'Focus marketing outreach on local commercial facilities, retail centers, and property managers.'
   },
-  strategicAdvisorNotes: 'Reis Electric LLC is positioned for high profitability. The 50/50 partnership allows Shadrick M. Reis to focus 100% on immaculate field execution, code compliance, and wire inspector sign-offs while the Silent Partner provides strategic capital and growth backing.'
+  strategicAdvisorNotes: 'Shadrick M. Reis Electric operates under controlled DRY_RUN evaluation. Applies configured Massachusetts claim and workflow gates. Requires official-source evidence and qualified human review. Not a legal determination.'
 };

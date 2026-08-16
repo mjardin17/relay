@@ -51,7 +51,7 @@ export class MAElectricalComplianceService {
       }
     }
 
-    if (!lower.includes('b-38914') && !lower.includes('license')) {
+    if (!lower.includes('license') && !lower.includes('ma lic')) {
       warnings.push('MISSING_LICENSE_DISCLOSURE: Massachusetts 237 CMR requires displaying license number in public marketing.');
     }
 
@@ -68,7 +68,7 @@ export class MAElectricalComplianceService {
 
   /**
    * Evaluates Massachusetts electrical company compliance rules deterministically.
-   * Enforces that an individual Journeyman credential (B-38914) does NOT prove that Reis Electric LLC
+   * Enforces that an individual Journeyman credential does NOT prove that an electrical entity
    * holds an active A1 Electrical Business License.
    */
   public evaluateCompliance(
@@ -138,14 +138,14 @@ export class MAElectricalComplianceService {
       if (input.insuranceClassification === 'OFFICIAL_SOURCE_VERIFIED' || input.insuranceSourceLevel === 'independently_verified') {
         blockedReasoning.push('NON_PROOF_SUBSTITUTION: General liability or worker compensation insurance does NOT constitute proof of a Massachusetts electrical business license.');
       }
-      blockedReasoning.push('INDIVIDUAL_JOURNEYMAN_GATE: An individual Journeyman credential (Shadrick M. Reis MA Lic. # B-38914) does NOT satisfy the requirement for an active A1 Electrical Business License for Reis Electric LLC.');
+      blockedReasoning.push('INDIVIDUAL_JOURNEYMAN_GATE: An individual Journeyman credential does NOT satisfy the requirement for an active A1 Electrical Business License for the contracting business entity.');
     }
 
     const canClaimLicensedCompany = isA1Verified && isMasterVerified && blockedReasoning.length === 0;
 
     const jLicense = input.journeymanLicenses && input.journeymanLicenses[0];
-    const jName = jLicense?.workerName || 'Shadrick M. Reis';
-    const jNum = jLicense?.licenseNumber || 'B-38914';
+    const jName = jLicense?.workerName || 'Journeyman Electrician';
+    const jNum = jLicense?.licenseNumber || 'SELF_REPORTED';
     const jClass = jLicense?.evidenceClassification || 'SELF_REPORTED';
 
     return {

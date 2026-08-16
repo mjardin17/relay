@@ -196,6 +196,20 @@ export class GBPGovernanceService {
   /**
    * Returns official Google source citations.
    */
+  private ensureTenantExists(db: any, tenantId: string): void {
+    if (!tenantId) return;
+    try {
+      db.prepare(`
+        INSERT OR IGNORE INTO tenants (
+          id, name, industry, mrr, primary_bottleneck, environment_classification,
+          company_maturity, engagement_model, operating_mode, verification_status, created_at
+        ) VALUES (?, ?, 'electrical_contracting', 0, 'none', 'SIMULATED', 'growth', 'pilot', 'SAFE_MODE', 'UNVERIFIED', ?)
+      `).run(tenantId, tenantId, new Date().toISOString());
+    } catch {
+      // Ignore if exists
+    }
+  }
+
   public getOfficialSources(): GBPOfficialSourceRecord[] {
     return GBP_OFFICIAL_SOURCES;
   }
@@ -269,6 +283,8 @@ export class GBPGovernanceService {
       createdAt: capturedAt,
       updatedAt: capturedAt
     };
+
+    this.ensureTenantExists(db, params.tenantId);
 
     db.prepare(`
       INSERT INTO gbp_authorization_grants (
@@ -464,6 +480,8 @@ export class GBPGovernanceService {
       verifiedBy: null
     };
 
+    this.ensureTenantExists(db, params.tenantId);
+
     db.prepare(`
       INSERT INTO gbp_role_attestations (
         attestation_id, tenant_id, person_name, person_identifier, role,
@@ -505,6 +523,153 @@ export class GBPGovernanceService {
       verifiedAt: r.verified_at,
       verifiedBy: r.verified_by
     }));
+  }
+
+  public recordRoleAttestation(
+    tenantId: string,
+    attestation: {
+      personName: string;
+      personIdentifier: string;
+      role: GBPRoleType;
+      notes?: string;
+      evidenceArtifactId?: string;
+      source?: string;
+      sourceHash?: string;
+    }
+  ): GBPRoleAttestation & { verificationStatus: string } {
+    const result = this.attestRole({
+      tenantId,
+      personName: attestation.personName,
+      personIdentifier: attestation.personIdentifier,
+      role: attestation.role,
+      status: 'SELF_REPORTED_PENDING_EVIDENCE',
+      notes: attestation.notes || '',
+    });
+    return {
+      ...result,
+      verificationStatus: 'UNVERIFIED',
+    };
+  }
+
+  public reviewRoleAttestation(
+    tenantId: string,
+    attestationId: string,
+    reviewerId: string,
+    decision: 'VERIFIED_DOCUMENTED' | 'REJECTED',
+    notes: string
+  ): { success: boolean; attestation?: GBPRoleAttestation & { verificationStatus: string }; error?: string } {
+    const db = getDatabase();
+    const row = db.prepare(`
+      SELECT * FROM gbp_role_attestations WHERE attestation_id = ? AND tenant_id = ?
+    `).get(attestationId, tenantId) as any;
+
+    if (!row) {
+      return { success: false, error: 'ATTESTATION_NOT_FOUND' };
+    }
+
+    if (row.person_identifier === reviewerId) {
+      return {
+        success: false,
+        error: 'SEGREGATION_OF_DUTIES_VIOLATION',
+      };
+    }
+
+    const now = new Date().toISOString();
+    db.prepare(`
+      UPDATE gbp_role_attestations
+      SET status = ?, verified_by = ?, verified_at = ?, notes = ?
+      WHERE attestation_id = ? AND tenant_id = ?
+    `).run(decision, reviewerId, now, notes, attestationId, tenantId);
+
+    return {
+      success: true,
+      attestation: {
+        attestationId: row.attestation_id,
+        tenantId: row.tenant_id,
+        personName: row.person_name,
+        personIdentifier: row.person_identifier,
+        role: row.role as GBPRoleType,
+        status: decision,
+        verificationStatus: decision,
+        evidenceClassification: row.evidence_classification || 'SELF_REPORTED_PENDING_EVIDENCE',
+        notes,
+        attestedAt: row.attested_at || now,
+        verifiedAt: now,
+        verifiedBy: reviewerId,
+      },
+    };
+  }
+
+  public assertAuthorizationGrant(
+    tenantId: string,
+    grantInput: {
+      businessId: string;
+      authorizedPersonId: string;
+      assertedAuthorityRole: GBPRoleType;
+      permissionPurpose: string;
+      allowedActions: any[];
+      prohibitedActions?: any[];
+      consentMethod?: any;
+      consentDisclosureVersion?: string;
+      consentDisclosureTextHash?: string;
+      consentDisclosureText?: string;
+      sourceFormId?: string;
+    }
+  ): GoogleBusinessAuthorizationGrant & { grantStatus: string } {
+    const grant = this.createAuthorizationGrant({
+      tenantId,
+      businessId: grantInput.businessId,
+      authorizedPersonId: grantInput.authorizedPersonId,
+      assertedAuthorityRole: grantInput.assertedAuthorityRole,
+      permissionPurpose: grantInput.permissionPurpose,
+      allowedActions: (grantInput.allowedActions || []) as any,
+      prohibitedActions: (grantInput.prohibitedActions || []) as any,
+      consentMethod: grantInput.consentMethod || 'OWNER_PORTAL_SIGNATURE',
+      consentDisclosureVersion: grantInput.consentDisclosureVersion || 'v1.0',
+      consentDisclosureText: grantInput.consentDisclosureText || 'Authorized grant',
+      approverId: grantInput.authorizedPersonId,
+    });
+
+    return {
+      ...grant,
+      approvalStatus: 'PENDING',
+      grantStatus: 'PENDING_REVIEW',
+    };
+  }
+
+  public approveAuthorizationGrant(
+    tenantId: string,
+    authorizationId: string,
+    approverId: string
+  ): { success: boolean; grant?: GoogleBusinessAuthorizationGrant & { grantStatus: string }; error?: string } {
+    const db = getDatabase();
+    const row = db.prepare(`
+      SELECT * FROM gbp_authorization_grants WHERE authorization_id = ? AND tenant_id = ?
+    `).get(authorizationId, tenantId) as any;
+
+    if (!row) {
+      return { success: false, error: 'GRANT_NOT_FOUND' };
+    }
+
+    if (row.authorized_person_id === approverId) {
+      return {
+        success: false,
+        error: 'SEGREGATION_OF_DUTIES_VIOLATION',
+      };
+    }
+
+    const now = new Date().toISOString();
+    db.prepare(`
+      UPDATE gbp_authorization_grants
+      SET approval_status = 'APPROVED', approver_id = ?, updated_at = ?
+      WHERE authorization_id = ? AND tenant_id = ?
+    `).run(approverId, now, authorizationId, tenantId);
+
+    const updated = this.getAuthorizationGrant(tenantId, authorizationId);
+    return {
+      success: true,
+      grant: updated ? { ...updated, grantStatus: 'APPROVED' } : undefined,
+    };
   }
 
   /**
@@ -609,6 +774,8 @@ export class GBPGovernanceService {
     const stages = INITIAL_12_STAGES;
     const duplicateChecklist = this.getInitialDuplicateChecklist();
 
+    this.ensureTenantExists(db, tenantId);
+
     db.prepare(`
       INSERT INTO gbp_onboarding_workflows (
         id, tenant_id, business_id, current_state, current_stage_number,
@@ -705,9 +872,9 @@ export class GBPGovernanceService {
         },
         {
           id: 'check-personal-gmail',
-          instruction: 'Check smrelec@gmail.com and personal Gmail accounts for existing unclaimed or dormant business profiles.',
+          instruction: 'Check business email accounts for existing unclaimed or dormant business profiles.',
           status: 'PENDING_MANUAL_CHECK',
-          finding: 'Awaiting Shad review of personal Google account dashboard.',
+          finding: 'Awaiting review of business Google account dashboard.',
           officialSourceRule: 'Claim existing profile if found rather than creating duplicate.'
         },
         {
@@ -768,12 +935,12 @@ export class GBPGovernanceService {
       },
       website: {
         status: 'BLOCKED_FROM_PUBLISHING_UNTIL_VERIFIED',
-        intendedDomain: 'smrelec.org',
+        intendedDomain: 'example.org',
         isPubliclyVerified: false,
-        note: 'smrelec.org intended domain is recorded, but publishing is blocked until site is ready and publicly verified.'
+        note: 'Intended domain is recorded, but publishing is blocked until site is ready and publicly verified.'
       },
       email: {
-        value: 'smrelec@gmail.com',
+        value: 'contact@example.org',
         status: 'CONFIGURED'
       },
       callToAction: {
@@ -810,3 +977,6 @@ export class GBPGovernanceService {
     };
   }
 }
+
+export const gbpGovernanceService = new GBPGovernanceService();
+

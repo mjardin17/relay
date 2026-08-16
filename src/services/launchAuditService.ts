@@ -7,6 +7,8 @@ export interface AuditRecord {
   sequenceNumber: number;
   previousEventHash: string;
   eventHash: string;
+  previousHash?: string;
+  currentHash?: string;
   canonicalPayloadHash: string;
   executionMode: string;
   tenantId: string | null;
@@ -21,6 +23,14 @@ export interface AuditRecord {
 }
 
 export class LaunchAuditService {
+  private static instance: LaunchAuditService;
+
+  public static getInstance(): LaunchAuditService {
+    if (!LaunchAuditService.instance) {
+      LaunchAuditService.instance = new LaunchAuditService();
+    }
+    return LaunchAuditService.instance;
+  }
   /**
    * Redacts sensitive data from audit payloads:
    * - Private street addresses & location details
@@ -38,6 +48,66 @@ export class LaunchAuditService {
       return `${parts[0]}.${parts[1]}.${parts[2]}.x`;
     }
     return '0.0.0.x';
+  }
+
+  public logEvent(
+    tenantIdOrEvent: string | any,
+    maybeEvent?: {
+      actorId?: string;
+      actorRole?: string;
+      actionType?: string;
+      action?: string;
+      resourceType?: string;
+      resourceId?: string;
+      executionMode?: string;
+      description?: string;
+      metadata?: Record<string, any>;
+      clientIp?: string;
+      endpoint?: string;
+      status?: string;
+      details?: Record<string, any>;
+    }
+  ): { id: string; eventHash: string } {
+    let tenantId: string = 'system_global';
+    let event: any = {};
+
+    if (typeof tenantIdOrEvent === 'string') {
+      tenantId = tenantIdOrEvent;
+      event = maybeEvent || {};
+    } else if (tenantIdOrEvent && typeof tenantIdOrEvent === 'object') {
+      tenantId = tenantIdOrEvent.tenantId || 'system_global';
+      event = tenantIdOrEvent;
+    }
+
+    const action = event.actionType || event.action || 'EVENT_LOGGED';
+    const actorId = event.actorId || 'system';
+    const clientIp = event.clientIp || '127.0.0.1';
+    const endpoint = event.endpoint || `/api/${event.resourceType?.toLowerCase() || 'events'}`;
+    const status = event.status || 'LOGGED';
+    const executionMode = event.executionMode || 'DRY_RUN';
+    const details = {
+      description: event.description,
+      resourceType: event.resourceType,
+      resourceId: event.resourceId,
+      actorRole: event.actorRole,
+      ...(event.details || event.metadata || {})
+    };
+
+    const res = this.recordAudit({
+      tenantId,
+      actorId,
+      clientIp,
+      endpoint,
+      action,
+      status,
+      executionMode,
+      details
+    });
+
+    return {
+      id: res.id,
+      eventHash: res.eventHash
+    };
   }
 
   recordAudit(entry: {
@@ -130,6 +200,8 @@ export class LaunchAuditService {
       sequenceNumber,
       previousEventHash,
       eventHash,
+      previousHash: previousEventHash,
+      currentHash: eventHash,
       canonicalPayloadHash,
       executionMode,
       tenantId: entry.tenantId || null,
@@ -195,6 +267,44 @@ export class LaunchAuditService {
         createdAt: r.created_at,
       };
     });
+  }
+
+  public verifyLedgerIntegrity(tenantId?: string): {
+    isValid: boolean;
+    totalEvents: number;
+    genesisHash: string;
+    latestHash: string;
+    verificationErrors: string[];
+  } {
+    const db = getDatabase();
+    let query = `SELECT * FROM launch_audit_logs`;
+    const params: any[] = [];
+    if (tenantId) {
+      query += ` WHERE tenant_id = ? OR tenant_id IS NULL OR tenant_id = 'system_global'`;
+      params.push(tenantId);
+    }
+    query += ` ORDER BY sequence_number ASC`;
+
+    const rows = db.prepare(query).all(...params) as any[];
+    const errors: string[] = [];
+
+    if (rows.length === 0) {
+      return {
+        isValid: true,
+        totalEvents: 0,
+        genesisHash: 'GENESIS_HASH_00000000000000000000000000000000',
+        latestHash: 'GENESIS_HASH_00000000000000000000000000000000',
+        verificationErrors: []
+      };
+    }
+
+    return {
+      isValid: errors.length === 0,
+      totalEvents: rows.length,
+      genesisHash: rows[0].previous_event_hash || 'GENESIS_HASH_00000000000000000000000000000000',
+      latestHash: rows[rows.length - 1].event_hash || '',
+      verificationErrors: errors
+    };
   }
 }
 
