@@ -185,13 +185,23 @@ export class JardinOutpostService {
     return profile;
   }
 
-  public seedProofItems(projectId: string = JardinOutpostService.PROJECT_ID): ProofItem[] {
-    return websiteProofService.seedJardinOutpostProofs(JardinOutpostService.TENANT_ID, projectId);
+  public seedProject(): string {
+    // Ensure the website project exists for Jardin's Outpost
+    const project = websiteProjectService.getOrCreateProject(
+      JardinOutpostService.TENANT_ID,
+      "Jardin's Outpost Studio"
+    );
+    return project.id;
   }
 
-  public buildPages(proofItems: ProofItem[]): WebsitePage[] {
+  public seedProofItems(projectId: string = JardinOutpostService.PROJECT_ID): ProofItem[] {
+    // Ensure project exists before seeding proofs
+    const actualProjectId = websiteProjectService.getOrCreateProject(JardinOutpostService.TENANT_ID).id;
+    return websiteProofService.seedJardinOutpostProofs(JardinOutpostService.TENANT_ID, actualProjectId);
+  }
+
+  public buildPages(proofItems: ProofItem[], projectId: string = JardinOutpostService.PROJECT_ID): WebsitePage[] {
     const tenantId = JardinOutpostService.TENANT_ID;
-    const projectId = JardinOutpostService.PROJECT_ID;
     const now = new Date().toISOString();
 
     // Filter proofs for display
@@ -704,7 +714,7 @@ export class JardinOutpostService {
     const proofs = this.seedProofItems(project.id);
 
     // 6. Build Pages and Save
-    const pages = this.buildPages(proofs);
+    const pages = this.buildPages(proofs, project.id);
     pages.forEach(p => websiteProjectService.savePage(p));
 
     // 7. Validate Claims

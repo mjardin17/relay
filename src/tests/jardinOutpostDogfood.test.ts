@@ -102,10 +102,14 @@ describe('Jardin’s Outpost Real Dogfood Build & Validation Suite', () => {
     });
 
     it('enforces Segregation of Duties: AI Agent cannot self-approve proof publications', () => {
+      jardinOutpostService.seedTenantAndLocations();
+      jardinOutpostService.seedBrandProfile();
+      const projectId = jardinOutpostService.seedProject();
+
       const proof = websiteProofService.registerProofItem({
         id: 'proof_test_opt_01',
         tenantId: studioTenantId,
-        projectId: 'proj_test',
+        projectId,
         title: 'Experimental Optimizer',
         type: 'TEST',
         verificationStatus: 'REPORTED',

@@ -806,10 +806,11 @@ export function initializeDatabaseSchema(db: DatabaseSync): void {
       state_province TEXT NOT NULL,
       postal_code TEXT,
       country TEXT NOT NULL DEFAULT 'US',
+      phone TEXT,
       timezone TEXT NOT NULL DEFAULT 'America/New_York',
       latitude REAL,
       longitude REAL,
-      source TEXT NOT NULL,
+      source TEXT NOT NULL DEFAULT 'SELF_REPORTED',
       confidence REAL NOT NULL DEFAULT 1.0,
       verification_state TEXT NOT NULL DEFAULT 'SELF_REPORTED',
       verified_at TEXT,
@@ -1382,6 +1383,9 @@ export function initializeDatabaseSchema(db: DatabaseSync): void {
     }
   };
 
+  safeAddColumn('tenants', 'status TEXT DEFAULT "active"');
+  safeAddColumn('tenants', 'settings_json TEXT DEFAULT "{}"');
+  safeAddColumn('tenants', 'updated_at TEXT');
   safeAddColumn('tenants', 'environment_classification TEXT NOT NULL DEFAULT "SIMULATED_DRY_RUN"');
   safeAddColumn('tenants', 'company_maturity TEXT DEFAULT "Fresh Launch"');
   safeAddColumn('tenants', 'engagement_model TEXT DEFAULT "Full AI Launch"');
