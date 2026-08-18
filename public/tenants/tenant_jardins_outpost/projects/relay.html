@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full scroll-smooth">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Relay Architecture &amp; Systems Case Study — Jardin&#039;s Outpost</title>
+  <meta name="description" content="In-depth architectural case study of Relay: AI operating system with Segregation of Duties and deterministic contract verification.">
+  <link rel="canonical" href="https://jardinsoutpost.com/projects/relay.html">
+  <meta property="og:title" content="Relay Architecture &amp; Systems Case Study — Jardin&#039;s Outpost">
+  <meta property="og:description" content="In-depth architectural case study of Relay: AI operating system with Segregation of Duties and deterministic contract verification.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://jardinsoutpost.com/projects/relay.html">
+  <meta property="og:site_name" content="Jardin&#039;s Outpost">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Relay Architecture &amp; Systems Case Study — Jardin&#039;s Outpost">
+  <meta name="twitter:description" content="In-depth architectural case study of Relay: AI operating system with Segregation of Duties and deterministic contract verification.">
+  <link rel="stylesheet" href="css/styles.css">
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  "name": "Jardin's Outpost",
+  "description": "Building practical AI systems, software products, and business infrastructure with deterministic execution, evidence-backed proof of work, and closed-loop governance.",
+  "url": "https://jardinsoutpost.com",
+  "email": "contact@business.com",
+  "knowsAbout": [
+    "Artificial Intelligence",
+    "Software Engineering",
+    "Deterministic Workflow Automation",
+    "Segregation of Duties",
+    "Commerce Platforms",
+    "Publishing Engines"
+  ],
+  "founder": {
+    "@type": "Person",
+    "name": "Founder & Technical Lead"
+  },
+  "@graph": [
+    {
+      "@type": "SoftwareApplication",
+      "name": "Relay",
+      "applicationCategory": "BusinessApplication",
+      "description": "AI operating system and website engine for local businesses with Segregation of Duties and verified revenue attribution.",
+      "operatingSystem": "Cloud / Linux / Web"
+    },
+    {
+      "@type": "SoftwareApplication",
+      "name": "BossLister",
+      "applicationCategory": "CommerceApplication",
+      "description": "Automated inventory indexing, price comps, and multi-channel marketplace listing engine.",
+      "operatingSystem": "Web"
+    },
+    {
+      "@type": "SoftwareApplication",
+      "name": "StoryForge",
+      "applicationCategory": "AuthoringApplication",
+      "description": "Algorithmic narrative plot coherence graph and manuscript publishing engine.",
+      "operatingSystem": "Web"
+    },
+    {
+      "@type": "SoftwareApplication",
+      "name": "OnTrack",
+      "applicationCategory": "ProductivityApplication",
+      "description": "Deterministic offline-first habit engine and momentum analytics.",
+      "operatingSystem": "Mobile / Web"
+    }
+  ]
+}
+  </script>
+</head>
+<body class="bg-[#0B0F17] text-slate-100 font-sans antialiased min-h-full flex flex-col selection:bg-sky-500 selection:text-white" style="background-color: #0B0D11; color: #F4F1EB;">
+  <!-- Header / Navigation Bar -->
+  <header class="sticky top-0 z-40 bg-[#0B0F17]/90 border-slate-800/80 backdrop-blur border-b">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex items-center justify-between h-20">
+        <!-- Logo / Brand Identity -->
+        <a href="/" class="flex items-center space-x-3 focus:outline-none focus:ring-2 focus:ring-sky-500 rounded-lg p-1" aria-label="Jardin&#039;s Outpost Home">
+          <span class="text-xl sm:text-2xl font-extrabold tracking-tight text-white font-heading">Jardin&#039;s Outpost</span>
+        </a>
+
+        <!-- Desktop Navigation -->
+        <nav class="hidden md:flex items-center space-x-8" aria-label="Main Navigation">
+          
+            <a href="/" class="text-sm font-medium text-slate-400 hover:text-white py-2 transition-colors">
+              Jardin&#039;s Outpost | Digital Workshop
+            </a>
+            <a href="/projects.html" class="text-sm font-medium text-slate-400 hover:text-white py-2 transition-colors">
+              Projects &amp; Architecture | Jardin&#039;s Outpost
+            </a>
+            <a href="/products.html" class="text-sm font-medium text-slate-400 hover:text-white py-2 transition-colors">
+              Products | Jardin&#039;s Outpost
+            </a>
+            <a href="/about.html" class="text-sm font-medium text-slate-400 hover:text-white py-2 transition-colors">
+              About &amp; Philosophy | Jardin&#039;s Outpost
+            </a>
+            <a href="/projects/relay.html" class="text-sm font-medium text-sky-400 font-semibold border-b-2 border-sky-400 py-2 transition-colors">
+              Relay Architecture | Case Study | Jardin&#039;s Outpost
+            </a>
+            <a href="/projects/bosslister.html" class="text-sm font-medium text-slate-400 hover:text-white py-2 transition-colors">
+              BossLister Architecture | Case Study | Jardin&#039;s Outpost
+            </a>
+            <a href="/projects/storyforge.html" class="text-sm font-medium text-slate-400 hover:text-white py-2 transition-colors">
+              StoryForge Architecture | Case Study | Jardin&#039;s Outpost
+            </a>
+        </nav>
+
+        <!-- Header Action CTA -->
+        <div class="flex items-center space-x-4">
+          
+          <a href="/projects.html" class="inline-flex items-center justify-center px-4 py-2 text-xs sm:text-sm font-semibold text-white bg-sky-600 hover:bg-sky-500 rounded-lg shadow-sm transition-all focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-sky-500">
+            Explore Products
+          </a>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content Flow -->
+  <main class="flex-grow" id="main-content">
+
+    <section class="py-16 px-4 sm:px-6 lg:px-8 max-w-4xl mx-auto" id="comp_relay_detail_intro">
+      <h2 class="text-3xl font-bold tracking-tight text-white font-heading mb-4 ">Relay Architecture: Deterministic AI Operating System</h2>
+      <p class="text-lg text-slate-400 mb-6 ">Production Dogfood &amp; Operational Architecture Deep-Dive</p>
+      <div class="prose prose-invert text-slate-300 max-w-none leading-relaxed space-y-4">
+        Relay is Jardin’s Outpost’s flagship autonomous business operating system, currently deployed and operating in production dogfood for trade business workloads.</p><p class="mt-4">### Architectural Thesis
+Modern AI agent architectures fail when they allow non-deterministic LLMs to make direct mutations to production state, publish unverified content, or operate without human approval gates. Relay solves this through three non-negotiable architectural pillars:</p><p class="mt-4">1. **Cryptographic Segregation of Duties (SoD):** AI agents may compose, propose, and validate operations, but cannot approve publication or live deployments. Dual-key authorization is cryptographically enforced.
+2. **Controlled Integration Testing:** The platform is validated with deterministic contract tests across 155 tests passing across 46 suites, executing real SQLite operations and HTTP pipelines.
+3. **Deterministic State &amp; Schema Generation:** Web presence compilation transforms verified business facts into static, accessible HTML with Schema.org JSON-LD and zero hallucinated claims.
+      </div>
+    </section>
+
+    <section class="py-20 px-4 sm:px-6 lg:px-8 bg-[#0B0F17] border-b border-slate-800/60" id="comp_relay_detail_case">
+      <div class="max-w-5xl mx-auto space-y-10">
+        <div class="space-y-3">
+          <span class="text-xs uppercase font-bold tracking-widest text-sky-400">Case Study & Architecture</span>
+          <h2 class="text-3xl sm:text-4xl font-bold text-white font-heading">Relay System Architecture &amp; Verification</h2>
+          <p class="text-lg text-slate-400">Internal Dogfood &amp; Trade Pilot Platform</p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div class="bg-[#111827] border-slate-800 border rounded-xl p-6 space-y-2">
+            <h4 class="text-xs font-bold uppercase tracking-wider text-rose-400">The Problem</h4>
+            <p class="text-sm text-slate-300 leading-relaxed">Businesses require automated operational systems, but LLM hallucinations and runaway mutations create catastrophic legal, regulatory, and financial risks.</p>
+          </div>
+          <div class="bg-[#111827] border-slate-800 border rounded-xl p-6 space-y-2">
+            <h4 class="text-xs font-bold uppercase tracking-wider text-sky-400">Deterministic Solution</h4>
+            <p class="text-sm text-slate-300 leading-relaxed">Engineered a multi-tenant platform with durable SQLite state, SHA-256 version snapshots, automated claim validation, and closed-loop revenue attribution.</p>
+          </div>
+          <div class="bg-[#111827] border-slate-800 border rounded-xl p-6 space-y-3">
+            <h4 class="text-xs font-bold uppercase tracking-wider text-emerald-400">Verified Results</h4>
+            <div class="space-y-2">
+              
+                <div class="text-xs text-slate-300">
+                  <strong class="text-white block text-sm">155 Tests</strong>
+                  <span class="text-slate-400">155 tests passing across 46 suites with controlled integration fixtures</span>
+                </div>
+              
+                <div class="text-xs text-slate-300">
+                  <strong class="text-white block text-sm">SHA-256 Hashing</strong>
+                  <span class="text-slate-400">Deterministic canonical content verification</span>
+                </div>
+              
+                <div class="text-xs text-slate-300">
+                  <strong class="text-white block text-sm">100% SoD Enforcement</strong>
+                  <span class="text-slate-400">Zero self-approving agent violations permitted</span>
+                </div>
+              
+                <div class="text-xs text-slate-300">
+                  <strong class="text-white block text-sm">0 Hallucinations</strong>
+                  <span class="text-slate-400">Factual business context strictly validated</span>
+                </div>
+              
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="py-20 px-4 sm:px-6 lg:px-8 bg-[#0B0F17] border-b border-slate-800/60" id="comp_projects_proof">
+      <div class="max-w-7xl mx-auto space-y-12">
+        <div class="space-y-3">
+          <div class="inline-flex items-center gap-2 px-3 py-1 rounded text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+            <span>🛡️</span> <span>EVIDENCE-BACKED PROOF OF WORK</span>
+          </div>
+          <h2 class="text-3xl sm:text-4xl font-bold text-white font-heading">Architectural Verification Records</h2>
+          <p class="text-base sm:text-lg text-slate-400 max-w-3xl">Cryptographic proof items verified against the codebase and system specs.</p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          
+          <div class="bg-[#111827] border-slate-800 hover:border-slate-700 border rounded-xl p-6 flex flex-col justify-between transition-all">
+            <div class="space-y-3">
+              <div class="flex items-center justify-between text-xs">
+                <span class="font-mono uppercase font-bold text-sky-400">TEST</span>
+                <span class="px-2 py-0.5 rounded font-semibold bg-emerald-500/20 text-emerald-400">
+                  VERIFIED
+                </span>
+              </div>
+              <h3 class="text-lg font-bold text-white font-heading">Deterministic Test Suite &amp; Controlled Integration Execution</h3>
+              <p class="text-xs text-slate-300 leading-relaxed">155 tests passing across 46 suites executing with controlled integration fixtures and clean TypeScript compilation.</p>
+            </div>
+            <div class="mt-6 pt-4 border-t border-slate-800 space-y-1.5 font-mono text-[11px] text-slate-400">
+              <div class="truncate"><strong class="text-slate-500">Source:</strong> tsx --test src/tests/*.test.ts</div>
+              <div class="truncate"><strong class="text-slate-500">SHA256:</strong> ff91c586ad5f42b1...</div>
+            </div>
+          </div>
+          <div class="bg-[#111827] border-slate-800 hover:border-slate-700 border rounded-xl p-6 flex flex-col justify-between transition-all">
+            <div class="space-y-3">
+              <div class="flex items-center justify-between text-xs">
+                <span class="font-mono uppercase font-bold text-sky-400">SECURITY</span>
+                <span class="px-2 py-0.5 rounded font-semibold bg-emerald-500/20 text-emerald-400">
+                  VERIFIED
+                </span>
+              </div>
+              <h3 class="text-lg font-bold text-white font-heading">Cryptographic Segregation of Duties (SoD) Engine</h3>
+              <p class="text-xs text-slate-300 leading-relaxed">AI agent actions require human approval with SHA-256 canonical request hashes, durable pause-resume workflows, and immutable audit logs.</p>
+            </div>
+            <div class="mt-6 pt-4 border-t border-slate-800 space-y-1.5 font-mono text-[11px] text-slate-400">
+              <div class="truncate"><strong class="text-slate-500">Source:</strong> src/services/durableApprovalService.ts</div>
+              <div class="truncate"><strong class="text-slate-500">SHA256:</strong> 12754914598054d4...</div>
+            </div>
+          </div>
+          <div class="bg-[#111827] border-slate-800 hover:border-slate-700 border rounded-xl p-6 flex flex-col justify-between transition-all">
+            <div class="space-y-3">
+              <div class="flex items-center justify-between text-xs">
+                <span class="font-mono uppercase font-bold text-sky-400">FEATURE</span>
+                <span class="px-2 py-0.5 rounded font-semibold bg-emerald-500/20 text-emerald-400">
+                  VERIFIED
+                </span>
+              </div>
+              <h3 class="text-lg font-bold text-white font-heading">Multi-Tenant Static Website Engine with Schema.org</h3>
+              <p class="text-xs text-slate-300 leading-relaxed">Full pipeline compiling tenant context, validating factual claims, generating accessible HTML, and enforcing SHA-256 version snapshots.</p>
+            </div>
+            <div class="mt-6 pt-4 border-t border-slate-800 space-y-1.5 font-mono text-[11px] text-slate-400">
+              <div class="truncate"><strong class="text-slate-500">Source:</strong> src/services/websiteRendererService.ts</div>
+              <div class="truncate"><strong class="text-slate-500">SHA256:</strong> 85aeea6ab67e8aca...</div>
+            </div>
+          </div>
+          <div class="bg-[#111827] border-slate-800 hover:border-slate-700 border rounded-xl p-6 flex flex-col justify-between transition-all">
+            <div class="space-y-3">
+              <div class="flex items-center justify-between text-xs">
+                <span class="font-mono uppercase font-bold text-sky-400">GOVERNANCE</span>
+                <span class="px-2 py-0.5 rounded font-semibold bg-emerald-500/20 text-emerald-400">
+                  VERIFIED
+                </span>
+              </div>
+              <h3 class="text-lg font-bold text-white font-heading">Closed-Loop Revenue Attribution &amp; Reconciliation</h3>
+              <p class="text-xs text-slate-300 leading-relaxed">Deterministic linking between website form submissions, CRM lead routing, verified bank deposits, and attributable gross margin.</p>
+            </div>
+            <div class="mt-6 pt-4 border-t border-slate-800 space-y-1.5 font-mono text-[11px] text-slate-400">
+              <div class="truncate"><strong class="text-slate-500">Source:</strong> src/services/websiteRoiService.ts</div>
+              <div class="truncate"><strong class="text-slate-500">SHA256:</strong> de9402a2a9f8d921...</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <footer class="bg-[#06090E] border-slate-800 text-slate-400 py-12 px-4 sm:px-6 lg:px-8 border-t" id="comp_footer_shared">
+      <div class="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
+        <div class="space-y-3 md:col-span-2">
+          <h4 class="text-lg font-bold text-white font-heading">Jardin&#039;s Outpost</h4>
+          <p class="text-sm text-slate-400"></p>
+          <p class="text-sm font-semibold text-sky-400"> | contact@jardinsoutpost.com</p>
+          <p class="text-xs text-slate-500 leading-relaxed">Independent Digital Workshop &amp; Product Studio</p>
+        </div>
+        <div>
+          <h5 class="text-sm font-semibold text-white uppercase tracking-wider mb-3">Navigation</h5>
+          <ul class="space-y-2 text-sm">
+            <li><a href="/" class="hover:text-white transition-colors">Home</a></li><li><a href="/products.html" class="hover:text-white transition-colors">Products</a></li><li><a href="/projects.html" class="hover:text-white transition-colors">Projects</a></li><li><a href="/about.html" class="hover:text-white transition-colors">About</a></li>
+          </ul>
+        </div>
+        <div>
+          <h5 class="text-sm font-semibold text-white uppercase tracking-wider mb-3">Integrity & Governance</h5>
+          <p class="text-xs text-slate-500 leading-relaxed">All architectural claims and benchmark data verified against ground-truth Relay test suites and deterministic audit logs.</p>
+        </div>
+      </div>
+      <div class="max-w-7xl mx-auto pt-8 border-t border-slate-800 text-xs text-slate-600 text-center">
+        © 2026 Jardin&#039;s Outpost. All rights reserved.
+      </div>
+    </footer>
+  </main>
+</body>
+</html>

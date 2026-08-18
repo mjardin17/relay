@@ -59,9 +59,8 @@ export class ReisElectricPilotService {
         id, tenant_id, legal_business_name, dba_name, entity_registration_status,
         ma_a1_business_license_number, business_license_status, business_license_source_level,
         master_electrician_name, master_electrician_license_number, master_electrician_license_status,
-        master_electrician_source_level, insurance_carrier, insurance_policy_status, insurance_expiration_date,
-        source_url, can_claim_licensed_company, created_at, updated_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        master_electrician_source_level, source_url, can_claim_licensed_company, created_at, updated_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       ON CONFLICT(tenant_id) DO UPDATE SET
         legal_business_name = excluded.legal_business_name,
         ma_a1_business_license_number = excluded.ma_a1_business_license_number,
@@ -69,8 +68,6 @@ export class ReisElectricPilotService {
         master_electrician_license_number = excluded.master_electrician_license_number,
         business_license_status = excluded.business_license_status,
         master_electrician_license_status = excluded.master_electrician_license_status,
-        insurance_carrier = excluded.insurance_carrier,
-        insurance_policy_status = excluded.insurance_policy_status,
         can_claim_licensed_company = excluded.can_claim_licensed_company,
         source_url = excluded.source_url
     `).run(
@@ -86,9 +83,6 @@ export class ReisElectricPilotService {
       '19842-A',
       'active',
       'independently_verified',
-      'Sentinel Risk Management',
-      'verified',
-      '2027-01-15',
       'https://mass.gov/dpl/boards/el',
       1,
       new Date().toISOString(),

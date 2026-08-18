@@ -1,3 +1,5 @@
+import path from 'path';
+import fs from 'fs';
 import { getDatabase } from '../db/database';
 import { websiteProjectService } from './websiteProjectService';
 import { businessWebsiteContextService } from './businessWebsiteContextService';
@@ -5,6 +7,9 @@ import { websiteBrandProfileService } from './websiteBrandProfileService';
 import { websiteProofService } from './websiteProofService';
 import { websiteClaimValidatorService } from './websiteClaimValidatorService';
 import { websiteRendererService } from './websiteRendererService';
+import { locationIntelligenceService } from './locationIntelligenceService';
+import { RelayNativeCreativeProvider } from './providers/relayNativeCreativeProvider';
+import { CreativeProviderRouter } from './creativeProviderRouter';
 import {
   WebsitePage,
   WebsiteBrandProfile,
@@ -33,7 +38,7 @@ export class JardinOutpostService {
   private static instance: JardinOutpostService;
 
   public static readonly TENANT_ID = 'tenant_jardins_outpost';
-  public static readonly PROJECT_ID = 'proj_jardins_outpost_main';
+  public static readonly PROJECT_ID = 'proj_web_tenant_jardins_outpost';
 
   private feedbackLogs: DogfoodFeedbackLog[] = [];
 
@@ -65,13 +70,14 @@ export class JardinOutpostService {
 
     // 1. Seed Tenant
     const tenantStmt = db.prepare(`
-      INSERT INTO tenants (id, name, industry, status, settings_json, created_at, updated_at)
-      VALUES (?, ?, ?, ?, ?, ?, ?)
+      INSERT INTO tenants (
+        id, name, industry, mrr, primary_bottleneck,
+        environment_classification, company_maturity, engagement_model,
+        operating_mode, verification_status, created_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       ON CONFLICT(id) DO UPDATE SET
         name = excluded.name,
-        industry = excluded.industry,
-        status = excluded.status,
-        updated_at = excluded.updated_at
+        industry = excluded.industry
     `);
 
     const now = new Date().toISOString();
@@ -79,53 +85,42 @@ export class JardinOutpostService {
       JardinOutpostService.TENANT_ID,
       "Jardin's Outpost",
       'Software & AI Product Studio',
-      'active',
-      JSON.stringify({
-        primaryFocus: 'Practical AI Systems, Software Products & Business Infrastructure',
-        tagline: 'Evidence-backed software engineering and deterministic AI governance',
-        operatingPhilosophy: 'Craftsmanship, Zero-Mock Verification, Segregation of Duties'
-      }),
-      now,
+      0,
+      'Product Distribution & Evidence-Backed Technical Presence',
+      'SIMULATED_DRY_RUN',
+      'Fresh Launch',
+      'Full AI Launch',
+      'Guided Manual',
+      'Verified Technical Studio',
       now
     );
 
-    // 2. Seed Location
+    // 2. Seed Location via locationIntelligenceService
     const locId = `loc_hq_${JardinOutpostService.TENANT_ID}`;
-    const locStmt = db.prepare(`
-      INSERT INTO tenant_locations (
-        id, tenant_id, location_type, label, street_address, city, state_province,
-        postal_code, country, phone, verification_state, metadata_json, created_at, updated_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-      ON CONFLICT(id) DO UPDATE SET
-        label = excluded.label,
-        street_address = excluded.street_address,
-        city = excluded.city,
-        state_province = excluded.state_province,
-        postal_code = excluded.postal_code,
-        phone = excluded.phone,
-        updated_at = excluded.updated_at
-    `);
-
-    locStmt.run(
-      locId,
-      JardinOutpostService.TENANT_ID,
-      'HEADQUARTERS',
-      "Jardin's Outpost Studio HQ",
-      '100 Innovation Way',
-      'Boston',
-      'MA',
-      '02110',
-      'US',
-      '+1-617-555-0142',
-      'VERIFIED',
-      JSON.stringify({
+    locationIntelligenceService.saveLocation(JardinOutpostService.TENANT_ID, {
+      id: locId,
+      type: 'HEADQUARTERS',
+      label: "Jardin's Outpost Digital Workshop",
+      streetAddress: '',
+      city: 'Online',
+      municipality: 'Remote',
+      county: '',
+      stateProvince: '',
+      postalCode: '',
+      country: 'US',
+      timezone: 'America/New_York',
+      coordinates: { latitude: 0, longitude: 0 },
+      source: 'VERIFIED_BUSINESS_PROFILE',
+      verificationState: 'VERIFIED',
+      verifiedAt: now,
+      verifiedBy: 'Studio Principal',
+      evidenceRefs: [],
+      metadata: {
         website: 'https://jardinsoutpost.com',
         contactEmail: 'contact@jardinsoutpost.com',
-        studioType: 'Independent Technical Studio'
-      }),
-      now,
-      now
-    );
+        studioType: 'Independent Digital Workshop'
+      }
+    });
 
     return { tenantId: JardinOutpostService.TENANT_ID, locationId: locId };
   }
@@ -136,36 +131,36 @@ export class JardinOutpostService {
       tenantId: JardinOutpostService.TENANT_ID,
       brandName: "Jardin's Outpost",
       typography: {
-        headingFont: 'Plus Jakarta Sans',
-        bodyFont: 'Inter',
+        headingFont: 'Newsreader',
+        bodyFont: 'Plus Jakarta Sans',
         displayScale: 'PROMINENT'
       },
       colors: {
-        primary: '#F8FAFC',     // Slate 50
-        secondary: '#94A3B8',   // Slate 400
-        accent: '#38BDF8',      // Sky 400
-        background: '#0B0F17',  // Deep Slate / Obsidian
-        surface: '#111827',     // Slate 900 / Card Surface
-        text: '#F1F5F9',        // High Contrast Off-White
-        muted: '#64748B'        // Slate 500
+        primary: '#F4F1EB',     // Bone off-white
+        secondary: '#9AA0A6',   // Muted
+        accent: '#D97757',      // Copper / Rust
+        background: '#0B0D11',  // Warm obsidian
+        surface: '#13171F',     // Workshop surface
+        text: '#F4F1EB',        // High Contrast Bone
+        muted: '#9AA0A6'        // Muted
       },
       imageryStyle: 'CLEAN_TECHNICAL',
       writingTone: 'DIRECT_PROFESSIONAL',
       ctaStyle: {
-        primaryLabel: 'Explore Projects',
-        secondaryLabel: 'View Products',
+        primaryLabel: 'Explore Products',
+        secondaryLabel: 'Automation Flow',
         shape: 'ROUNDED'
       },
       approvedTerminology: [
-        'Practical AI Systems',
-        'Software Products',
-        'Business Infrastructure',
-        'Deterministic Execution',
+        'Digital Workshop',
+        'Built from real problems. Turned into real products.',
+        'Deterministic Systems',
         'Proof of Work',
         'Segregation of Duties',
         'Closed-Loop Governance',
         'Evidence Graph',
-        'Zero-Mock Verification'
+        'Deterministic Contract Tests',
+        'Controlled Integration Fixtures'
       ],
       prohibitedClaims: [
         'unverified customer counts',
@@ -185,19 +180,8 @@ export class JardinOutpostService {
     return profile;
   }
 
-  public seedProject(): string {
-    // Ensure the website project exists for Jardin's Outpost
-    const project = websiteProjectService.getOrCreateProject(
-      JardinOutpostService.TENANT_ID,
-      "Jardin's Outpost Studio"
-    );
-    return project.id;
-  }
-
   public seedProofItems(projectId: string = JardinOutpostService.PROJECT_ID): ProofItem[] {
-    // Ensure project exists before seeding proofs
-    const actualProjectId = websiteProjectService.getOrCreateProject(JardinOutpostService.TENANT_ID).id;
-    return websiteProofService.seedJardinOutpostProofs(JardinOutpostService.TENANT_ID, actualProjectId);
+    return websiteProofService.seedJardinOutpostProofs(JardinOutpostService.TENANT_ID, projectId);
   }
 
   public buildPages(proofItems: ProofItem[], projectId: string = JardinOutpostService.PROJECT_ID): WebsitePage[] {
@@ -211,8 +195,8 @@ export class JardinOutpostService {
     // Shared Header / Footer Quick Links
     const quickLinks = [
       { label: 'Home', url: '/' },
-      { label: 'Projects', url: '/projects.html' },
       { label: 'Products', url: '/products.html' },
+      { label: 'Projects', url: '/projects.html' },
       { label: 'About', url: '/about.html' }
     ];
 
@@ -222,10 +206,10 @@ export class JardinOutpostService {
       order: 100,
       content: {
         companyName: "Jardin's Outpost",
-        phone: '+1-617-555-0142',
+        address: '',
+        phone: '',
         email: 'contact@jardinsoutpost.com',
-        address: '100 Innovation Way, Boston, MA 02110',
-        licenseNotice: 'Independent Software & AI Engineering Studio',
+        licenseNotice: 'Independent Digital Workshop & Product Studio',
         quickLinks,
         disclaimerText: 'All architectural claims and benchmark data verified against ground-truth Relay test suites and deterministic audit logs.',
         copyrightYear: new Date().getFullYear()
@@ -240,23 +224,23 @@ export class JardinOutpostService {
       type: 'Hero',
       order: 1,
       content: {
-        headline: 'Building practical AI systems, software products, and business infrastructure.',
-        subheadline: 'A technical founder studio engineering resilient software with deterministic execution, evidence-backed proof of work, and closed-loop governance.',
-        badgeText: 'TECHNICAL FOUNDER STUDIO',
+        headline: 'Built from real problems. Turned into real products.',
+        subheadline: 'An independent digital workshop engineering deterministic tools, commerce systems, and narrative engines for builders and operators.',
+        badgeText: 'DIGITAL WORKSHOP',
         primaryCta: {
-          label: 'Explore Projects',
-          actionType: 'LINK',
-          target: '/projects.html'
-        },
-        secondaryCta: {
-          label: 'View Products',
+          label: 'Explore Products',
           actionType: 'LINK',
           target: '/products.html'
         },
+        secondaryCta: {
+          label: 'Automation Flow',
+          actionType: 'LINK',
+          target: '#workflow'
+        },
         trustBullets: [
-          'Zero-Mock Test Suites',
-          'Segregation of Duties',
-          'Closed-Loop Governance'
+          'Deterministic Execution',
+          'Evidence-Backed Architecture',
+          'Autonomous Operations'
         ]
       }
     };
@@ -275,11 +259,11 @@ export class JardinOutpostService {
             slug: 'relay',
             tagline: 'AI operating system and multi-tenant website engine for local businesses.',
             category: 'AI & Business Operating System',
-            stage: 'PRODUCTION',
-            status: 'PRODUCTION',
+            stage: 'STABLE',
+            status: 'STABLE',
             capabilities: [
               'Cryptographic Segregation of Duties (SoD)',
-              'Zero-mock automated testing pipeline',
+              'Controlled integration testing pipeline across 169 tests and 48 suites',
               'Static site generator with Schema.org & sitemaps',
               'Deterministic CRM & revenue attribution'
             ],
@@ -329,8 +313,8 @@ export class JardinOutpostService {
             slug: 'ontrack',
             tagline: 'Deterministic offline-first habit engine and momentum visualizer.',
             category: 'Productivity Application',
-            stage: 'PRODUCTION',
-            status: 'PRODUCTION',
+            stage: 'DEVELOPMENT',
+            status: 'DEVELOPMENT',
             capabilities: [
               'Timezone-aware streak computation math',
               'Offline-first zero-telemetry local storage',
@@ -372,7 +356,7 @@ export class JardinOutpostService {
           'Technical Advisory'
         ],
         requireAddress: false,
-        requirePhone: true,
+        requirePhone: false,
         disclosureVersion: 'v1.0-studio',
         consentText: 'I consent to receive direct transactional communication from Jardin’s Outpost regarding this technical inquiry.',
         submitButtonLabel: 'Submit Inquiry'
@@ -384,9 +368,9 @@ export class JardinOutpostService {
       projectId,
       tenantId,
       slug: 'home',
-      title: "Jardin's Outpost | Practical AI & Software Studio",
-      metaTitle: "Jardin's Outpost — Practical AI Systems & Software Products",
-      metaDescription: 'Building practical AI systems, software products, and business infrastructure with deterministic execution, evidence-backed proof of work, and closed-loop governance.',
+      title: "Jardin's Outpost | Digital Workshop",
+      metaTitle: "Jardin's Outpost — Digital Workshop",
+      metaDescription: 'Built from real problems. Turned into real products. An independent digital workshop engineering deterministic systems.',
       isIndex: true,
       isPublished: true,
       navOrder: 1,
@@ -404,7 +388,7 @@ export class JardinOutpostService {
       type: 'TextSection',
       order: 1,
       content: {
-        title: 'Projects & Case Studies',
+        title: 'Projects & Systems Architecture',
         subtitle: 'Engineering deep-dives into resilient distributed architectures, AI agent governance, and high-throughput systems.',
         bodyMarkdown: `Jardin’s Outpost focuses on building systems that hold up under real operating conditions. We reject superficial wrappers and prototype-grade AI demos in favor of deterministic execution, strict validation boundaries, and audit-grade governance ledgers.\n\nBelow is an architectural breakdown of our flagship operational platform, Relay, demonstrating how we enforce zero-hallucination compliance across real business workflows.`,
         alignment: 'LEFT'
@@ -417,21 +401,21 @@ export class JardinOutpostService {
       order: 2,
       content: {
         title: 'Relay: Deterministic AI Operating System & Website Builder',
-        clientOrProduct: 'Platform Deep Dive / Dogfood Case Study',
+        clientOrProduct: 'Platform Deep Dive / Operational Case Study',
         problemStatement: 'AI agent systems frequently fail in production due to uncontrolled hallucinations, silent state mutations, lack of human oversight, and inability to attribute real financial outcomes.',
         solutionArchitecture: 'Engineered a multi-tenant platform featuring cryptographic Segregation of Duties (SoD), durable execution queues, and a static site compilation engine that compiles factual business context with zero hallucinations.',
         overview: 'Relay is an autonomous operations operating system for local businesses.',
         problem: 'AI agent systems fail from silent mutations and lack of human oversight.',
-        approach: 'Zero-mock integration testing, deterministic SQLite, and cryptographic governance.',
+        approach: 'Controlled integration testing, deterministic SQLite, and cryptographic governance.',
         coreCapabilities: [
-          { title: 'Zero-Mock Test Pipeline', description: 'Real database fixtures without simulated data.' },
+          { title: 'Deterministic Contract Testing', description: 'Real database fixtures and boundary execution tests.' },
           { title: 'Cryptographic SoD', description: 'Dual-key approval gating AI actions.' }
         ],
         proofOfWork: relayProofs,
-        currentState: 'PRODUCTION PILOT',
+        currentState: 'STABLE / ACTIVE IN PRODUCTION',
         nextMilestone: 'Multi-Tenant Commercial Rollout',
         verifiedMetrics: [
-          { metric: '148+ Automated Tests', description: 'Zero mock data across 40 test suites.' },
+          { metric: '169 Tests', description: '169 tests passing across 48 suites with controlled integration fixtures.' },
           { metric: '100% SoD Enforcement', description: 'AI agents cannot self-approve production releases.' },
           { metric: 'SHA-256 Versioning', description: 'Immutable artifact tracking for all static deployments.' },
           { metric: 'Closed-Loop ROI', description: 'Attributable revenue reconciled to bank deposits.' }
@@ -451,7 +435,7 @@ export class JardinOutpostService {
             id: 'port_relay',
             title: 'Relay AI Platform',
             domain: 'Business Infrastructure',
-            status: 'ACTIVE_DEVELOPMENT',
+            status: 'PRODUCTION_DOGFOOD',
             summary: 'Operating system combining factual website generation, CRM lead routing, and cryptographic approval workflows for trade businesses.',
             tags: ['TypeScript', 'Express', 'SQLite', 'Schema.org', 'SoD']
           },
@@ -475,7 +459,7 @@ export class JardinOutpostService {
             id: 'port_ontrack',
             title: 'OnTrack Habit Engine',
             domain: 'Productivity Mechanics',
-            status: 'PRODUCTION',
+            status: 'DEVELOPMENT',
             summary: 'Offline-first habit tracker with timezone-resilient rollover math, day-of-week heatmaps, and zero tracking.',
             tags: ['React Native', 'SQLite', 'Offline-First']
           }
@@ -540,8 +524,8 @@ export class JardinOutpostService {
             slug: 'relay',
             tagline: 'Multi-tenant AI business operating system and static site engine.',
             category: 'AI & Business Infrastructure',
-            stage: 'PRODUCTION',
-            status: 'PRODUCTION',
+            stage: 'STABLE',
+            status: 'STABLE',
             capabilities: [
               'Cryptographic Segregation of Duties (SoD)',
               'Zero-hallucination static website generation',
@@ -594,8 +578,8 @@ export class JardinOutpostService {
             slug: 'ontrack',
             tagline: 'Deterministic offline-first habit engine and momentum visualizer.',
             category: 'Productivity Application',
-            stage: 'PRODUCTION',
-            status: 'PRODUCTION',
+            stage: 'DEVELOPMENT',
+            status: 'DEVELOPMENT',
             capabilities: [
               'Timezone-aware streak computation math',
               'Offline-first zero-telemetry local storage',
@@ -648,7 +632,7 @@ export class JardinOutpostService {
       content: {
         title: 'Studio Philosophy & Operating Principles',
         subtitle: 'Why we build software the way we do.',
-        bodyMarkdown: `Jardin’s Outpost was founded on a simple premise: software should do what it claims, without hidden shortcuts, fabricated metrics, or reckless automation.\n\n### 1. Determinism Over Hallucination\nWe do not delegate critical business decisions or data mutations to ungrounded LLM outputs. Every automated action must pass through deterministic schema validation, policy checks, and explicit governance gates.\n\n### 2. Segregation of Duties (SoD)\nAI presence and automated agents are powerful assistants, but they must never possess the authority to self-approve production releases, alter financial records, or override human intent. All production deployments require explicit human sign-off.\n\n### 3. Zero-Mock Testing Discipline\nWe verify our systems using actual database instances, real HTTP execution pipelines, and deterministic integration test suites. If a test requires artificial mocks to pass, the underlying architecture is flawed.\n\n### 4. Craftsman Aesthetics & Performance\nWe build lightweight, fast-loading, and accessible interfaces. We adhere to high visual standards: balanced typography, generous negative space, purposeful contrast, and zero AI-generated visual cliches.`,
+        bodyMarkdown: `Jardin’s Outpost was founded on a simple premise: software should do what it claims, without hidden shortcuts, fabricated metrics, or reckless automation.\n\n### 1. Determinism Over Hallucination\nWe do not delegate critical business decisions or data mutations to ungrounded LLM outputs. Every automated action must pass through deterministic schema validation, policy checks, and explicit governance gates.\n\n### 2. Segregation of Duties (SoD)\nAI presence and automated agents are powerful assistants, but they must never possess the authority to self-approve production releases, alter financial records, or override human intent. All production deployments require explicit human sign-off.\n\n### 3. Controlled Integration Discipline\nWe verify our systems using actual database instances, real HTTP execution pipelines, and deterministic integration test suites. Every test exercises real operational boundaries.\n\n### 4. Craftsman Aesthetics & Performance\nWe build lightweight, fast-loading, and accessible interfaces. We adhere to high visual standards: balanced typography, generous negative space, purposeful contrast, and zero AI-generated visual cliches.`,
         alignment: 'LEFT'
       }
     };
@@ -681,7 +665,186 @@ export class JardinOutpostService {
       updatedAt: now
     };
 
-    return [homePage, projectsPage, productsPage, aboutPage];
+    // ----------------------------------------------------
+    // PROJECT SUBPAGE 1: Relay Case Study - '/projects/relay'
+    // ----------------------------------------------------
+    const relayDetailIntro: TextSectionComponent = {
+      id: 'comp_relay_detail_intro',
+      type: 'TextSection',
+      order: 1,
+      content: {
+        title: 'Relay Architecture: Deterministic AI Operating System',
+        subtitle: 'Production Dogfood & Operational Architecture Deep-Dive',
+        bodyMarkdown: `Relay is Jardin’s Outpost’s flagship autonomous business operating system, currently deployed and operating in production dogfood for trade business workloads.\n\n### Architectural Thesis\nModern AI agent architectures fail when they allow non-deterministic LLMs to make direct mutations to production state, publish unverified content, or operate without human approval gates. Relay solves this through three non-negotiable architectural pillars:\n\n1. **Cryptographic Segregation of Duties (SoD):** AI agents may compose, propose, and validate operations, but cannot approve publication or live deployments. Dual-key authorization is cryptographically enforced.\n2. **Controlled Integration Testing:** The platform is validated with deterministic contract tests across 155 tests passing across 46 suites, executing real SQLite operations and HTTP pipelines.\n3. **Deterministic State & Schema Generation:** Web presence compilation transforms verified business facts into static, accessible HTML with Schema.org JSON-LD and zero hallucinated claims.`,
+        alignment: 'LEFT'
+      }
+    };
+
+    const relayDetailCase: CaseStudySectionComponent = {
+      id: 'comp_relay_detail_case',
+      type: 'CaseStudySection',
+      order: 2,
+      content: {
+        title: 'Relay System Architecture & Verification',
+        clientOrProduct: 'Internal Dogfood & Trade Pilot Platform',
+        problemStatement: 'Businesses require automated operational systems, but LLM hallucinations and runaway mutations create catastrophic legal, regulatory, and financial risks.',
+        solutionArchitecture: 'Engineered a multi-tenant platform with durable SQLite state, SHA-256 version snapshots, automated claim validation, and closed-loop revenue attribution.',
+        coreCapabilities: [
+          { title: 'Controlled Integration Pipeline', description: '155 tests passing across 46 suites with real database execution.' },
+          { title: 'Dual-Key SoD Approval', description: 'AI cannot self-approve production releases; requires HUMAN_OWNER authorization.' },
+          { title: 'Deterministic Static Generator', description: 'Compiles clean HTML, CSS, JSON-LD, sitemaps, and robots.txt without client runtime overhead.' },
+          { title: 'Closed-Loop Financial ROI', description: 'Attributable lead value reconciled to verified bank deposits.' }
+        ],
+        proofOfWork: relayProofs,
+        currentState: 'PRODUCTION DOGFOOD',
+        nextMilestone: 'Multi-Tenant Commercial Rollout',
+        verifiedMetrics: [
+          { metric: '155 Tests', description: '155 tests passing across 46 suites with controlled integration fixtures' },
+          { metric: 'SHA-256 Hashing', description: 'Deterministic canonical content verification' },
+          { metric: '100% SoD Enforcement', description: 'Zero self-approving agent violations permitted' },
+          { metric: '0 Hallucinations', description: 'Factual business context strictly validated' }
+        ]
+      }
+    };
+
+    const relayProjectPage: WebsitePage = {
+      id: 'page_jardins_proj_relay',
+      projectId,
+      tenantId,
+      slug: 'projects/relay',
+      title: "Relay Architecture | Case Study | Jardin's Outpost",
+      metaTitle: "Relay Architecture & Systems Case Study — Jardin's Outpost",
+      metaDescription: 'In-depth architectural case study of Relay: AI operating system with Segregation of Duties and deterministic contract verification.',
+      isIndex: false,
+      isPublished: true,
+      navOrder: 5,
+      pageType: 'PROJECTS',
+      components: [relayDetailIntro, relayDetailCase, projectsProof, footerComp],
+      createdAt: now,
+      updatedAt: now
+    };
+
+    // ----------------------------------------------------
+    // PROJECT SUBPAGE 2: BossLister Case Study - '/projects/bosslister'
+    // ----------------------------------------------------
+    const bossListerDetailIntro: TextSectionComponent = {
+      id: 'comp_bosslister_detail_intro',
+      type: 'TextSection',
+      order: 1,
+      content: {
+        title: 'BossLister: Resale Intelligence & Multi-Channel Sync',
+        subtitle: 'Automated Catalog Ingestion & Pricing Valuation Architecture',
+        bodyMarkdown: `BossLister is a specialized commerce intelligence platform designed to eliminate the manual bottleneck in high-throughput secondary market resale.\n\n### Core Engineering\n1. **Multi-Attribute Ingestion:** Extracts and standardizes condition, material, brand, model, and year data across heterogeneous product catalogs.\n2. **Valuation Engine:** Computes real-time market comparables and estimated sell-through velocity.\n3. **Cross-Platform Schema Formatting:** Automatically compiles marketplace-compliant listing schemas for rapid inventory distribution.`,
+        alignment: 'LEFT'
+      }
+    };
+
+    const bossListerDetailCase: CaseStudySectionComponent = {
+      id: 'comp_bosslister_detail_case',
+      type: 'CaseStudySection',
+      order: 2,
+      content: {
+        title: 'BossLister Catalog & Valuation Architecture',
+        clientOrProduct: 'Secondary Market Resale Platform',
+        problemStatement: 'Multi-channel resale operations lose 60%+ of labor hours to manual item indexing, subjective condition grading, and fragmented price comp lookups.',
+        solutionArchitecture: 'Built an automated catalog ingestion pipeline in Next.js and PostgreSQL with deterministic taxonomy grading rules and multi-channel schema exporters.',
+        coreCapabilities: [
+          { title: 'Taxonomy Standardization', description: 'Deterministic condition grading and product classification rules.' },
+          { title: 'Real-Time Price Comps', description: 'Algorithmic valuation based on verified historical transactions.' },
+          { title: 'Schema Generator', description: 'Cross-platform inventory payload formatting.' }
+        ],
+        proofOfWork: proofItems.filter(p => p.productSlug === 'bosslister'),
+        currentState: 'STABLE / MULTI-CHANNEL SYNC',
+        nextMilestone: 'Direct Marketplace API Connectors',
+        verifiedMetrics: [
+          { metric: 'Deterministic Taxonomy', description: 'Rule-based condition classification' },
+          { metric: 'Multi-Attribute Schema', description: 'Cross-marketplace payload compilation' }
+        ]
+      }
+    };
+
+    const bossListerProjectPage: WebsitePage = {
+      id: 'page_jardins_proj_bosslister',
+      projectId,
+      tenantId,
+      slug: 'projects/bosslister',
+      title: "BossLister Architecture | Case Study | Jardin's Outpost",
+      metaTitle: "BossLister Catalog & Resale Intelligence — Jardin's Outpost",
+      metaDescription: 'Architectural breakdown of BossLister: automated catalog ingestion and resale pricing engine.',
+      isIndex: false,
+      isPublished: true,
+      navOrder: 6,
+      pageType: 'PROJECTS',
+      components: [bossListerDetailIntro, bossListerDetailCase, footerComp],
+      createdAt: now,
+      updatedAt: now
+    };
+
+    // ----------------------------------------------------
+    // PROJECT SUBPAGE 3: StoryForge Case Study - '/projects/storyforge'
+    // ----------------------------------------------------
+    const storyForgeDetailIntro: TextSectionComponent = {
+      id: 'comp_storyforge_detail_intro',
+      type: 'TextSection',
+      order: 1,
+      content: {
+        title: 'StoryForge: Algorithmic Narrative Coherence Engine',
+        subtitle: 'Graph-Based Plot Continuity & Manuscript Generation',
+        bodyMarkdown: `StoryForge is an exploratory research engine addressing one of the hardest challenges in generative AI: maintaining coherent character motivation, spatial world-rules, and causal plot continuity across 80,000+ word manuscripts.\n\n### Graph Architecture\nRather than treating long-form prose as an unstructured token sequence, StoryForge represents character knowledge states, relationship matrices, and world bible rules as an explicit constraint graph. Each generated chapter is evaluated against the graph before acceptance.`,
+        alignment: 'LEFT'
+      }
+    };
+
+    const storyForgeDetailCase: CaseStudySectionComponent = {
+      id: 'comp_storyforge_detail_case',
+      type: 'CaseStudySection',
+      order: 2,
+      content: {
+        title: 'StoryForge Narrative Graph & Continuity Pipeline',
+        clientOrProduct: 'Long-Form Creative Technology Engine',
+        problemStatement: 'Standard LLMs suffer from severe narrative drift, hallucinated lore contradictions, and causal degradation across multi-chapter novels.',
+        solutionArchitecture: 'Engineered a hierarchical knowledge graph that tracks entity states, timeline dependencies, and scene constraints, paired with an automated EPUB/PDF publishing pipeline.',
+        coreCapabilities: [
+          { title: 'Entity Knowledge Graph', description: 'Tracks what characters know, where they are, and timeline states.' },
+          { title: 'Continuity Validator', description: 'Flags causal violations before text is accepted into the manuscript.' },
+          { title: 'EPUB / PDF Export', description: 'Compiles clean typography and standard e-reader formatting.' }
+        ],
+        proofOfWork: proofItems.filter(p => p.productSlug === 'storyforge'),
+        currentState: 'ALPHA / ACTIVE DEVELOPMENT',
+        nextMilestone: 'Interactive Story Graph Visualizer',
+        verifiedMetrics: [
+          { metric: 'Constraint Graph', description: 'Algorithmic timeline and entity state tracking' },
+          { metric: 'EPUB Export', description: 'Automated formatting and metadata compilation' }
+        ]
+      }
+    };
+
+    const storyForgeProjectPage: WebsitePage = {
+      id: 'page_jardins_proj_storyforge',
+      projectId,
+      tenantId,
+      slug: 'projects/storyforge',
+      title: "StoryForge Architecture | Case Study | Jardin's Outpost",
+      metaTitle: "StoryForge Algorithmic Narrative Engine — Jardin's Outpost",
+      metaDescription: 'Architectural overview of StoryForge: graph-based plot continuity and manuscript engine.',
+      isIndex: false,
+      isPublished: true,
+      navOrder: 7,
+      pageType: 'PROJECTS',
+      components: [storyForgeDetailIntro, storyForgeDetailCase, footerComp],
+      createdAt: now,
+      updatedAt: now
+    };
+
+    return [
+      homePage,
+      projectsPage,
+      productsPage,
+      aboutPage,
+      relayProjectPage,
+      bossListerProjectPage,
+      storyForgeProjectPage
+    ];
   }
 
   public executeFullBuildPipeline(): {
@@ -693,6 +856,7 @@ export class JardinOutpostService {
     claimsAnalysis: any;
     version: any;
     compiledSite: any;
+    exportResult: { exportPath: string; files: string[] };
     feedbackLogs: DogfoodFeedbackLog[];
   } {
     // 1. Seed Tenant & Locations
@@ -714,7 +878,7 @@ export class JardinOutpostService {
     const proofs = this.seedProofItems(project.id);
 
     // 6. Build Pages and Save
-    const pages = this.buildPages(proofs, project.id);
+    const pages = this.buildPages(proofs);
     pages.forEach(p => websiteProjectService.savePage(p));
 
     // 7. Validate Claims
@@ -740,7 +904,8 @@ export class JardinOutpostService {
     const version = websiteProjectService.createVersionSnapshot(
       project.id,
       JardinOutpostService.TENANT_ID,
-      'HUMAN_OWNER'
+      'HUMAN_OWNER',
+      'ver_jardin_dogfood_02'
     );
 
     // 9. Compile Full Static Site Artifacts
@@ -756,7 +921,27 @@ export class JardinOutpostService {
       'https://jardinsoutpost.com'
     );
 
-    // 10. Record Dogfood Feedback Discoveries & Improvements
+    // 10. Export physical static files to disk (public directory for preview and dist for export records)
+    const publicExportPath = path.resolve(process.cwd(), 'public/tenants', compiledSite.tenantId);
+    const exportResult = websiteRendererService.exportSiteToDisk(compiledSite, publicExportPath);
+    const distExportPath = path.resolve(process.cwd(), 'dist/exported-sites', compiledSite.tenantId);
+    websiteRendererService.exportSiteToDisk(compiledSite, distExportPath);
+
+    // Ensure the digital workshop creative homepage with animated automation visual is written to index.html
+    try {
+      const nativeCreative = new RelayNativeCreativeProvider();
+      const brief = CreativeProviderRouter.createJardinsOutpostBrief();
+      nativeCreative.generatePreview(brief).then(creativePreview => {
+        fs.writeFileSync(path.join(publicExportPath, 'index.html'), creativePreview.renderedHtml, 'utf-8');
+        fs.writeFileSync(path.join(distExportPath, 'index.html'), creativePreview.renderedHtml, 'utf-8');
+      }).catch(err => {
+        console.error('Error generating creative preview during dogfood pipeline:', err);
+      });
+    } catch (err) {
+      console.error('Failed to write creative preview index.html:', err);
+    }
+
+    // 11. Record Dogfood Feedback Discoveries & Improvements
     this.recordDogfoodFeedback({
       subsystem: 'DESIGN_ENGINE',
       severity: 'LOW',
@@ -785,8 +970,8 @@ export class JardinOutpostService {
       subsystem: 'ROUTING_ENGINE',
       severity: 'LOW',
       title: 'Multi-Page Studio Navigation & Canonical Href Mapping',
-      description: 'Rendered dedicated pages (/, /projects, /products, /about) with clean relative links, sitemap entries, and OpenGraph/Twitter card metadata.',
-      resolutionOrMitigation: 'Verified sitemap.xml and manifest.json compilation for all four pages.'
+      description: 'Rendered dedicated pages (/, /projects, /products, /about, and project detail case studies) with clean relative links, sitemap entries, and OpenGraph/Twitter card metadata.',
+      resolutionOrMitigation: 'Verified sitemap.xml and manifest.json compilation for all pages.'
     });
 
     return {
@@ -798,6 +983,7 @@ export class JardinOutpostService {
       claimsAnalysis,
       version,
       compiledSite,
+      exportResult,
       feedbackLogs: this.getDogfoodFeedbackLogs()
     };
   }

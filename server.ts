@@ -1,5 +1,6 @@
 import express from 'express';
 import path from 'path';
+import fs from 'fs';
 import dotenv from 'dotenv';
 import { createServer as createViteServer } from 'vite';
 import { GoogleGenAI } from '@google/genai';
@@ -13,6 +14,7 @@ import { controlledOperationsRouter } from './src/routes/controlledOperationsApi
 import { pilotApiRouter } from './src/routes/pilotApi';
 import { websiteBuilderApiRouter } from './src/routes/websiteBuilderApi';
 import { publicWebsiteFormsApiRouter } from './src/routes/publicWebsiteFormsApi';
+import { creativeRouterApi } from './src/routes/creativeRouterApi';
 
 dotenv.config();
 
@@ -43,6 +45,7 @@ app.use('/api/operations', controlledOperationsRouter);
 app.use('/api/pilot', pilotApiRouter);
 app.use('/api/website-builder', websiteBuilderApiRouter);
 app.use('/api/public', publicWebsiteFormsApiRouter);
+app.use('/api/creative', creativeRouterApi);
 
 // Lazy initializer for Gemini client to prevent startup crash if GEMINI_API_KEY is missing
 function getGeminiClient(): GoogleGenAI {
@@ -459,6 +462,27 @@ Provide direct, actionable, revenue-focused advice. Answer like a seasoned partn
 // Health check endpoint
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', module: 'Empire OS Relay Module', time: new Date().toISOString() });
+});
+
+// Serve Jardin’s Outpost static site files from public/tenants/tenant_jardins_outpost
+const outpostStaticPath = path.join(process.cwd(), 'public/tenants/tenant_jardins_outpost');
+app.use(express.static(outpostStaticPath, {
+  setHeaders: (res) => {
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
+  }
+}));
+
+app.get(['/', '/index.html'], (req, res, next) => {
+  const indexPath = path.join(outpostStaticPath, 'index.html');
+  if (fs.existsSync(indexPath)) {
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
+    return res.sendFile(indexPath);
+  }
+  next();
 });
 
 // Serve Vite frontend

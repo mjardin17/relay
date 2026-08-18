@@ -10,7 +10,7 @@
     "preview": "vite preview",
     "clean": "rm -rf dist server.js",
     "lint": "tsc --noEmit",
-    "test": "tsx --test src/tests/growth.test.ts src/tests/buzAgentSuite.test.ts src/tests/auditAndComplianceReconciliation.test.ts src/tests/gbpOnboarding.test.ts src/tests/apiSecurityAndIsolation.test.ts src/tests/locationResolution.test.ts src/tests/spatialAndGeocodingReuse.test.ts src/tests/financialMetrics.test.ts src/tests/controlledLiveOperationsAndConnectors.test.ts src/tests/realPilotActivationAndEvidenceCapture.test.ts src/tests/websiteBuilderValidation.test.ts src/tests/jardinOutpostDogfood.test.ts"
+    "test": "tsx --test src/tests/growth.test.ts src/tests/buzAgentSuite.test.ts src/tests/auditAndComplianceReconciliation.test.ts src/tests/gbpOnboarding.test.ts src/tests/apiSecurityAndIsolation.test.ts src/tests/locationResolution.test.ts src/tests/spatialAndGeocodingReuse.test.ts src/tests/financialMetrics.test.ts src/tests/controlledLiveOperationsAndConnectors.test.ts src/tests/realPilotActivationAndEvidenceCapture.test.ts src/tests/websiteBuilderValidation.test.ts src/tests/websiteClaimPrecision.test.ts src/tests/jardinOutpostDogfood.test.ts src/tests/creativeProviderRouter.test.ts"
   },
   "dependencies": {
     "@google/genai": "^2.4.0",
