@@ -1350,6 +1350,88 @@ export function initializeDatabaseSchema(db: DatabaseSync): void {
       FOREIGN KEY (tenant_id) REFERENCES tenants(id) ON DELETE CASCADE
     );
 
+    -- 39. Universal Action Engine Ledger (Universal Execution & Governance)
+    CREATE TABLE IF NOT EXISTS universal_action_records (
+      id TEXT PRIMARY KEY,
+      tenant_id TEXT NOT NULL,
+      actor_id TEXT NOT NULL,
+      actor_role TEXT NOT NULL,
+      actor_name TEXT NOT NULL,
+      action_type TEXT NOT NULL,
+      provider TEXT NOT NULL,
+      input_payload_json TEXT NOT NULL,
+      input_fingerprint TEXT NOT NULL,
+      execution_state TEXT NOT NULL DEFAULT 'REQUESTED',
+      approval_state TEXT NOT NULL DEFAULT 'NOT_REQUIRED',
+      approval_required INTEGER NOT NULL DEFAULT 0,
+      approved_by TEXT,
+      approved_at TEXT,
+      approval_reason TEXT,
+      attempt_count INTEGER NOT NULL DEFAULT 0,
+      max_attempts INTEGER NOT NULL DEFAULT 3,
+      result_payload_json TEXT,
+      error_json TEXT,
+      idempotency_key TEXT NOT NULL,
+      audit_reference TEXT NOT NULL,
+      requested_at TEXT NOT NULL,
+      validated_at TEXT,
+      authorized_at TEXT,
+      planned_at TEXT,
+      queued_at TEXT,
+      executed_at TEXT,
+      verified_at TEXT,
+      completed_at TEXT,
+      created_at TEXT NOT NULL,
+      updated_at TEXT NOT NULL,
+      FOREIGN KEY (tenant_id) REFERENCES tenants(id) ON DELETE CASCADE
+    );
+
+    -- 40. Authoritative Connector Definitions & Tenant Instances
+    CREATE TABLE IF NOT EXISTS tenant_connector_instances (
+      id TEXT PRIMARY KEY,
+      tenant_id TEXT NOT NULL,
+      provider TEXT NOT NULL,
+      category TEXT NOT NULL,
+      connector_type TEXT NOT NULL,
+      connection_state TEXT NOT NULL DEFAULT 'DISCONNECTED',
+      auth_method TEXT NOT NULL,
+      configured_by TEXT NOT NULL,
+      credentials_masked_json TEXT NOT NULL DEFAULT '{}',
+      last_verification_at TEXT,
+      last_verification_status TEXT,
+      last_verification_message TEXT,
+      last_successful_request_at TEXT,
+      last_failure_at TEXT,
+      last_failure_message TEXT,
+      enabled_operations_json TEXT NOT NULL DEFAULT '[]',
+      paused_operations_json TEXT NOT NULL DEFAULT '[]',
+      created_at TEXT NOT NULL,
+      updated_at TEXT NOT NULL,
+      FOREIGN KEY (tenant_id) REFERENCES tenants(id) ON DELETE CASCADE
+    );
+
+    -- 41. Project Intelligence Registry & Saved Comparisons
+    CREATE TABLE IF NOT EXISTS project_intelligence_projects (
+      id TEXT PRIMARY KEY,
+      name TEXT NOT NULL,
+      purpose TEXT NOT NULL,
+      stack_json TEXT NOT NULL,
+      root_directory TEXT NOT NULL,
+      repo_url TEXT,
+      last_scanned_at TEXT,
+      status TEXT NOT NULL DEFAULT 'ACTIVE',
+      created_at TEXT NOT NULL,
+      updated_at TEXT NOT NULL
+    );
+
+    CREATE TABLE IF NOT EXISTS project_intelligence_comparisons (
+      id TEXT PRIMARY KEY,
+      target_project_id TEXT NOT NULL,
+      source_project_id TEXT NOT NULL,
+      comparison_report_json TEXT NOT NULL,
+      compared_at TEXT NOT NULL
+    );
+
     CREATE INDEX IF NOT EXISTS idx_connector_tenant ON connector_records(tenant_id, provider, capability);
     CREATE INDEX IF NOT EXISTS idx_conn_verif_tenant ON connector_verifications(tenant_id, connector_id);
     CREATE INDEX IF NOT EXISTS idx_exec_q_tenant_status ON durable_execution_queue(tenant_id, status);
@@ -1370,6 +1452,9 @@ export function initializeDatabaseSchema(db: DatabaseSync): void {
     CREATE INDEX IF NOT EXISTS idx_web_analytics_proj ON website_analytics_events(tenant_id, project_id, timestamp);
     CREATE INDEX IF NOT EXISTS idx_web_recs_proj ON website_recommendations(tenant_id, project_id, status);
     CREATE INDEX IF NOT EXISTS idx_web_proof_proj ON website_proof_items(tenant_id, project_id, product_slug);
+    CREATE INDEX IF NOT EXISTS idx_univ_actions_tenant ON universal_action_records(tenant_id, action_type, execution_state);
+    CREATE INDEX IF NOT EXISTS idx_univ_actions_idempotency ON universal_action_records(tenant_id, idempotency_key);
+    CREATE INDEX IF NOT EXISTS idx_tenant_conn_inst ON tenant_connector_instances(tenant_id, provider);
   `;
 
   db.exec(schemaDDL);

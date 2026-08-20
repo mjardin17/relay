@@ -30,6 +30,7 @@ import { RecommendationHistory } from './components/growth/RecommendationHistory
 import { ElectricalWorkflowStudio } from './components/growth/ElectricalWorkflowStudio';
 import { PilotCommandCenter } from './components/pilot/PilotCommandCenter';
 import { WebsiteBuilderHub } from './components/website/WebsiteBuilderHub';
+import { RelayControlCenter } from './components/controlcenter/RelayControlCenter';
 import { GitSyncPanel } from './components/gitsync/GitSyncPanel';
 import { EvidenceDrawer } from './components/evidence/EvidenceDrawer';
 import { EvidenceItem } from './types/evidence';
@@ -204,6 +205,11 @@ export default function App() {
 
         {/* Main Workspace View */}
         <main className="flex-1 p-3 md:p-6 overflow-y-auto max-h-[calc(100vh-64px)] pb-20 lg:pb-6">
+          {/* Relay Control Center — AI Business Operating System Command */}
+          {activeTab === 'control_center' && (
+            <RelayControlCenter darkMode={darkMode} tenantId="tenant_ma_fresh_launch" />
+          )}
+
           {/* Relay v2.0 Website Builder & Web Presence Engine */}
           {activeTab === 'website_builder' && (
             <WebsiteBuilderHub

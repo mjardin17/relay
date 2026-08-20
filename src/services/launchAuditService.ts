@@ -110,6 +110,23 @@ export class LaunchAuditService {
     };
   }
 
+  public logAuditEvent(event: {
+    tenantId?: string;
+    actorId?: string;
+    action: string;
+    endpoint?: string;
+    status?: string;
+    details?: Record<string, any>;
+  }): { id: string; eventHash: string } {
+    return this.logEvent(event.tenantId || 'system_global', {
+      actorId: event.actorId,
+      action: event.action,
+      endpoint: event.endpoint,
+      status: event.status,
+      details: event.details
+    });
+  }
+
   recordAudit(entry: {
     tenantId?: string | null;
     actorId?: string | null;

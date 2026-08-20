@@ -22,6 +22,7 @@ import {
   Rocket,
   Zap,
   Globe,
+  Boxes,
   FolderGit2
 } from 'lucide-react';
 import { RelayTab } from '../../types/relay';
@@ -44,6 +45,7 @@ export const EmpireSidebar: React.FC<EmpireSidebarProps> = ({
   onCloseMobile
 }) => {
   const growthEngineNav = [
+    { id: 'control_center', label: 'Relay Control Center', icon: Boxes, badge: 'Command OS', badgeColor: 'bg-gradient-to-r from-indigo-500/30 to-violet-500/30 text-indigo-300 font-bold border border-indigo-500/30' },
     { id: 'website_builder', label: 'Website Builder & Agent', icon: Globe, badge: 'v2.0 Web', badgeColor: 'bg-emerald-500/20 text-emerald-400 font-bold border border-emerald-500/30' },
     { id: 'pilot_command', label: 'Pilot Command Center', icon: ShieldAlert, badge: 'Real Ops', badgeColor: 'bg-amber-500/20 text-amber-400 font-bold border border-amber-500/30' },
     { id: 'electrical_workflow', label: 'Electrical Lead Studio', icon: Zap, badge: 'Vertical Slice', badgeColor: 'bg-amber-500/20 text-amber-400 font-bold border border-amber-500/30' },

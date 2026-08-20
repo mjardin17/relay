@@ -238,4 +238,29 @@ export class EmergencyControlService {
       resumedBy: r.resumed_by || undefined
     }));
   }
+
+  public getEmergencyStatus(tenantId?: string): { isEmergencyPaused: boolean; reason?: string; scope?: string } {
+    const blocked = this.isExecutionBlocked(tenantId);
+    return {
+      isEmergencyPaused: blocked.blocked,
+      reason: blocked.reason,
+      scope: blocked.scope
+    };
+  }
+
+  public pauseGlobal(params: { reason: string; actorId?: string }): EmergencyControlRecord {
+    return this.pause({
+      scope: 'GLOBAL',
+      reason: params.reason,
+      pausedBy: params.actorId || 'operator-admin'
+    });
+  }
+
+  public resumeGlobal(params: { actorId?: string; reason?: string }): boolean {
+    return this.resume({
+      scope: 'GLOBAL',
+      resumedBy: params.actorId || 'operator-admin',
+      reason: params.reason || 'Normal operation restored'
+    });
+  }
 }
