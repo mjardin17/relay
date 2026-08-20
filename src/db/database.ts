@@ -1454,6 +1454,49 @@ export function initializeDatabaseSchema(db: DatabaseSync): void {
       compared_at TEXT NOT NULL
     );
 
+    -- 42. Tenant Business Profiles (Unified Business Data Layer)
+    CREATE TABLE IF NOT EXISTS tenant_business_profiles (
+      tenant_id TEXT PRIMARY KEY,
+      legal_name TEXT NOT NULL,
+      dba_name TEXT,
+      industry TEXT NOT NULL,
+      website_url TEXT,
+      phone TEXT,
+      email TEXT,
+      street_address TEXT,
+      city TEXT,
+      state_province TEXT,
+      postal_code TEXT,
+      country TEXT NOT NULL DEFAULT 'US',
+      business_hours_json TEXT NOT NULL DEFAULT '[]',
+      service_areas_json TEXT NOT NULL DEFAULT '[]',
+      products_and_services_json TEXT NOT NULL DEFAULT '[]',
+      business_goals_json TEXT NOT NULL DEFAULT '[]',
+      communication_preferences_json TEXT NOT NULL DEFAULT '{}',
+      publishing_preferences_json TEXT NOT NULL DEFAULT '{}',
+      created_at TEXT NOT NULL,
+      updated_at TEXT NOT NULL,
+      FOREIGN KEY (tenant_id) REFERENCES tenants(id) ON DELETE CASCADE
+    );
+
+    -- 43. Tenant AI Worker Configurations & Governance
+    CREATE TABLE IF NOT EXISTS tenant_worker_configs (
+      id TEXT PRIMARY KEY,
+      tenant_id TEXT NOT NULL,
+      worker_id TEXT NOT NULL,
+      worker_name TEXT NOT NULL,
+      role_description TEXT NOT NULL,
+      is_enabled INTEGER NOT NULL DEFAULT 1,
+      execution_mode TEXT NOT NULL DEFAULT 'DRY_RUN',
+      assigned_permissions_json TEXT NOT NULL DEFAULT '[]',
+      approval_requirement TEXT NOT NULL DEFAULT 'REQUIRE_APPROVAL_ALL_ACTIONS',
+      schedule_or_trigger TEXT NOT NULL DEFAULT 'ON_EVENT_OR_MANUAL',
+      capability_status TEXT NOT NULL DEFAULT 'ACTIVE',
+      updated_at TEXT NOT NULL,
+      FOREIGN KEY (tenant_id) REFERENCES tenants(id) ON DELETE CASCADE,
+      UNIQUE(tenant_id, worker_id)
+    );
+
     CREATE INDEX IF NOT EXISTS idx_connector_tenant ON connector_records(tenant_id, provider, capability);
     CREATE INDEX IF NOT EXISTS idx_conn_verif_tenant ON connector_verifications(tenant_id, connector_id);
     CREATE INDEX IF NOT EXISTS idx_exec_q_tenant_status ON durable_execution_queue(tenant_id, status);
@@ -1477,6 +1520,7 @@ export function initializeDatabaseSchema(db: DatabaseSync): void {
     CREATE INDEX IF NOT EXISTS idx_univ_actions_tenant ON universal_action_records(tenant_id, action_type, execution_state);
     CREATE INDEX IF NOT EXISTS idx_univ_actions_idempotency ON universal_action_records(tenant_id, idempotency_key);
     CREATE INDEX IF NOT EXISTS idx_tenant_conn_inst ON tenant_connector_instances(tenant_id, provider);
+    CREATE INDEX IF NOT EXISTS idx_tenant_workers ON tenant_worker_configs(tenant_id, worker_id);
   `;
 
   db.exec(schemaDDL);
@@ -1530,4 +1574,5 @@ export function initializeDatabaseSchema(db: DatabaseSync): void {
   safeAddColumn('universal_action_records', 'retry_classification TEXT');
   safeAddColumn('universal_action_records', 'next_retry_at TEXT');
   safeAddColumn('universal_action_records', 'dead_letter_id TEXT');
+  safeAddColumn('opportunities', 'updated_at TEXT');
 }

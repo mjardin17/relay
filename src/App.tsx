@@ -65,7 +65,8 @@ import { ContentPost, MediaAsset, RelayTab } from './types/relay';
 export default function App() {
   const [darkMode, setDarkMode] = useState(true);
   const [activeModule, setActiveModule] = useState('relay');
-  const [activeTab, setActiveTab] = useState<RelayTab>('website_builder');
+  const [activeTab, setActiveTab] = useState<RelayTab>('control_center');
+  const [currentTenantId, setCurrentTenantId] = useState('tenant_ma_fresh_launch');
   const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
 
   // Application State - Growth OS & Evidence Graph
@@ -207,20 +208,24 @@ export default function App() {
         <main className="flex-1 p-3 md:p-6 overflow-y-auto max-h-[calc(100vh-64px)] pb-20 lg:pb-6">
           {/* Relay Control Center — AI Business Operating System Command */}
           {activeTab === 'control_center' && (
-            <RelayControlCenter darkMode={darkMode} tenantId="tenant_ma_fresh_launch" />
+            <RelayControlCenter
+              darkMode={darkMode}
+              tenantId={currentTenantId}
+              onNavigateAppTab={(tab) => setActiveTab(tab as RelayTab)}
+            />
           )}
 
           {/* Relay v2.0 Website Builder & Web Presence Engine */}
           {activeTab === 'website_builder' && (
             <WebsiteBuilderHub
-              currentTenantId="tenant_ma_fresh_launch"
+              currentTenantId={currentTenantId}
               onNavigateToLeads={() => setActiveTab('pilot_command')}
             />
           )}
 
           {/* Real Pilot Command Center & Evidence Capture */}
           {activeTab === 'pilot_command' && (
-            <PilotCommandCenter tenantId="tenant_ma_fresh_launch" />
+            <PilotCommandCenter tenantId={currentTenantId} />
           )}
 
           {/* Electrical Company Workflow Vertical Slice */}

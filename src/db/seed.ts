@@ -361,6 +361,192 @@ export function seedDatabaseIfEmpty(): void {
       now
     );
 
+    // 10. Seed Tenant Business Profiles
+    const insertBusinessProfile = db.prepare(`
+      INSERT OR IGNORE INTO tenant_business_profiles (
+        tenant_id, legal_name, dba_name, industry, website_url, phone, email,
+        street_address, city, state_province, postal_code, country,
+        business_hours_json, service_areas_json, products_and_services_json,
+        business_goals_json, communication_preferences_json, publishing_preferences_json,
+        created_at, updated_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `);
+
+    const standardHours = JSON.stringify([
+      { day: 'Monday', open: '08:00', close: '17:00', isClosed: false },
+      { day: 'Tuesday', open: '08:00', close: '17:00', isClosed: false },
+      { day: 'Wednesday', open: '08:00', close: '17:00', isClosed: false },
+      { day: 'Thursday', open: '08:00', close: '17:00', isClosed: false },
+      { day: 'Friday', open: '08:00', close: '17:00', isClosed: false },
+      { day: 'Saturday', open: '09:00', close: '14:00', isClosed: false },
+      { day: 'Sunday', open: '00:00', close: '00:00', isClosed: true }
+    ]);
+
+    insertBusinessProfile.run(
+      'tenant_demo_1',
+      'Apex Horizon Technologies LLC',
+      'Apex Horizon',
+      'B2B SaaS & Enterprise AI',
+      'https://apexhorizon.com',
+      '+1 (555) 234-5678',
+      'ops@apexhorizon.com',
+      '100 Innovation Way, Suite 400',
+      'Boston',
+      'MA',
+      '02110',
+      'US',
+      standardHours,
+      JSON.stringify(['Greater Boston Area', 'New England', 'National Remote']),
+      JSON.stringify([
+        { id: 'prod_1', name: 'Enterprise Workflow Engine', category: 'Software', priceRange: '$10,000 - $50,000', status: 'ACTIVE' },
+        { id: 'prod_2', name: 'AI Decision Copilot', category: 'Software', priceRange: '$2,500/mo', status: 'ACTIVE' },
+        { id: 'prod_3', name: 'Integration Migration Assessment', category: 'Services', priceRange: '$5,000 fixed', status: 'ACTIVE' }
+      ]),
+      JSON.stringify([
+        { goal: 'Accelerate lead response time to under 5 minutes', targetMetric: '< 5 min', status: 'IN_PROGRESS' },
+        { goal: 'Recover 20% of dormant high-value pipeline', targetMetric: '$45,000 MRR', status: 'ON_TRACK' },
+        { goal: 'Maintain 100% verified regulatory audit ledger', targetMetric: 'Zero audit discrepancies', status: 'MET' }
+      ]),
+      JSON.stringify({
+        channel: 'EMAIL_AND_DASHBOARD',
+        requireApprovalForOutbound: true,
+        tone: 'DIRECT_PROFESSIONAL',
+        escalationContact: 'admin@apexhorizon.com'
+      }),
+      JSON.stringify({
+        autoPublishApprovedPosts: false,
+        proofOfWorkWatermark: true,
+        requireTwoPersonIntegrity: true
+      }),
+      now,
+      now
+    );
+
+    insertBusinessProfile.run(
+      'tenant_ma_fresh_launch',
+      'Fresh Launch MA Electrical Company Inc.',
+      'MA Electrical Pros',
+      'Electrical Contracting',
+      'https://ma-electrical-demo.relay.local',
+      '+1 (508) 555-0199',
+      'service@ma-electrical-demo.relay.local',
+      '42 Circuit Lane',
+      'New Bedford',
+      'MA',
+      '02740',
+      'US',
+      standardHours,
+      JSON.stringify(['New Bedford', 'Dartmouth', 'Fairhaven', 'Fall River', 'Bristol County']),
+      JSON.stringify([
+        { id: 'prod_elec_1', name: '200A Electrical Panel Upgrade', category: 'Residential', priceRange: '$3,200 - $4,800', status: 'ACTIVE' },
+        { id: 'prod_elec_2', name: 'EV Charger Level 2 Installation', category: 'Residential', priceRange: '$950 - $1,800', status: 'ACTIVE' },
+        { id: 'prod_elec_3', name: 'Commercial Wiring & Code Inspection', category: 'Commercial', priceRange: '$1,500 - $8,000', status: 'ACTIVE' }
+      ]),
+      JSON.stringify([
+        { goal: 'Complete Massachusetts A-1 license verification', targetMetric: 'State verification confirmed', status: 'PENDING_EVIDENCE' },
+        { goal: 'Automate qualified residential lead triage', targetMetric: '100% human-approved response', status: 'IN_PROGRESS' },
+        { goal: 'Launch Google Business Profile local presence', targetMetric: 'Owner OAuth authorization verified', status: 'IN_PROGRESS' }
+      ]),
+      JSON.stringify({
+        channel: 'SMS_AND_EMAIL',
+        requireApprovalForOutbound: true,
+        tone: 'HELPFUL_CONTRACTOR',
+        escalationContact: 'operator@relay.ai'
+      }),
+      JSON.stringify({
+        autoPublishApprovedPosts: false,
+        proofOfWorkWatermark: true,
+        requireTwoPersonIntegrity: true
+      }),
+      now,
+      now
+    );
+
+    // 11. Seed Tenant AI Workers
+    const insertWorkerConfig = db.prepare(`
+      INSERT OR IGNORE INTO tenant_worker_configs (
+        id, tenant_id, worker_id, worker_name, role_description, is_enabled,
+        execution_mode, assigned_permissions_json, approval_requirement,
+        schedule_or_trigger, capability_status, updated_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `);
+
+    const standardWorkers = [
+      {
+        id: 'aria_executive',
+        name: 'Aria — Autonomous Operations Orchestrator',
+        desc: 'Executive triage, cross-agent coordination, and bottleneck prioritization.',
+        perms: ['universal_actions:propose', 'opportunities:analyze', 'reports:generate'],
+        appr: 'REQUIRE_APPROVAL_HIGH_IMPACT',
+        trigger: 'Continuous Event Stream & Manual Trigger',
+        capability: 'ACTIVE'
+      },
+      {
+        id: 'lead_triage_agent',
+        name: 'Lead Triage & Qualification Agent',
+        desc: 'Evaluates incoming leads, scores qualification, checks service area eligibility, and drafts governed responses.',
+        perms: ['leads:read', 'leads:score', 'communications:draft'],
+        appr: 'REQUIRE_APPROVAL_ALL_ACTIONS',
+        trigger: 'Inbound Webhook & Form Submissions',
+        capability: 'ACTIVE'
+      },
+      {
+        id: 'growth_recovery_agent',
+        name: 'Revenue Growth & Stale Lead Recovery Agent',
+        desc: 'Discovers reactivation opportunities, scans CRM for dormant value, and computes defensible ROI models.',
+        perms: ['opportunities:discover', 'roi:compute', 'campaigns:draft'],
+        appr: 'REQUIRE_APPROVAL_ALL_ACTIONS',
+        trigger: 'Daily Nightly Scan',
+        capability: 'ACTIVE'
+      },
+      {
+        id: 'compliance_officer_agent',
+        name: 'Compliance & Verification Officer',
+        desc: 'Validates jurisdictional licensing, inspects consent evidence, checks SoD rules, and audits hash-chains.',
+        perms: ['compliance:audit', 'evidence:verify', 'ledger:inspect'],
+        appr: 'INDEPENDENT_AUDITOR_ONLY',
+        trigger: 'Pre-Execution Hook & Periodic Ledger Check',
+        capability: 'ACTIVE'
+      },
+      {
+        id: 'creative_studio_agent',
+        name: 'StoryForge & Content Studio Agent',
+        desc: 'Drafts brand-aligned marketing posts, case studies, and local GBP updates with strict anti-hallucination guardrails.',
+        perms: ['content:draft', 'brand:read', 'proof:assemble'],
+        appr: 'REQUIRE_APPROVAL_ALL_ACTIONS',
+        trigger: 'Content Calendar & Manual Request',
+        capability: 'ACTIVE'
+      },
+      {
+        id: 'website_presence_agent',
+        name: 'Web Presence & Reputation Agent',
+        desc: 'Maintains verified proof of work showcases, monitors reviews, and drafts responses with human sign-off.',
+        perms: ['website:recommend', 'reviews:draft', 'gbp:propose'],
+        appr: 'REQUIRE_APPROVAL_ALL_ACTIONS',
+        trigger: 'Review Ingestion & Proof of Work Sync',
+        capability: 'ACTIVE'
+      }
+    ];
+
+    for (const tId of ['tenant_demo_1', 'tenant_demo_2', 'tenant_ma_fresh_launch']) {
+      for (const w of standardWorkers) {
+        insertWorkerConfig.run(
+          `${tId}_${w.id}`,
+          tId,
+          w.id,
+          w.name,
+          w.desc,
+          1,
+          'DRY_RUN',
+          JSON.stringify(w.perms),
+          w.appr,
+          w.trigger,
+          w.capability,
+          now
+        );
+      }
+    }
+
     db.exec('COMMIT;');
     console.log('[SQLite Seed] Database successfully initialized and seeded with tenant_demo_1.');
   } catch (err) {
