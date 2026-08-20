@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Workshop Story & Philosophy | Jardin’s Outpost</title>
+  <meta name="description" content="A workshop where practical software gets built from real problems in selling, automation, media, and small-business operations.">
+  <link rel="canonical" href="https://jardins-outpost.pages.dev/about">
+  
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400;1,6..72,600&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  
+  <!-- Tailwind CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            workshop: {
+              bg: '#090B0F',
+              surface: '#11151F',
+              elevated: '#181E2B',
+              border: '#1F2736',
+              bone: '#F4F1EB',
+              muted: '#8E98A8',
+              copper: '#D97757',
+              copperLight: '#E88C6F',
+              rust: '#C45A38',
+              amber: '#E59850',
+              emerald: '#2D5A43',
+              emeraldLight: '#3D7A5B'
+            }
+          },
+          fontFamily: {
+            serif: ['Newsreader', 'Georgia', 'serif'],
+            sans: ['Plus Jakarta Sans', '-apple-system', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace']
+          }
+        }
+      }
+    }
+  </script>
+  <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body class="bg-workshop-bg text-workshop-bone font-sans min-h-screen flex flex-col selection:bg-workshop-copper selection:text-white bg-workshop-grid bg-workshop-radial">
+
+  <!-- Header -->
+  <header class="sticky top-0 z-50 border-b border-workshop-border/80 bg-workshop-bg/95 backdrop-blur-md">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
+      <a href="/" class="flex items-center gap-3.5 group">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-workshop-copper via-[#B85D43] to-workshop-rust flex items-center justify-center text-white font-bold font-mono text-sm shadow-lg shadow-workshop-copper/20 group-hover:scale-105 transition-all border border-workshop-copper/40">
+          JO
+        </div>
+        <div class="flex flex-col">
+          <span class="font-serif text-xl sm:text-2xl font-medium tracking-tight text-workshop-bone group-hover:text-workshop-copper transition-colors">
+            Jardin’s Outpost
+          </span>
+          <span class="text-[10px] font-mono tracking-widest uppercase text-workshop-muted">
+            Workshop Story
+          </span>
+        </div>
+      </a>
+
+      <nav class="hidden md:flex items-center gap-7 text-sm font-medium">
+        <a href="/" class="text-workshop-muted hover:text-workshop-bone transition-colors">Workshop Home</a>
+        <a href="/storyforge" class="text-workshop-muted hover:text-workshop-bone transition-colors">StoryForge</a>
+        <a href="/crosspost" class="text-workshop-muted hover:text-workshop-bone transition-colors">Crosspost</a>
+        <a href="/bosslister" class="text-workshop-muted hover:text-workshop-bone transition-colors">BossLister</a>
+        <a href="/bosslister-mvp" class="text-workshop-muted hover:text-workshop-bone transition-colors">BossLister MVP</a>
+        <a href="/about" class="text-workshop-copper font-semibold border-b-2 border-workshop-copper pb-1">About</a>
+      </nav>
+
+      <div class="flex items-center gap-3">
+        <a href="/" class="px-4 py-2 rounded-xl bg-workshop-surface border border-workshop-border text-xs font-mono text-workshop-bone hover:text-workshop-copper transition-all">
+          ← Back to Workshop
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="flex-grow max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-16 space-y-16">
+    
+    <!-- Hero Section -->
+    <section class="space-y-6 text-center sm:text-left">
+      <div class="inline-flex items-center gap-2.5 px-4 py-1.5 rounded-full bg-workshop-surface border border-workshop-border text-xs font-mono text-workshop-copper shadow-inner">
+        <span class="w-2 h-2 rounded-full bg-workshop-copper animate-pulse"></span>
+        <span>ORIGIN & PHILOSOPHY</span>
+      </div>
+
+      <h1 class="text-4xl sm:text-6xl font-serif font-normal tracking-tight text-workshop-bone leading-tight">
+        A craftsman’s workshop for <br>
+        <span class="italic text-transparent bg-clip-text bg-gradient-to-r from-workshop-copper via-workshop-copperLight to-amber-400">
+          working software.
+        </span>
+      </h1>
+
+      <p class="text-lg text-workshop-muted font-sans font-light leading-relaxed">
+        Jardin’s Outpost is an independent digital workshop where practical tools get engineered directly from real-world problems in online selling, content distribution, narrative creation, and small-business operations.
+      </p>
+    </section>
+
+    <!-- Narrative Essays / Principles -->
+    <section class="space-y-12 text-sm sm:text-base font-sans text-workshop-bone/90 leading-relaxed">
+      
+      <div class="p-8 rounded-2xl bg-workshop-surface border border-workshop-border space-y-4">
+        <h2 class="text-2xl font-serif text-workshop-bone">1. Tools built from friction I actually felt</h2>
+        <p class="text-workshop-muted">
+          Software shouldn’t start in a boardroom with buzzwords and market research templates. Every system inside Jardin’s Outpost started as an actual bottleneck: spending hours manually copying listings to three different marketplaces, fighting plot holes in complex story outlines, or trying to format one video across six social networks without losing quality.
+        </p>
+      </div>
+
+      <div class="p-8 rounded-2xl bg-workshop-surface border border-workshop-border space-y-4">
+        <h2 class="text-2xl font-serif text-workshop-bone">2. Deterministic execution over AI fluff</h2>
+        <p class="text-workshop-muted">
+          AI is powerful, but only when bounded by deterministic data structures, strict state machines, and verified guardrails. If an item sells on eBay, the system must immediately and reliably lock the inventory across other channels. If a book chapter contradicts character lore, the story graph must catch it before compilation.
+        </p>
+      </div>
+
+      <div class="p-8 rounded-2xl bg-workshop-surface border border-workshop-border space-y-4">
+        <h2 class="text-2xl font-serif text-workshop-bone">3. Clean, independent product boundaries</h2>
+        <p class="text-workshop-muted">
+          Just because products can talk to each other doesn’t mean they should be mashed into an unmaintainable monolith. <strong class="text-workshop-bone">StoryForge</strong> is for writing and narrative universe packaging. <strong class="text-workshop-bone">BossLister</strong> is for resale product intelligence. <strong class="text-workshop-bone">Crosspost</strong> is for multi-platform distribution. They are independent tools that connect through clean, modular handoffs.
+        </p>
+      </div>
+
+    </section>
+
+    <!-- Products Roster Quick Link -->
+    <section class="p-8 rounded-2xl bg-workshop-elevated border border-workshop-border space-y-6">
+      <h3 class="text-xl font-serif text-workshop-bone">Explore the Active Workshop Products</h3>
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs font-mono">
+        <a href="/storyforge" class="p-4 rounded-xl bg-workshop-surface border border-workshop-border hover:border-workshop-copper transition-all space-y-1 block">
+          <span class="text-workshop-copper font-bold block">StoryForge</span>
+          <span class="text-workshop-muted">Book & Narrative Creation Engine</span>
+        </a>
+        <a href="/crosspost" class="p-4 rounded-xl bg-workshop-surface border border-workshop-border hover:border-workshop-copper transition-all space-y-1 block">
+          <span class="text-sky-400 font-bold block">Crosspost</span>
+          <span class="text-workshop-muted">Media & Commerce Distribution</span>
+        </a>
+        <a href="/bosslister" class="p-4 rounded-xl bg-workshop-surface border border-workshop-border hover:border-workshop-copper transition-all space-y-1 block">
+          <span class="text-amber-400 font-bold block">BossLister</span>
+          <span class="text-workshop-muted">Resale Product Intelligence</span>
+        </a>
+        <a href="/bosslister-mvp" class="p-4 rounded-xl bg-workshop-surface border border-workshop-border hover:border-workshop-copper transition-all space-y-1 block">
+          <span class="text-emerald-400 font-bold block">BossLister MVP</span>
+          <span class="text-workshop-muted">1-Pass Mobile Seller & Promo Flow</span>
+        </a>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Footer -->
+  <footer class="border-t border-workshop-border/80 bg-[#07090D] py-12 px-4 sm:px-6 lg:px-8 text-xs font-mono text-workshop-muted">
+    <div class="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-6">
+      <div class="flex items-center gap-3">
+        <div class="w-6 h-6 rounded-md bg-workshop-copper flex items-center justify-center text-white font-bold text-[10px]">JO</div>
+        <span class="text-workshop-bone font-sans font-medium">Jardin’s Outpost • Workshop Story</span>
+      </div>
+      <div class="flex flex-wrap items-center gap-6">
+        <a href="/" class="hover:text-workshop-copper transition-colors">Workshop Home</a>
+        <a href="/storyforge" class="hover:text-workshop-copper transition-colors">StoryForge</a>
+        <a href="/crosspost" class="hover:text-workshop-copper transition-colors">Crosspost</a>
+        <a href="/bosslister" class="hover:text-workshop-copper transition-colors">BossLister</a>
+        <a href="/bosslister-mvp" class="hover:text-workshop-copper transition-colors">BossLister MVP</a>
+      </div>
+    </div>
+  </footer>
+
+</body>
+</html>

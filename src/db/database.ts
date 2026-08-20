@@ -1392,6 +1392,8 @@ export function initializeDatabaseSchema(db: DatabaseSync): void {
   safeAddColumn('tenants', 'operating_mode TEXT DEFAULT "Guided Manual"');
   safeAddColumn('tenants', 'verification_status TEXT DEFAULT "Pending owner confirmation and official-source verification"');
 
+  safeAddColumn('tenant_locations', 'phone TEXT');
+
   safeAddColumn('actors', 'user_role_classification TEXT DEFAULT "UNVERIFIED"');
   safeAddColumn('actors', 'is_licensed_electrician INTEGER DEFAULT 0');
   safeAddColumn('actors', 'is_master_electrician INTEGER DEFAULT 0');

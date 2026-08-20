@@ -5,6 +5,10 @@ coverage/
 .DS_Store
 *.log
 *.db
+*.db-shm
+*.db-wal
 *.sqlite
+*.tmp
+.relay_git_sync_state.json
 .env*
 !.env.example

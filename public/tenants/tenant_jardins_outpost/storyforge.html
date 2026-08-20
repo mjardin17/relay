@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>StoryForge | Book & Narrative Universe Creation Engine — Jardin’s Outpost</title>
+  <meta name="description" content="Create books, plot coherence graphs, and full narrative universes, then prepare retailer-ready packages and multimedia promotional campaigns.">
+  <link rel="canonical" href="https://jardins-outpost.pages.dev/storyforge">
+  
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400;1,6..72,600&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  
+  <!-- Tailwind CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            workshop: {
+              bg: '#090B0F',
+              surface: '#11151F',
+              elevated: '#181E2B',
+              border: '#1F2736',
+              bone: '#F4F1EB',
+              muted: '#8E98A8',
+              copper: '#D97757',
+              copperLight: '#E88C6F',
+              rust: '#C45A38',
+              amber: '#E59850',
+              emerald: '#2D5A43',
+              emeraldLight: '#3D7A5B'
+            }
+          },
+          fontFamily: {
+            serif: ['Newsreader', 'Georgia', 'serif'],
+            sans: ['Plus Jakarta Sans', '-apple-system', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace']
+          }
+        }
+      }
+    }
+  </script>
+  <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body class="bg-workshop-bg text-workshop-bone font-sans min-h-screen flex flex-col selection:bg-workshop-copper selection:text-white bg-workshop-grid bg-workshop-radial">
+
+  <!-- Header -->
+  <header class="sticky top-0 z-50 border-b border-workshop-border/80 bg-workshop-bg/95 backdrop-blur-md">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
+      <a href="/" class="flex items-center gap-3.5 group">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-workshop-copper via-[#B85D43] to-workshop-rust flex items-center justify-center text-white font-bold font-mono text-sm shadow-lg shadow-workshop-copper/20 group-hover:scale-105 transition-all border border-workshop-copper/40">
+          JO
+        </div>
+        <div class="flex flex-col">
+          <span class="font-serif text-xl sm:text-2xl font-medium tracking-tight text-workshop-bone group-hover:text-workshop-copper transition-colors">
+            Jardin’s Outpost
+          </span>
+          <span class="text-[10px] font-mono tracking-widest uppercase text-workshop-muted">
+            StoryForge Module
+          </span>
+        </div>
+      </a>
+
+      <nav class="hidden md:flex items-center gap-7 text-sm font-medium">
+        <a href="/" class="text-workshop-muted hover:text-workshop-bone transition-colors">Workshop Home</a>
+        <a href="/storyforge" class="text-workshop-copper font-semibold border-b-2 border-workshop-copper pb-1">StoryForge</a>
+        <a href="/crosspost" class="text-workshop-muted hover:text-workshop-bone transition-colors">Crosspost</a>
+        <a href="/bosslister" class="text-workshop-muted hover:text-workshop-bone transition-colors">BossLister</a>
+        <a href="/bosslister-mvp" class="text-workshop-muted hover:text-workshop-bone transition-colors">BossLister MVP</a>
+        <a href="/about" class="text-workshop-muted hover:text-workshop-bone transition-colors">About</a>
+      </nav>
+
+      <div class="flex items-center gap-3">
+        <a href="/" class="px-4 py-2 rounded-xl bg-workshop-surface border border-workshop-border text-xs font-mono text-workshop-bone hover:text-workshop-copper transition-all">
+          ← Back to Workshop
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="flex-grow max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-16 space-y-20">
+    
+    <!-- Hero Section -->
+    <section class="space-y-6 text-center max-w-4xl mx-auto">
+      <div class="inline-flex items-center gap-2.5 px-4 py-1.5 rounded-full bg-workshop-surface border border-workshop-border text-xs font-mono text-workshop-copper shadow-inner">
+        <span class="w-2 h-2 rounded-full bg-workshop-copper animate-pulse"></span>
+        <span>CREATIVE & PUBLISHING WORKSPACE</span>
+      </div>
+
+      <h1 class="text-4xl sm:text-6xl font-serif font-normal tracking-tight text-workshop-bone leading-tight">
+        Write the story. <br>
+        <span class="italic text-workshop-copper">Generate the entire media campaign.</span>
+      </h1>
+
+      <p class="text-lg text-workshop-muted font-sans font-light max-w-2xl mx-auto leading-relaxed">
+        StoryForge turns ideas and manuscripts into coherent narrative universes, compiles retailer-ready packages, and renders short-form video teasers for social promotion.
+      </p>
+
+      <div class="flex flex-wrap justify-center gap-4 pt-4">
+        <a href="#interactive-demo" class="px-7 py-3.5 rounded-xl bg-workshop-copper hover:bg-workshop-copperLight text-white font-medium text-sm transition-all shadow-lg shadow-workshop-copper/20">
+          Inspect Manuscript Engine ↓
+        </a>
+        <a href="/crosspost" class="px-7 py-3.5 rounded-xl bg-workshop-surface border border-workshop-border hover:border-workshop-copper/50 text-workshop-bone font-medium text-sm transition-all">
+          See Crosspost Handoff →
+        </a>
+      </div>
+    </section>
+
+    <!-- The Problem & Solution -->
+    <section class="grid grid-cols-1 md:grid-cols-2 gap-8">
+      <div class="p-8 rounded-2xl bg-workshop-surface border border-workshop-border space-y-4">
+        <span class="text-xs font-mono uppercase text-workshop-rust font-bold">The Problem</span>
+        <h2 class="text-2xl font-serif text-workshop-bone">Writers spend 80% of their energy on marketing friction.</h2>
+        <p class="text-sm text-workshop-muted leading-relaxed">
+          Writing a book is only half the battle. Authors must constantly track timeline contradictions, format EPUBs, create blurb variations, edit vertical TikTok hooks, and assemble promotion packages across platforms.
+        </p>
+      </div>
+
+      <div class="p-8 rounded-2xl bg-workshop-surface border border-workshop-border space-y-4">
+        <span class="text-xs font-mono uppercase text-emerald-400 font-bold">The Solution</span>
+        <h2 class="text-2xl font-serif text-workshop-bone">Algorithmic story graph + automated promo suite.</h2>
+        <p class="text-sm text-workshop-muted leading-relaxed">
+          StoryForge parses character arcs and timeline nodes to eliminate plot holes, compiles print/digital files, and generates ready-to-post short-form video teaser scripts with audio stems.
+        </p>
+      </div>
+    </section>
+
+    <!-- The 7-Step Creative Lifecycle -->
+    <section class="space-y-8">
+      <div class="text-center space-y-2">
+        <span class="text-xs font-mono uppercase text-workshop-copper font-semibold">Step-by-Step Architecture</span>
+        <h2 class="text-3xl font-serif text-workshop-bone">The Full Creative & Promotional Lifecycle</h2>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-7 gap-3 text-center">
+        <div class="p-4 rounded-xl bg-workshop-surface border border-workshop-border space-y-2">
+          <span class="text-[10px] font-mono text-workshop-copper block">01. IDEA</span>
+          <h3 class="text-xs font-bold text-workshop-bone">Core Concept</h3>
+          <p class="text-[11px] text-workshop-muted">Loglines, themes & premise drafting.</p>
+        </div>
+        <div class="p-4 rounded-xl bg-workshop-surface border border-workshop-border space-y-2">
+          <span class="text-[10px] font-mono text-workshop-copper block">02. STORY</span>
+          <h3 class="text-xs font-bold text-workshop-bone">Coherence Graph</h3>
+          <p class="text-[11px] text-workshop-muted">Chapter beats & causal timeline validation.</p>
+        </div>
+        <div class="p-4 rounded-xl bg-workshop-surface border border-workshop-border space-y-2">
+          <span class="text-[10px] font-mono text-workshop-copper block">03. WORLD</span>
+          <h3 class="text-xs font-bold text-workshop-bone">Character Bible</h3>
+          <p class="text-[11px] text-workshop-muted">Factions, rules, magic systems & bios.</p>
+        </div>
+        <div class="p-4 rounded-xl bg-workshop-surface border border-workshop-border space-y-2">
+          <span class="text-[10px] font-mono text-workshop-copper block">04. BOOK</span>
+          <h3 class="text-xs font-bold text-workshop-bone">Manuscript</h3>
+          <p class="text-[11px] text-workshop-muted">Compiled EPUB 3.0 & formatted PDF.</p>
+        </div>
+        <div class="p-4 rounded-xl bg-workshop-surface border border-workshop-border space-y-2">
+          <span class="text-[10px] font-mono text-workshop-copper block">05. COVER</span>
+          <h3 class="text-xs font-bold text-workshop-bone">Visual Packaging</h3>
+          <p class="text-[11px] text-workshop-muted">Typography layouts & high-res artwork.</p>
+        </div>
+        <div class="p-4 rounded-xl bg-workshop-surface border border-workshop-border space-y-2">
+          <span class="text-[10px] font-mono text-workshop-copper block">06. VIDEO</span>
+          <h3 class="text-xs font-bold text-workshop-bone">Shorts & Teasers</h3>
+          <p class="text-[11px] text-workshop-muted">Vertical video hooks with subtitle stems.</p>
+        </div>
+        <div class="p-4 rounded-xl bg-workshop-surface border border-workshop-copper/60 space-y-2">
+          <span class="text-[10px] font-mono text-emerald-400 block">07. PROMO</span>
+          <h3 class="text-xs font-bold text-workshop-bone">Crosspost Ready</h3>
+          <p class="text-[11px] text-workshop-muted">Delivered to Crosspost Media queue.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Interactive Visual Demo Frame -->
+    <section id="interactive-demo" class="space-y-6">
+      <div class="text-center space-y-2">
+        <span class="text-xs font-mono uppercase text-workshop-copper font-semibold">Live System Interface</span>
+        <h2 class="text-3xl font-serif text-workshop-bone">StoryForge Studio Workspace</h2>
+      </div>
+
+      <div class="rounded-2xl bg-[#090B0F] border border-workshop-border p-6 sm:p-8 space-y-6 shadow-2xl font-mono text-xs">
+        <div class="flex flex-wrap items-center justify-between gap-4 border-b border-workshop-border pb-4">
+          <div class="flex items-center gap-3">
+            <span class="w-3 h-3 rounded-full bg-emerald-400"></span>
+            <span class="text-workshop-bone font-semibold">Project: "Neon Leviathan" (Sci-Fi Novella Series)</span>
+          </div>
+          <span class="px-3 py-1 rounded bg-workshop-surface border border-workshop-border text-workshop-muted">
+            Human Sign-Off Required Before Release
+          </span>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <!-- Column 1 -->
+          <div class="p-4 rounded-xl bg-workshop-surface border border-workshop-border space-y-3">
+            <div class="flex items-center justify-between text-workshop-copper">
+              <span>Chapter Timeline</span>
+              <span>18 / 18</span>
+            </div>
+            <div class="space-y-2 text-[11px] font-sans text-workshop-muted">
+              <div class="p-2 rounded bg-workshop-elevated text-workshop-bone">Ch 1: The Sunken Array (Intro)</div>
+              <div class="p-2 rounded bg-workshop-elevated text-workshop-bone">Ch 2: Sub-Level Decryption (Incident)</div>
+              <div class="p-2 rounded bg-workshop-elevated text-workshop-bone">Ch 3: The Protocol Drift (Climax)</div>
+            </div>
+          </div>
+
+          <!-- Column 2 -->
+          <div class="p-4 rounded-xl bg-workshop-surface border border-workshop-border space-y-3">
+            <div class="flex items-center justify-between text-amber-400">
+              <span>Character Universe</span>
+              <span>8 Entities</span>
+            </div>
+            <div class="space-y-2 text-[11px] font-sans text-workshop-muted">
+              <div class="p-2 rounded bg-workshop-elevated">
+                <strong class="text-workshop-bone">Kaelen Voss:</strong> Chief Engineer • Motive: Restore power grid
+              </div>
+              <div class="p-2 rounded bg-workshop-elevated">
+                <strong class="text-workshop-bone">The Sentry:</strong> Autonomous Guardian • Logic constraint intact
+              </div>
+            </div>
+          </div>
+
+          <!-- Column 3 -->
+          <div class="p-4 rounded-xl bg-workshop-surface border border-workshop-border space-y-3">
+            <div class="flex items-center justify-between text-sky-400">
+              <span>Media Assets Generated</span>
+              <span>5 Packages</span>
+            </div>
+            <div class="space-y-2 text-[11px] font-sans text-workshop-muted">
+              <div class="p-2 rounded bg-workshop-elevated flex items-center justify-between">
+                <span>9:16 TikTok Hook Video</span>
+                <span class="text-emerald-400 font-mono text-[10px]">RENDERED</span>
+              </div>
+              <div class="p-2 rounded bg-workshop-elevated flex items-center justify-between">
+                <span>Amazon KDP Blurb & Meta</span>
+                <span class="text-emerald-400 font-mono text-[10px]">READY</span>
+              </div>
+              <div class="p-2 rounded bg-workshop-elevated flex items-center justify-between">
+                <span>Social Carousel Cards</span>
+                <span class="text-emerald-400 font-mono text-[10px]">GENERATED</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Truth Matrix: Verified vs Planned -->
+    <section class="space-y-6 p-8 rounded-2xl bg-workshop-surface border border-workshop-border">
+      <div class="space-y-2">
+        <span class="text-xs font-mono uppercase text-workshop-copper font-bold">Integration Truth Matrix</span>
+        <h2 class="text-2xl font-serif text-workshop-bone">Verified Capabilities vs Planned Integrations</h2>
+      </div>
+
+      <div class="overflow-x-auto">
+        <table class="w-full text-left text-xs font-mono">
+          <thead>
+            <tr class="border-b border-workshop-border text-workshop-muted">
+              <th class="py-3 px-4">Feature / Module</th>
+              <th class="py-3 px-4">Current Status</th>
+              <th class="py-3 px-4">Notes & Safety Guardrails</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-workshop-border/60 text-workshop-bone">
+            <tr>
+              <td class="py-3 px-4">Narrative Timeline Graph</td>
+              <td class="py-3 px-4 text-emerald-400">VERIFIED</td>
+              <td class="py-3 px-4 text-workshop-muted">Deterministic validation for character inconsistencies and chronological breaks.</td>
+            </tr>
+            <tr>
+              <td class="py-3 px-4">EPUB 3.0 & Print Compilation</td>
+              <td class="py-3 px-4 text-emerald-400">VERIFIED</td>
+              <td class="py-3 px-4 text-workshop-muted">Standard clean book package export ready for local upload.</td>
+            </tr>
+            <tr>
+              <td class="py-3 px-4">Promotional Short Video Scripts</td>
+              <td class="py-3 px-4 text-emerald-400">VERIFIED</td>
+              <td class="py-3 px-4 text-workshop-muted">Generates hook lines, audio cues, and visual frame descriptions.</td>
+            </tr>
+            <tr>
+              <td class="py-3 px-4">Handoff to Crosspost Media</td>
+              <td class="py-3 px-4 text-sky-400">ACTIVE PIPELINE</td>
+              <td class="py-3 px-4 text-workshop-muted">Prepares formatted payloads for social multi-distribution.</td>
+            </tr>
+            <tr>
+              <td class="py-3 px-4">Direct Auto-Publishing to Retailers</td>
+              <td class="py-3 px-4 text-amber-400">HUMAN GATE (PLANNED)</td>
+              <td class="py-3 px-4 text-workshop-muted">Irreversible retailer publishing requires manual human review and sign-off.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Bottom Navigation CTA -->
+    <section class="flex flex-col sm:flex-row items-center justify-between p-8 rounded-2xl bg-workshop-elevated border border-workshop-border gap-6">
+      <div class="space-y-1 text-center sm:text-left">
+        <h3 class="text-xl font-serif text-workshop-bone">Ready to explore multi-channel distribution?</h3>
+        <p class="text-xs text-workshop-muted">Discover how Crosspost takes StoryForge assets and scales them across 6+ platforms.</p>
+      </div>
+      <a href="/crosspost" class="px-6 py-3 rounded-xl bg-workshop-copper hover:bg-workshop-copperLight text-white font-medium text-sm transition-all whitespace-nowrap">
+        Explore Crosspost →
+      </a>
+    </section>
+
+  </main>
+
+  <!-- Footer -->
+  <footer class="border-t border-workshop-border/80 bg-[#07090D] py-12 px-4 sm:px-6 lg:px-8 text-xs font-mono text-workshop-muted">
+    <div class="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-6">
+      <div class="flex items-center gap-3">
+        <div class="w-6 h-6 rounded-md bg-workshop-copper flex items-center justify-center text-white font-bold text-[10px]">JO</div>
+        <span class="text-workshop-bone font-sans font-medium">Jardin’s Outpost • StoryForge</span>
+      </div>
+      <div class="flex flex-wrap items-center gap-6">
+        <a href="/" class="hover:text-workshop-copper transition-colors">Workshop Home</a>
+        <a href="/crosspost" class="hover:text-workshop-copper transition-colors">Crosspost</a>
+        <a href="/bosslister" class="hover:text-workshop-copper transition-colors">BossLister</a>
+        <a href="/bosslister-mvp" class="hover:text-workshop-copper transition-colors">BossLister MVP</a>
+        <a href="/about" class="hover:text-workshop-copper transition-colors">About</a>
+      </div>
+    </div>
+  </footer>
+
+</body>
+</html>

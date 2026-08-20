@@ -1,0 +1,95 @@
+@import url('https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400;1,6..72,600&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+
+:root {
+  --color-bg: #090B0F;
+  --color-surface: #11151F;
+  --color-elevated: #181E2B;
+  --color-bone: #F4F1EB;
+  --color-copper: #D97757;
+  --color-copper-light: #E88C6F;
+  --color-rust: #C45A38;
+  --color-amber: #E59850;
+  --color-emerald: #2D5A43;
+  --color-border: #1F2736;
+  --color-muted: #8E98A8;
+}
+
+body {
+  background-color: var(--color-bg);
+  color: var(--color-bone);
+  font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.font-serif {
+  font-family: 'Newsreader', Georgia, Cambria, 'Times New Roman', Times, serif;
+}
+
+.font-mono {
+  font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+}
+
+/* Subtle Technical Workshop Grid */
+.bg-workshop-grid {
+  background-size: 32px 32px;
+  background-image: 
+    linear-gradient(to right, rgba(217, 119, 87, 0.04) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(217, 119, 87, 0.04) 1px, transparent 1px);
+}
+
+.bg-workshop-radial {
+  background-image: 
+    radial-gradient(ellipse 80% 50% at 50% -20%, rgba(217, 119, 87, 0.12), transparent),
+    radial-gradient(ellipse 60% 40% at 80% 80%, rgba(45, 90, 67, 0.08), transparent);
+}
+
+/* Custom animations */
+@keyframes signalFlow {
+  0% { transform: translateX(-100%); opacity: 0; }
+  20% { opacity: 1; }
+  80% { opacity: 1; }
+  100% { transform: translateX(300%); opacity: 0; }
+}
+
+@keyframes pulseGlow {
+  0%, 100% { opacity: 0.4; transform: scale(1); }
+  50% { opacity: 0.8; transform: scale(1.05); }
+}
+
+@keyframes dashFlow {
+  from { stroke-dashoffset: 24; }
+  to { stroke-dashoffset: 0; }
+}
+
+.animate-dash-flow {
+  stroke-dasharray: 6 6;
+  animation: dashFlow 1.8s linear infinite;
+}
+
+.animate-pulse-glow {
+  animation: pulseGlow 4s ease-in-out infinite;
+}
+
+/* Mobile Friendly Custom Scrollbars */
+.custom-scrollbar::-webkit-scrollbar {
+  height: 4px;
+  width: 4px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: rgba(17, 21, 31, 0.8);
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #2A3445;
+  border-radius: 4px;
+}
+
+/* Reduced motion accessibility */
+@media (prefers-reduced-motion: reduce) {
+  *, ::before, ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BossLister | Resale Product Intelligence & Listing Engine — Jardin’s Outpost</title>
+  <meta name="description" content="Instant computer vision item identification, real sold price comps, automated fee calculations, and structured multi-marketplace listing creation.">
+  <link rel="canonical" href="https://jardins-outpost.pages.dev/bosslister">
+  
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400;1,6..72,600&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  
+  <!-- Tailwind CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            workshop: {
+              bg: '#090B0F',
+              surface: '#11151F',
+              elevated: '#181E2B',
+              border: '#1F2736',
+              bone: '#F4F1EB',
+              muted: '#8E98A8',
+              copper: '#D97757',
+              copperLight: '#E88C6F',
+              rust: '#C45A38',
+              amber: '#E59850',
+              emerald: '#2D5A43',
+              emeraldLight: '#3D7A5B'
+            }
+          },
+          fontFamily: {
+            serif: ['Newsreader', 'Georgia', 'serif'],
+            sans: ['Plus Jakarta Sans', '-apple-system', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace']
+          }
+        }
+      }
+    }
+  </script>
+  <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body class="bg-workshop-bg text-workshop-bone font-sans min-h-screen flex flex-col selection:bg-workshop-copper selection:text-white bg-workshop-grid bg-workshop-radial">
+
+  <!-- Header -->
+  <header class="sticky top-0 z-50 border-b border-workshop-border/80 bg-workshop-bg/95 backdrop-blur-md">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
+      <a href="/" class="flex items-center gap-3.5 group">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-workshop-copper via-[#B85D43] to-workshop-rust flex items-center justify-center text-white font-bold font-mono text-sm shadow-lg shadow-workshop-copper/20 group-hover:scale-105 transition-all border border-workshop-copper/40">
+          JO
+        </div>
+        <div class="flex flex-col">
+          <span class="font-serif text-xl sm:text-2xl font-medium tracking-tight text-workshop-bone group-hover:text-workshop-copper transition-colors">
+            Jardin’s Outpost
+          </span>
+          <span class="text-[10px] font-mono tracking-widest uppercase text-workshop-muted">
+            BossLister Module
+          </span>
+        </div>
+      </a>
+
+      <nav class="hidden md:flex items-center gap-7 text-sm font-medium">
+        <a href="/" class="text-workshop-muted hover:text-workshop-bone transition-colors">Workshop Home</a>
+        <a href="/storyforge" class="text-workshop-muted hover:text-workshop-bone transition-colors">StoryForge</a>
+        <a href="/crosspost" class="text-workshop-muted hover:text-workshop-bone transition-colors">Crosspost</a>
+        <a href="/bosslister" class="text-workshop-copper font-semibold border-b-2 border-workshop-copper pb-1">BossLister</a>
+        <a href="/bosslister-mvp" class="text-workshop-muted hover:text-workshop-bone transition-colors">BossLister MVP</a>
+        <a href="/about" class="text-workshop-muted hover:text-workshop-bone transition-colors">About</a>
+      </nav>
+
+      <div class="flex items-center gap-3">
+        <a href="/" class="px-4 py-2 rounded-xl bg-workshop-surface border border-workshop-border text-xs font-mono text-workshop-bone hover:text-workshop-copper transition-all">
+          ← Back to Workshop
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="flex-grow max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-16 space-y-20">
+    
+    <!-- Hero Section -->
+    <section class="space-y-6 text-center max-w-4xl mx-auto">
+      <div class="inline-flex items-center gap-2.5 px-4 py-1.5 rounded-full bg-workshop-surface border border-workshop-border text-xs font-mono text-amber-400 shadow-inner">
+        <span class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
+        <span>RESALE PRODUCT INTELLIGENCE ENGINE</span>
+      </div>
+
+      <h1 class="text-4xl sm:text-6xl font-serif font-normal tracking-tight text-workshop-bone leading-tight">
+        Scan the item. <br>
+        <span class="italic text-transparent bg-clip-text bg-gradient-to-r from-amber-400 via-workshop-copper to-workshop-rust">
+          Get real comps, calculate fees, and create listings in seconds.
+        </span>
+      </h1>
+
+      <p class="text-lg text-workshop-muted font-sans font-light max-w-2xl mx-auto leading-relaxed">
+        BossLister is the product intelligence engine built for high-volume resellers and estate liquidators. Computer vision identification, live price comps, accurate net margin calculations, and formatted marketplace listings.
+      </p>
+
+      <div class="flex flex-wrap justify-center gap-4 pt-4">
+        <a href="#workflow-breakdown" class="px-7 py-3.5 rounded-xl bg-workshop-copper hover:bg-workshop-copperLight text-white font-medium text-sm transition-all shadow-lg shadow-workshop-copper/20">
+          Inspect Reseller Workflow ↓
+        </a>
+        <a href="/bosslister-mvp" class="px-7 py-3.5 rounded-xl bg-workshop-surface border border-workshop-border hover:border-amber-400/50 text-workshop-bone font-medium text-sm transition-all">
+          See BossLister MVP (1-Pass Flow) →
+        </a>
+      </div>
+    </section>
+
+    <!-- Architecture Boundary Callout -->
+    <div class="p-5 rounded-2xl bg-workshop-surface border border-workshop-border flex flex-col sm:flex-row items-center justify-between gap-4">
+      <div class="space-y-1 text-center sm:text-left">
+        <span class="text-xs font-mono text-amber-400 font-bold uppercase">System Boundary Distinction:</span>
+        <p class="text-xs text-workshop-muted">
+          BossLister is the <strong class="text-workshop-bone">listing and product intelligence engine</strong>. Downstream distribution, multi-account posting, and inventory sync are executed by <strong class="text-workshop-bone">Crosspost Commerce</strong>.
+        </p>
+      </div>
+      <a href="/crosspost" class="text-xs font-mono text-workshop-copper hover:underline whitespace-nowrap">
+        Learn about Crosspost Commerce →
+      </a>
+    </div>
+
+    <!-- The 5-Stage Reseller Workflow -->
+    <section id="workflow-breakdown" class="space-y-8">
+      <div class="text-center space-y-2">
+        <span class="text-xs font-mono uppercase text-workshop-copper font-semibold">End-to-End Execution</span>
+        <h2 class="text-3xl font-serif text-workshop-bone">The BossLister Product Intelligence Flow</h2>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 text-center">
+        
+        <div class="p-5 rounded-2xl bg-workshop-surface border border-workshop-border space-y-3">
+          <span class="text-[10px] font-mono text-amber-400 font-bold block">01. SCAN</span>
+          <h3 class="font-serif text-lg text-workshop-bone">Photo / Barcode</h3>
+          <p class="text-xs text-workshop-muted leading-relaxed">
+            Snap 2–4 photos of the item or scan its UPC/model tag directly from a mobile browser.
+          </p>
+        </div>
+
+        <div class="p-5 rounded-2xl bg-workshop-surface border border-workshop-border space-y-3">
+          <span class="text-[10px] font-mono text-amber-400 font-bold block">02. IDENTIFY</span>
+          <h3 class="font-serif text-lg text-workshop-bone">Product Match</h3>
+          <p class="text-xs text-workshop-muted leading-relaxed">
+            Computer vision matches brand, exact model number, year, condition grade, and colorway.
+          </p>
+        </div>
+
+        <div class="p-5 rounded-2xl bg-workshop-surface border border-workshop-border space-y-3">
+          <span class="text-[10px] font-mono text-amber-400 font-bold block">03. COMPS</span>
+          <h3 class="font-serif text-lg text-workshop-bone">Sold Research</h3>
+          <p class="text-xs text-workshop-muted leading-relaxed">
+            Queries historical sold data across eBay, Mercari, and Poshmark to establish fair market value.
+          </p>
+        </div>
+
+        <div class="p-5 rounded-2xl bg-workshop-surface border border-workshop-border space-y-3">
+          <span class="text-[10px] font-mono text-amber-400 font-bold block">04. FEES & PROFIT</span>
+          <h3 class="font-serif text-lg text-workshop-bone">Margin Engine</h3>
+          <p class="text-xs text-workshop-muted leading-relaxed">
+            Deducts platform commission, estimated shipping, and cost-of-goods to show true net take-home profit.
+          </p>
+        </div>
+
+        <div class="p-5 rounded-2xl bg-workshop-surface border border-workshop-copper/60 space-y-3">
+          <span class="text-[10px] font-mono text-emerald-400 font-bold block">05. LISTING</span>
+          <h3 class="font-serif text-lg text-workshop-bone">Channel Payload</h3>
+          <p class="text-xs text-workshop-muted leading-relaxed">
+            Formats descriptions, item specifics, and photos, then sends verified payload to Crosspost Commerce.
+          </p>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- Key Reseller Capabilities -->
+    <section class="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div class="p-6 rounded-2xl bg-workshop-surface border border-workshop-border space-y-3">
+        <div class="w-8 h-8 rounded-lg bg-amber-400/20 text-amber-400 flex items-center justify-center font-mono font-bold text-xs">01</div>
+        <h3 class="font-serif text-xl text-workshop-bone">Fast Sourcing Decisions</h3>
+        <p class="text-xs text-workshop-muted leading-relaxed">
+          Know within 5 seconds at an estate sale or thrift store if an item is worth buying based on real sold velocity and estimated margin.
+        </p>
+      </div>
+
+      <div class="p-6 rounded-2xl bg-workshop-surface border border-workshop-border space-y-3">
+        <div class="w-8 h-8 rounded-lg bg-workshop-copper/20 text-workshop-copper flex items-center justify-center font-mono font-bold text-xs">02</div>
+        <h3 class="font-serif text-xl text-workshop-bone">Accurate Item Specifics</h3>
+        <p class="text-xs text-workshop-muted leading-relaxed">
+          Populates mandatory eBay aspects, UPC numbers, material types, and measurements without manual typing.
+        </p>
+      </div>
+
+      <div class="p-6 rounded-2xl bg-workshop-surface border border-workshop-border space-y-3">
+        <div class="w-8 h-8 rounded-lg bg-emerald-400/20 text-emerald-400 flex items-center justify-center font-mono font-bold text-xs">03</div>
+        <h3 class="font-serif text-xl text-workshop-bone">Direct Export Handshake</h3>
+        <p class="text-xs text-workshop-muted leading-relaxed">
+          Seamlessly bundles photos, price thresholds, and descriptions into a clean JSON payload for Crosspost Commerce multi-market posting.
+        </p>
+      </div>
+    </section>
+
+    <!-- Bottom Navigation CTA -->
+    <section class="flex flex-col sm:flex-row items-center justify-between p-8 rounded-2xl bg-gradient-to-r from-workshop-surface via-workshop-elevated to-workshop-surface border-2 border-workshop-copper/60 gap-6">
+      <div class="space-y-1 text-center sm:text-left">
+        <h3 class="text-xl font-serif text-workshop-bone">Looking for the fastest all-in-one seller flow?</h3>
+        <p class="text-xs text-workshop-muted">Check out BossLister MVP — combining photo intake, listing creation, and commercial promo generation in one step.</p>
+      </div>
+      <a href="/bosslister-mvp" class="px-6 py-3 rounded-xl bg-workshop-copper hover:bg-workshop-copperLight text-white font-semibold text-sm transition-all whitespace-nowrap shadow-lg">
+        Explore BossLister MVP →
+      </a>
+    </section>
+
+  </main>
+
+  <!-- Footer -->
+  <footer class="border-t border-workshop-border/80 bg-[#07090D] py-12 px-4 sm:px-6 lg:px-8 text-xs font-mono text-workshop-muted">
+    <div class="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-6">
+      <div class="flex items-center gap-3">
+        <div class="w-6 h-6 rounded-md bg-workshop-copper flex items-center justify-center text-white font-bold text-[10px]">JO</div>
+        <span class="text-workshop-bone font-sans font-medium">Jardin’s Outpost • BossLister</span>
+      </div>
+      <div class="flex flex-wrap items-center gap-6">
+        <a href="/" class="hover:text-workshop-copper transition-colors">Workshop Home</a>
+        <a href="/storyforge" class="hover:text-workshop-copper transition-colors">StoryForge</a>
+        <a href="/crosspost" class="hover:text-workshop-copper transition-colors">Crosspost</a>
+        <a href="/bosslister-mvp" class="hover:text-workshop-copper transition-colors">BossLister MVP</a>
+        <a href="/about" class="hover:text-workshop-copper transition-colors">About</a>
+      </div>
+    </div>
+  </footer>
+
+</body>
+</html>

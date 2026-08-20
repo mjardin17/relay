@@ -1,5 +1,6 @@
 import express from 'express';
 import path from 'path';
+import fs from 'fs';
 import dotenv from 'dotenv';
 import { createServer as createViteServer } from 'vite';
 import { GoogleGenAI } from '@google/genai';
@@ -13,6 +14,8 @@ import { controlledOperationsRouter } from './src/routes/controlledOperationsApi
 import { pilotApiRouter } from './src/routes/pilotApi';
 import { websiteBuilderApiRouter } from './src/routes/websiteBuilderApi';
 import { publicWebsiteFormsApiRouter } from './src/routes/publicWebsiteFormsApi';
+import { creativeRouterApi } from './src/routes/creativeRouterApi';
+import { gitSyncApiRouter } from './src/routes/gitSyncApi';
 
 dotenv.config();
 
@@ -43,6 +46,8 @@ app.use('/api/operations', controlledOperationsRouter);
 app.use('/api/pilot', pilotApiRouter);
 app.use('/api/website-builder', websiteBuilderApiRouter);
 app.use('/api/public', publicWebsiteFormsApiRouter);
+app.use('/api/creative', creativeRouterApi);
+app.use('/api/git-sync', gitSyncApiRouter);
 
 // Lazy initializer for Gemini client to prevent startup crash if GEMINI_API_KEY is missing
 function getGeminiClient(): GoogleGenAI {
@@ -456,9 +461,69 @@ Provide direct, actionable, revenue-focused advice. Answer like a seasoned partn
   }
 });
 
+// Direct Backup ZIP Download Endpoints
+app.get([
+  '/download',
+  '/download-backup',
+  '/backup',
+  '/backup.zip',
+  '/relay-ai-studio-pre-reset-backup-2026-08-18.zip',
+  '/api/download-backup'
+], (req, res) => {
+  const zipPath = path.join(process.cwd(), 'relay-ai-studio-pre-reset-backup-2026-08-18.zip');
+  if (fs.existsSync(zipPath)) {
+    res.setHeader('Content-Type', 'application/zip');
+    res.setHeader('Content-Disposition', 'attachment; filename="relay-ai-studio-pre-reset-backup-2026-08-18.zip"');
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+    return res.download(zipPath, 'relay-ai-studio-pre-reset-backup-2026-08-18.zip');
+  }
+  const publicZipPath = path.join(process.cwd(), 'public', 'relay-ai-studio-pre-reset-backup-2026-08-18.zip');
+  if (fs.existsSync(publicZipPath)) {
+    res.setHeader('Content-Type', 'application/zip');
+    res.setHeader('Content-Disposition', 'attachment; filename="relay-ai-studio-pre-reset-backup-2026-08-18.zip"');
+    return res.download(publicZipPath, 'relay-ai-studio-pre-reset-backup-2026-08-18.zip');
+  }
+  return res.status(404).send('Backup archive not found on server.');
+});
+
 // Health check endpoint
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', module: 'Empire OS Relay Module', time: new Date().toISOString() });
+});
+
+// Serve Jardin’s Outpost static site files from public/tenants/tenant_jardins_outpost
+const outpostStaticPath = path.join(process.cwd(), 'public/tenants/tenant_jardins_outpost');
+app.use(express.static(outpostStaticPath, {
+  setHeaders: (res) => {
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
+  }
+}));
+
+app.get(['/', '/index.html'], (req, res, next) => {
+  const indexPath = path.join(outpostStaticPath, 'index.html');
+  if (fs.existsSync(indexPath)) {
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
+    return res.sendFile(indexPath);
+  }
+  next();
+});
+
+const tenantPages = ['storyforge', 'crosspost', 'bosslister', 'bosslister-mvp', 'about'];
+tenantPages.forEach((page) => {
+  app.get([`/${page}`, `/${page}.html`], (req, res, next) => {
+    const pagePath = path.join(outpostStaticPath, `${page}.html`);
+    if (fs.existsSync(pagePath)) {
+      res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+      res.setHeader('Pragma', 'no-cache');
+      res.setHeader('Expires', '0');
+      return res.sendFile(pagePath);
+    }
+    next();
+  });
 });
 
 // Serve Vite frontend

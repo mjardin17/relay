@@ -11,7 +11,8 @@ import {
   Sun,
   Shield,
   Zap,
-  Globe
+  Globe,
+  Menu
 } from 'lucide-react';
 
 interface EmpireHeaderProps {
@@ -21,6 +22,7 @@ interface EmpireHeaderProps {
   setActiveModule: (module: string) => void;
   onOpenCreateModal: () => void;
   pendingApprovalsCount: number;
+  onToggleMobileMenu?: () => void;
 }
 
 export const EmpireHeader: React.FC<EmpireHeaderProps> = ({
@@ -29,7 +31,8 @@ export const EmpireHeader: React.FC<EmpireHeaderProps> = ({
   activeModule,
   setActiveModule,
   onOpenCreateModal,
-  pendingApprovalsCount
+  pendingApprovalsCount,
+  onToggleMobileMenu
 }) => {
   const [showModuleMenu, setShowModuleMenu] = useState(false);
   const [showWorkspaceMenu, setShowWorkspaceMenu] = useState(false);
@@ -52,7 +55,18 @@ export const EmpireHeader: React.FC<EmpireHeaderProps> = ({
       <div className="max-w-[1700px] mx-auto px-4 h-16 flex items-center justify-between gap-4">
         
         {/* Left Branding & Module Selector */}
-        <div className="flex items-center gap-3 md:gap-6">
+        <div className="flex items-center gap-2 md:gap-6">
+          {/* Mobile Menu Toggle Button */}
+          <button
+            onClick={onToggleMobileMenu}
+            className={`p-2 rounded-lg border lg:hidden transition-all ${
+              darkMode ? 'bg-slate-900 border-slate-800 text-slate-300 hover:text-white' : 'bg-slate-100 border-slate-200 text-slate-700'
+            }`}
+            title="Open Relay Navigation"
+          >
+            <Menu className="w-5 h-5 text-indigo-400" />
+          </button>
+
           {/* Empire OS Logo */}
           <div className="flex items-center gap-2 font-bold tracking-wider text-sm uppercase cursor-pointer group">
             <div className="w-8 h-8 rounded-lg bg-gradient-to-tr from-indigo-600 via-blue-600 to-emerald-400 p-0.5 shadow-md shadow-indigo-500/20 flex items-center justify-center">

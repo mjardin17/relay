@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Crosspost | Multi-Platform Media & Commerce Distribution — Jardin’s Outpost</title>
+  <meta name="description" content="Unified multi-channel distribution engine with dual surfaces: Crosspost Media for video/social content and Crosspost Commerce for multi-marketplace listings.">
+  <link rel="canonical" href="https://jardins-outpost.pages.dev/crosspost">
+  
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400;1,6..72,600&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  
+  <!-- Tailwind CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            workshop: {
+              bg: '#090B0F',
+              surface: '#11151F',
+              elevated: '#181E2B',
+              border: '#1F2736',
+              bone: '#F4F1EB',
+              muted: '#8E98A8',
+              copper: '#D97757',
+              copperLight: '#E88C6F',
+              rust: '#C45A38',
+              amber: '#E59850',
+              emerald: '#2D5A43',
+              emeraldLight: '#3D7A5B'
+            }
+          },
+          fontFamily: {
+            serif: ['Newsreader', 'Georgia', 'serif'],
+            sans: ['Plus Jakarta Sans', '-apple-system', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace']
+          }
+        }
+      }
+    }
+  </script>
+  <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body class="bg-workshop-bg text-workshop-bone font-sans min-h-screen flex flex-col selection:bg-workshop-copper selection:text-white bg-workshop-grid bg-workshop-radial">
+
+  <!-- Header -->
+  <header class="sticky top-0 z-50 border-b border-workshop-border/80 bg-workshop-bg/95 backdrop-blur-md">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
+      <a href="/" class="flex items-center gap-3.5 group">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-workshop-copper via-[#B85D43] to-workshop-rust flex items-center justify-center text-white font-bold font-mono text-sm shadow-lg shadow-workshop-copper/20 group-hover:scale-105 transition-all border border-workshop-copper/40">
+          JO
+        </div>
+        <div class="flex flex-col">
+          <span class="font-serif text-xl sm:text-2xl font-medium tracking-tight text-workshop-bone group-hover:text-workshop-copper transition-colors">
+            Jardin’s Outpost
+          </span>
+          <span class="text-[10px] font-mono tracking-widest uppercase text-workshop-muted">
+            Crosspost Module
+          </span>
+        </div>
+      </a>
+
+      <nav class="hidden md:flex items-center gap-7 text-sm font-medium">
+        <a href="/" class="text-workshop-muted hover:text-workshop-bone transition-colors">Workshop Home</a>
+        <a href="/storyforge" class="text-workshop-muted hover:text-workshop-bone transition-colors">StoryForge</a>
+        <a href="/crosspost" class="text-workshop-copper font-semibold border-b-2 border-workshop-copper pb-1">Crosspost</a>
+        <a href="/bosslister" class="text-workshop-muted hover:text-workshop-bone transition-colors">BossLister</a>
+        <a href="/bosslister-mvp" class="text-workshop-muted hover:text-workshop-bone transition-colors">BossLister MVP</a>
+        <a href="/about" class="text-workshop-muted hover:text-workshop-bone transition-colors">About</a>
+      </nav>
+
+      <div class="flex items-center gap-3">
+        <a href="/" class="px-4 py-2 rounded-xl bg-workshop-surface border border-workshop-border text-xs font-mono text-workshop-bone hover:text-workshop-copper transition-all">
+          ← Back to Workshop
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="flex-grow max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-16 space-y-20">
+    
+    <!-- Hero Section -->
+    <section class="space-y-6 text-center max-w-4xl mx-auto">
+      <div class="inline-flex items-center gap-2.5 px-4 py-1.5 rounded-full bg-workshop-surface border border-workshop-border text-xs font-mono text-sky-400 shadow-inner">
+        <span class="w-2 h-2 rounded-full bg-sky-400 animate-pulse"></span>
+        <span>MULTI-CHANNEL DISTRIBUTION ENGINE</span>
+      </div>
+
+      <h1 class="text-4xl sm:text-6xl font-serif font-normal tracking-tight text-workshop-bone leading-tight">
+        Create once. <br>
+        <span class="italic text-transparent bg-clip-text bg-gradient-to-r from-workshop-copper via-workshop-copperLight to-sky-400">
+          Distribute everywhere with zero drift.
+        </span>
+      </h1>
+
+      <p class="text-lg text-workshop-muted font-sans font-light max-w-2xl mx-auto leading-relaxed">
+        Crosspost is the multi-platform distribution product with two dedicated surfaces: <strong class="text-workshop-bone">Crosspost Media</strong> for social content and <strong class="text-workshop-bone">Crosspost Commerce</strong> for marketplace inventory.
+      </p>
+
+      <div class="flex flex-wrap justify-center gap-4 pt-4">
+        <a href="#surface-media" class="px-7 py-3.5 rounded-xl bg-workshop-copper hover:bg-workshop-copperLight text-white font-medium text-sm transition-all shadow-lg shadow-workshop-copper/20">
+          Explore Crosspost Media ↓
+        </a>
+        <a href="#surface-commerce" class="px-7 py-3.5 rounded-xl bg-workshop-surface border border-workshop-border hover:border-emerald-400/50 text-workshop-bone font-medium text-sm transition-all">
+          Explore Crosspost Commerce ↓
+        </a>
+      </div>
+    </section>
+
+    <!-- Clean Boundary Notice -->
+    <div class="p-4 rounded-xl bg-workshop-surface/60 border border-workshop-border text-xs font-mono text-workshop-muted text-center max-w-3xl mx-auto">
+      <span class="text-workshop-copper font-bold">Architecture Guardrail:</span> Crosspost is a standalone distribution engine. It receives finished video/social media payloads from <strong class="text-workshop-bone">StoryForge</strong>, and structured listing inventory payloads from <strong class="text-workshop-bone">BossLister</strong>.
+    </div>
+
+    <!-- ======================================================================= -->
+    <!-- SURFACE 1: CROSSPOST MEDIA                                              -->
+    <!-- ======================================================================= -->
+    <section id="surface-media" class="rounded-3xl bg-workshop-surface border border-workshop-border p-8 sm:p-12 space-y-10 shadow-2xl">
+      <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 border-b border-workshop-border/80 pb-6">
+        <div class="space-y-2">
+          <div class="flex items-center gap-2 text-xs font-mono text-workshop-copper">
+            <span class="w-2.5 h-2.5 rounded-full bg-workshop-copper"></span>
+            <span>SURFACE 01 • CONTENT DISTRIBUTION</span>
+          </div>
+          <h2 class="text-3xl sm:text-4xl font-serif text-workshop-bone">Crosspost Media</h2>
+          <p class="text-workshop-muted text-sm max-w-2xl">
+            One piece of content adapted for every major video and text social channel with platform-specific captions, aspect ratios, tags, and queue tracking.
+          </p>
+        </div>
+      </div>
+
+      <!-- Capabilities Grid -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 text-xs font-sans">
+        <div class="p-5 rounded-xl bg-workshop-elevated border border-workshop-border space-y-2">
+          <h3 class="font-serif text-base text-workshop-bone">Automated Ratio & Trim Adaptation</h3>
+          <p class="text-workshop-muted">Formats 9:16 vertical videos for TikTok & Shorts, 1:1 square cards for Instagram, and widescreen previews for X and LinkedIn.</p>
+        </div>
+        <div class="p-5 rounded-xl bg-workshop-elevated border border-workshop-border space-y-2">
+          <h3 class="font-serif text-base text-workshop-bone">Native Caption Styling</h3>
+          <p class="text-workshop-muted">Generates platform-tailored character-safe titles, hashtag clusters, and engagement prompts without awkward auto-formatting errors.</p>
+        </div>
+        <div class="p-5 rounded-xl bg-workshop-elevated border border-workshop-border space-y-2">
+          <h3 class="font-serif text-base text-workshop-bone">Queue & Telemetry Engine</h3>
+          <p class="text-workshop-muted">Queues drafts, schedules timed releases, monitors publishing status, and logs first-party response analytics.</p>
+        </div>
+      </div>
+
+      <!-- Channels Supported -->
+      <div class="space-y-3">
+        <span class="text-xs font-mono uppercase text-workshop-muted">Supported Social Channels & Status:</span>
+        <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-3 text-center text-xs font-mono">
+          <div class="p-3 rounded-lg bg-workshop-elevated border border-workshop-border">
+            <span class="text-workshop-bone font-medium block">TikTok</span>
+            <span class="text-[10px] text-emerald-400">VERIFIED</span>
+          </div>
+          <div class="p-3 rounded-lg bg-workshop-elevated border border-workshop-border">
+            <span class="text-workshop-bone font-medium block">Instagram</span>
+            <span class="text-[10px] text-emerald-400">VERIFIED</span>
+          </div>
+          <div class="p-3 rounded-lg bg-workshop-elevated border border-workshop-border">
+            <span class="text-workshop-bone font-medium block">YouTube</span>
+            <span class="text-[10px] text-emerald-400">VERIFIED</span>
+          </div>
+          <div class="p-3 rounded-lg bg-workshop-elevated border border-workshop-border">
+            <span class="text-workshop-bone font-medium block">Facebook</span>
+            <span class="text-[10px] text-emerald-400">VERIFIED</span>
+          </div>
+          <div class="p-3 rounded-lg bg-workshop-elevated border border-workshop-border">
+            <span class="text-workshop-bone font-medium block">X (Twitter)</span>
+            <span class="text-[10px] text-emerald-400">VERIFIED</span>
+          </div>
+          <div class="p-3 rounded-lg bg-workshop-elevated border border-workshop-border">
+            <span class="text-workshop-bone font-medium block">LinkedIn</span>
+            <span class="text-[10px] text-emerald-400">VERIFIED</span>
+          </div>
+          <div class="p-3 rounded-lg bg-workshop-elevated border border-workshop-border">
+            <span class="text-workshop-bone font-medium block">Reddit</span>
+            <span class="text-[10px] text-amber-400">DRAFT_ONLY</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ======================================================================= -->
+    <!-- SURFACE 2: CROSSPOST COMMERCE                                           -->
+    <!-- ======================================================================= -->
+    <section id="surface-commerce" class="rounded-3xl bg-workshop-surface border border-workshop-border p-8 sm:p-12 space-y-10 shadow-2xl">
+      <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 border-b border-workshop-border/80 pb-6">
+        <div class="space-y-2">
+          <div class="flex items-center gap-2 text-xs font-mono text-emerald-400">
+            <span class="w-2.5 h-2.5 rounded-full bg-emerald-400"></span>
+            <span>SURFACE 02 • MULTI-MARKETPLACE COMMERCE</span>
+          </div>
+          <h2 class="text-3xl sm:text-4xl font-serif text-workshop-bone">Crosspost Commerce</h2>
+          <p class="text-workshop-muted text-sm max-w-2xl">
+            One product listing adapted for multiple marketplaces with synchronized inventory, price controls, and instant anti-oversell locks.
+          </p>
+        </div>
+      </div>
+
+      <!-- Capabilities Grid -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 text-xs font-sans">
+        <div class="p-5 rounded-xl bg-workshop-elevated border border-workshop-border space-y-2">
+          <h3 class="font-serif text-base text-workshop-bone">Instant Anti-Oversell Protection</h3>
+          <p class="text-workshop-muted">When an item sells on eBay, Crosspost Commerce instantly sends withdrawal signals to Mercari, Facebook Marketplace, and Poshmark within seconds.</p>
+        </div>
+        <div class="p-5 rounded-xl bg-workshop-elevated border border-workshop-border space-y-2">
+          <h3 class="font-serif text-base text-workshop-bone">Marketplace Category Taxonomy</h3>
+          <p class="text-workshop-muted">Translates item conditions, brands, sizes, and specs into the unique taxonomy required by each marketplace API.</p>
+        </div>
+        <div class="p-5 rounded-xl bg-workshop-elevated border border-workshop-border space-y-2">
+          <h3 class="font-serif text-base text-workshop-bone">Live Inventory State Machine</h3>
+          <p class="text-workshop-muted">Tracks listing status (Draft, Queued, Active, Sold, Delisted) with an audit trail and fail-safe retry handlers.</p>
+        </div>
+      </div>
+
+      <!-- Marketplaces Supported -->
+      <div class="space-y-3">
+        <span class="text-xs font-mono uppercase text-workshop-muted">Supported Marketplaces & Integration Status:</span>
+        <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-3 text-center text-xs font-mono">
+          <div class="p-3 rounded-lg bg-workshop-elevated border border-workshop-border">
+            <span class="text-workshop-bone font-medium block">eBay</span>
+            <span class="text-[10px] text-emerald-400">VERIFIED</span>
+          </div>
+          <div class="p-3 rounded-lg bg-workshop-elevated border border-workshop-border">
+            <span class="text-workshop-bone font-medium block">FB Market</span>
+            <span class="text-[10px] text-emerald-400">VERIFIED</span>
+          </div>
+          <div class="p-3 rounded-lg bg-workshop-elevated border border-workshop-border">
+            <span class="text-workshop-bone font-medium block">Etsy</span>
+            <span class="text-[10px] text-emerald-400">VERIFIED</span>
+          </div>
+          <div class="p-3 rounded-lg bg-workshop-elevated border border-workshop-border">
+            <span class="text-workshop-bone font-medium block">Mercari</span>
+            <span class="text-[10px] text-emerald-400">VERIFIED</span>
+          </div>
+          <div class="p-3 rounded-lg bg-workshop-elevated border border-workshop-border">
+            <span class="text-workshop-bone font-medium block">Poshmark</span>
+            <span class="text-[10px] text-amber-400">DRAFT_ONLY</span>
+          </div>
+          <div class="p-3 rounded-lg bg-workshop-elevated border border-workshop-border">
+            <span class="text-workshop-bone font-medium block">Depop</span>
+            <span class="text-[10px] text-amber-400">DRAFT_ONLY</span>
+          </div>
+          <div class="p-3 rounded-lg bg-workshop-elevated border border-workshop-border">
+            <span class="text-workshop-bone font-medium block">Shopify</span>
+            <span class="text-[10px] text-emerald-400">VERIFIED</span>
+          </div>
+          <div class="p-3 rounded-lg bg-workshop-elevated border border-workshop-border">
+            <span class="text-workshop-bone font-medium block">TikTok Shop</span>
+            <span class="text-[10px] text-sky-400">PLANNED</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Bottom Navigation CTA -->
+    <section class="flex flex-col sm:flex-row items-center justify-between p-8 rounded-2xl bg-workshop-elevated border border-workshop-border gap-6">
+      <div class="space-y-1 text-center sm:text-left">
+        <h3 class="text-xl font-serif text-workshop-bone">Explore the Upstream Listing Engine</h3>
+        <p class="text-xs text-workshop-muted">See how BossLister scans products, researches comps, and supplies structured listings to Crosspost Commerce.</p>
+      </div>
+      <a href="/bosslister" class="px-6 py-3 rounded-xl bg-workshop-copper hover:bg-workshop-copperLight text-white font-medium text-sm transition-all whitespace-nowrap">
+        Explore BossLister →
+      </a>
+    </section>
+
+  </main>
+
+  <!-- Footer -->
+  <footer class="border-t border-workshop-border/80 bg-[#07090D] py-12 px-4 sm:px-6 lg:px-8 text-xs font-mono text-workshop-muted">
+    <div class="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-6">
+      <div class="flex items-center gap-3">
+        <div class="w-6 h-6 rounded-md bg-workshop-copper flex items-center justify-center text-white font-bold text-[10px]">JO</div>
+        <span class="text-workshop-bone font-sans font-medium">Jardin’s Outpost • Crosspost</span>
+      </div>
+      <div class="flex flex-wrap items-center gap-6">
+        <a href="/" class="hover:text-workshop-copper transition-colors">Workshop Home</a>
+        <a href="/storyforge" class="hover:text-workshop-copper transition-colors">StoryForge</a>
+        <a href="/bosslister" class="hover:text-workshop-copper transition-colors">BossLister</a>
+        <a href="/bosslister-mvp" class="hover:text-workshop-copper transition-colors">BossLister MVP</a>
+        <a href="/about" class="hover:text-workshop-copper transition-colors">About</a>
+      </div>
+    </div>
+  </footer>
+
+</body>
+</html>

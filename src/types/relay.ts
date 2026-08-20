@@ -37,7 +37,8 @@ export type RelayTab =
   | 'team'
   | 'automation'
   | 'agents'
-  | 'integrations';
+  | 'integrations'
+  | 'git_sync';
 
 export interface BusinessProfile {
   name: string;

@@ -21,7 +21,8 @@ import {
   Database,
   Rocket,
   Zap,
-  Globe
+  Globe,
+  FolderGit2
 } from 'lucide-react';
 import { RelayTab } from '../../types/relay';
 
@@ -30,13 +31,17 @@ interface EmpireSidebarProps {
   setActiveTab: (tab: RelayTab) => void;
   darkMode: boolean;
   pendingApprovalsCount: number;
+  isMobileOpen?: boolean;
+  onCloseMobile?: () => void;
 }
 
 export const EmpireSidebar: React.FC<EmpireSidebarProps> = ({
   activeTab,
   setActiveTab,
   darkMode,
-  pendingApprovalsCount
+  pendingApprovalsCount,
+  isMobileOpen = false,
+  onCloseMobile
 }) => {
   const growthEngineNav = [
     { id: 'website_builder', label: 'Website Builder & Agent', icon: Globe, badge: 'v2.0 Web', badgeColor: 'bg-emerald-500/20 text-emerald-400 font-bold border border-emerald-500/30' },
@@ -69,7 +74,8 @@ export const EmpireSidebar: React.FC<EmpireSidebarProps> = ({
     { id: 'team', label: 'Team & Approvals', icon: Users, count: pendingApprovalsCount, countColor: 'bg-rose-500 text-white' },
     { id: 'automation', label: 'Automation Engine', icon: Workflow },
     { id: 'agents', label: 'AI Agents Hub', icon: Bot },
-    { id: 'integrations', label: 'Integrations Hub', icon: Plug }
+    { id: 'integrations', label: 'Integrations Hub', icon: Plug },
+    { id: 'git_sync', label: 'Git Sync & Canonical', icon: FolderGit2, badge: 'GitHub', badgeColor: 'bg-[#D97757]/20 text-[#D97757] font-mono font-bold border border-[#D97757]/30' }
   ];
 
   const renderNavGroup = (title: string, items: any[]) => (
@@ -122,10 +128,8 @@ export const EmpireSidebar: React.FC<EmpireSidebarProps> = ({
     </div>
   );
 
-  return (
-    <aside className={`w-64 border-r shrink-0 flex flex-col justify-between hidden lg:flex select-none transition-colors duration-200 ${
-      darkMode ? 'bg-slate-950/60 border-slate-800/80 text-slate-300' : 'bg-slate-50/80 border-slate-200 text-slate-700'
-    }`}>
+  const sidebarContent = (
+    <div className="flex flex-col h-full justify-between">
       <div className="p-3 overflow-y-auto max-h-[calc(100vh-100px)]">
         {renderNavGroup('Growth OS Engines', growthEngineNav)}
         {renderNavGroup('Content Studio', contentSuiteNav)}
@@ -147,6 +151,50 @@ export const EmpireSidebar: React.FC<EmpireSidebarProps> = ({
           6 Core Engines Active • Gemini 3.6 Flash
         </p>
       </div>
-    </aside>
+    </div>
+  );
+
+  return (
+    <>
+      {/* Desktop Sidebar */}
+      <aside className={`w-64 border-r shrink-0 flex flex-col justify-between hidden lg:flex select-none transition-colors duration-200 ${
+        darkMode ? 'bg-slate-950/60 border-slate-800/80 text-slate-300' : 'bg-slate-50/80 border-slate-200 text-slate-700'
+      }`}>
+        {sidebarContent}
+      </aside>
+
+      {/* Mobile Drawer Overlay */}
+      {isMobileOpen && (
+        <div className="fixed inset-0 z-50 lg:hidden flex">
+          {/* Backdrop */}
+          <div 
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm transition-opacity"
+            onClick={onCloseMobile}
+          />
+          {/* Slide-out Panel */}
+          <aside className={`relative w-72 max-w-[85vw] h-full flex flex-col justify-between select-none shadow-2xl z-10 transition-colors duration-200 ${
+            darkMode ? 'bg-slate-950 border-r border-slate-800 text-slate-300' : 'bg-slate-50 border-r border-slate-200 text-slate-700'
+          }`}>
+            <div className="p-3 border-b border-slate-800/60 flex items-center justify-between">
+              <span className="text-xs font-mono font-bold tracking-wider uppercase text-indigo-400">Relay Navigation</span>
+              <button 
+                onClick={onCloseMobile}
+                className="px-2 py-1 rounded bg-slate-800 text-slate-300 text-xs font-mono hover:text-white"
+              >
+                ✕ Close
+              </button>
+            </div>
+            <div className="flex-1 overflow-y-auto" onClick={(e) => {
+              // Auto close on navigation click
+              if ((e.target as HTMLElement).closest('button')) {
+                onCloseMobile?.();
+              }
+            }}>
+              {sidebarContent}
+            </div>
+          </aside>
+        </div>
+      )}
+    </>
   );
 };

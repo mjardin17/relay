@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BossLister MVP | 1-Pass Reseller & Commercial Generator — Jardin’s Outpost</title>
+  <meta name="description" content="The fastest mobile seller workflow: Photo, Identify, Price, List, Crosspost, and auto-generate a 15-second commercial in one continuous pass.">
+  <link rel="canonical" href="https://jardins-outpost.pages.dev/bosslister-mvp">
+  
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400;1,6..72,600&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  
+  <!-- Tailwind CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            workshop: {
+              bg: '#090B0F',
+              surface: '#11151F',
+              elevated: '#181E2B',
+              border: '#1F2736',
+              bone: '#F4F1EB',
+              muted: '#8E98A8',
+              copper: '#D97757',
+              copperLight: '#E88C6F',
+              rust: '#C45A38',
+              amber: '#E59850',
+              emerald: '#2D5A43',
+              emeraldLight: '#3D7A5B'
+            }
+          },
+          fontFamily: {
+            serif: ['Newsreader', 'Georgia', 'serif'],
+            sans: ['Plus Jakarta Sans', '-apple-system', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace']
+          }
+        }
+      }
+    }
+  </script>
+  <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body class="bg-workshop-bg text-workshop-bone font-sans min-h-screen flex flex-col selection:bg-workshop-copper selection:text-white bg-workshop-grid bg-workshop-radial">
+
+  <!-- Header -->
+  <header class="sticky top-0 z-50 border-b border-workshop-border/80 bg-workshop-bg/95 backdrop-blur-md">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
+      <a href="/" class="flex items-center gap-3.5 group">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-workshop-copper via-[#B85D43] to-workshop-rust flex items-center justify-center text-white font-bold font-mono text-sm shadow-lg shadow-workshop-copper/20 group-hover:scale-105 transition-all border border-workshop-copper/40">
+          JO
+        </div>
+        <div class="flex flex-col">
+          <span class="font-serif text-xl sm:text-2xl font-medium tracking-tight text-workshop-bone group-hover:text-workshop-copper transition-colors">
+            Jardin’s Outpost
+          </span>
+          <span class="text-[10px] font-mono tracking-widest uppercase text-workshop-muted">
+            BossLister MVP
+          </span>
+        </div>
+      </a>
+
+      <nav class="hidden md:flex items-center gap-7 text-sm font-medium">
+        <a href="/" class="text-workshop-muted hover:text-workshop-bone transition-colors">Workshop Home</a>
+        <a href="/storyforge" class="text-workshop-muted hover:text-workshop-bone transition-colors">StoryForge</a>
+        <a href="/crosspost" class="text-workshop-muted hover:text-workshop-bone transition-colors">Crosspost</a>
+        <a href="/bosslister" class="text-workshop-muted hover:text-workshop-bone transition-colors">BossLister</a>
+        <a href="/bosslister-mvp" class="text-workshop-copper font-semibold border-b-2 border-workshop-copper pb-1">BossLister MVP</a>
+        <a href="/about" class="text-workshop-muted hover:text-workshop-bone transition-colors">About</a>
+      </nav>
+
+      <div class="flex items-center gap-3">
+        <a href="/" class="px-4 py-2 rounded-xl bg-workshop-surface border border-workshop-border text-xs font-mono text-workshop-bone hover:text-workshop-copper transition-all">
+          ← Back to Workshop
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="flex-grow max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-16 space-y-20">
+    
+    <!-- Hero Section -->
+    <section class="space-y-6 text-center max-w-4xl mx-auto">
+      <div class="inline-flex items-center gap-2.5 px-4 py-1.5 rounded-full bg-workshop-surface border border-workshop-border text-xs font-mono text-workshop-copper shadow-inner">
+        <span class="w-2 h-2 rounded-full bg-workshop-copper animate-pulse"></span>
+        <span>FAST-PASS SELLER & PROMO SUITE</span>
+      </div>
+
+      <h1 class="text-4xl sm:text-6xl font-serif font-normal tracking-tight text-workshop-bone leading-tight">
+        List the item. <br>
+        <span class="italic text-transparent bg-clip-text bg-gradient-to-r from-workshop-copper via-workshop-copperLight to-amber-400">
+          Create the commercial in one workflow.
+        </span>
+      </h1>
+
+      <p class="text-lg text-workshop-muted font-sans font-light max-w-2xl mx-auto leading-relaxed">
+        BossLister MVP collapses the entire resale pipeline into a 60-second mobile interaction: Take photos, get comps, publish marketplace listings, and instantly render a short-form video commercial.
+      </p>
+
+      <div class="flex flex-wrap justify-center gap-4 pt-4">
+        <a href="#interactive-simulator" class="px-7 py-3.5 rounded-xl bg-workshop-copper hover:bg-workshop-copperLight text-white font-medium text-sm transition-all shadow-lg shadow-workshop-copper/20">
+          Test Live Mobile Simulator ↓
+        </a>
+        <a href="/bosslister" class="px-7 py-3.5 rounded-xl bg-workshop-surface border border-workshop-border hover:border-workshop-copper/50 text-workshop-bone font-medium text-sm transition-all">
+          Compare with Core BossLister →
+        </a>
+      </div>
+    </section>
+
+    <!-- The 6-Step Single-Pass Flow -->
+    <section class="space-y-8">
+      <div class="text-center space-y-2">
+        <span class="text-xs font-mono uppercase text-workshop-copper font-semibold">Continuous Pipeline</span>
+        <h2 class="text-3xl font-serif text-workshop-bone">The 60-Second Resale Velocity Loop</h2>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-3 text-center">
+        <div class="p-4 rounded-xl bg-workshop-surface border border-workshop-border space-y-2">
+          <span class="text-[10px] font-mono text-workshop-copper block">01. PHOTO</span>
+          <h3 class="text-xs font-bold text-workshop-bone">Snap Item</h3>
+          <p class="text-[11px] text-workshop-muted">Take 3 photos with mobile camera.</p>
+        </div>
+        <div class="p-4 rounded-xl bg-workshop-surface border border-workshop-border space-y-2">
+          <span class="text-[10px] font-mono text-workshop-copper block">02. IDENTIFY</span>
+          <h3 class="text-xs font-bold text-workshop-bone">AI Vision</h3>
+          <p class="text-[11px] text-workshop-muted">Extracts model, brand & condition.</p>
+        </div>
+        <div class="p-4 rounded-xl bg-workshop-surface border border-workshop-border space-y-2">
+          <span class="text-[10px] font-mono text-workshop-copper block">03. PRICE</span>
+          <h3 class="text-xs font-bold text-workshop-bone">Comps Calc</h3>
+          <p class="text-[11px] text-workshop-muted">Calculates sold comps & net margin.</p>
+        </div>
+        <div class="p-4 rounded-xl bg-workshop-surface border border-workshop-border space-y-2">
+          <span class="text-[10px] font-mono text-workshop-copper block">04. LIST</span>
+          <h3 class="text-xs font-bold text-workshop-bone">Draft Package</h3>
+          <p class="text-[11px] text-workshop-muted">Generates title, specs & description.</p>
+        </div>
+        <div class="p-4 rounded-xl bg-workshop-surface border border-workshop-border space-y-2">
+          <span class="text-[10px] font-mono text-emerald-400 block">05. CROSSPOST</span>
+          <h3 class="text-xs font-bold text-workshop-bone">Multi-Channel</h3>
+          <p class="text-[11px] text-workshop-muted">Queues to eBay, Mercari, & FB.</p>
+        </div>
+        <div class="p-4 rounded-xl bg-workshop-surface border border-workshop-copper/70 space-y-2">
+          <span class="text-[10px] font-mono text-amber-400 block">06. COMMERCIAL</span>
+          <h3 class="text-xs font-bold text-workshop-bone">15s Video Clip</h3>
+          <p class="text-[11px] text-workshop-muted">Auto-renders TikTok/Reels promo.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Interactive Mobile Device Simulator -->
+    <section id="interactive-simulator" class="rounded-3xl bg-workshop-surface border border-workshop-border p-8 sm:p-12 space-y-8 shadow-2xl">
+      <div class="text-center space-y-2 max-w-2xl mx-auto">
+        <span class="text-xs font-mono uppercase text-workshop-copper font-bold">Interactive Mobile View</span>
+        <h2 class="text-3xl font-serif text-workshop-bone">Experience BossLister MVP In Action</h2>
+        <p class="text-xs text-workshop-muted">
+          Click the steps below to simulate the intake-to-commercial workflow on mobile.
+        </p>
+      </div>
+
+      <!-- Simulator Layout -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center max-w-4xl mx-auto">
+        
+        <!-- Controls on Left -->
+        <div class="lg:col-span-6 space-y-4">
+          <div class="space-y-2">
+            <button type="button" onclick="setSimStep(1)" id="btn-step-1" class="w-full text-left p-3.5 rounded-xl bg-workshop-elevated border border-workshop-copper text-workshop-bone font-mono text-xs flex items-center justify-between hover:bg-workshop-border transition-all">
+              <span>01. Mobile Photo Intake</span>
+              <span class="text-workshop-copper font-bold">ACTIVE</span>
+            </button>
+            <button type="button" onclick="setSimStep(2)" id="btn-step-2" class="w-full text-left p-3.5 rounded-xl bg-workshop-elevated border border-workshop-border text-workshop-muted font-mono text-xs flex items-center justify-between hover:bg-workshop-border transition-all">
+              <span>02. Sold Comps & Price Lock</span>
+              <span class="text-workshop-muted">STEP 2</span>
+            </button>
+            <button type="button" onclick="setSimStep(3)" id="btn-step-3" class="w-full text-left p-3.5 rounded-xl bg-workshop-elevated border border-workshop-border text-workshop-muted font-mono text-xs flex items-center justify-between hover:bg-workshop-border transition-all">
+              <span>03. Multi-Marketplace Post</span>
+              <span class="text-workshop-muted">STEP 3</span>
+            </button>
+            <button type="button" onclick="setSimStep(4)" id="btn-step-4" class="w-full text-left p-3.5 rounded-xl bg-workshop-elevated border border-workshop-border text-workshop-muted font-mono text-xs flex items-center justify-between hover:bg-workshop-border transition-all">
+              <span>04. 15s Commercial Video</span>
+              <span class="text-workshop-muted">STEP 4</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Phone Mockup on Right -->
+        <div class="lg:col-span-6 flex justify-center">
+          <div class="w-[300px] rounded-[36px] bg-[#000000] border-4 border-workshop-border p-3 shadow-2xl relative">
+            <div class="w-24 h-4 bg-workshop-border rounded-full mx-auto mb-3"></div>
+            
+            <div class="rounded-2xl bg-workshop-surface border border-workshop-border p-4 space-y-3 font-sans min-h-[360px] flex flex-col justify-between">
+              
+              <!-- Screen Top -->
+              <div class="flex items-center justify-between text-[10px] font-mono border-b border-workshop-border pb-2 text-workshop-muted">
+                <span>BossLister MVP v1.2</span>
+                <span id="sim-status" class="text-emerald-400 font-bold">READY</span>
+              </div>
+
+              <!-- Dynamic Screen Area -->
+              <div id="sim-screen" class="space-y-2.5 my-auto">
+                <div class="h-28 rounded-xl bg-workshop-elevated border border-workshop-border flex flex-col items-center justify-center text-center p-2">
+                  <span class="text-3xl">📷 ✨</span>
+                  <span class="text-xs font-semibold text-workshop-bone pt-1">Vintage Polaroid Sun 660</span>
+                  <span class="text-[10px] text-workshop-copper font-mono">AutoFocus Autoflash</span>
+                </div>
+                <div class="p-2.5 rounded bg-workshop-bg border border-workshop-border text-[11px] font-mono text-workshop-muted space-y-1">
+                  <div class="flex justify-between text-workshop-bone">
+                    <span>Sold Comp Median:</span>
+                    <span class="text-emerald-400 font-bold">$58.00</span>
+                  </div>
+                  <div class="flex justify-between">
+                    <span>Target Net Profit:</span>
+                    <span class="text-workshop-bone">$43.50</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Screen Bottom CTA -->
+              <button type="button" onclick="advanceSimStep()" class="w-full py-2.5 text-center rounded-xl bg-workshop-copper hover:bg-workshop-copperLight text-white text-xs font-semibold shadow-md transition-all">
+                Next Workflow Stage →
+              </button>
+
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- Bottom Navigation CTA -->
+    <section class="flex flex-col sm:flex-row items-center justify-between p-8 rounded-2xl bg-workshop-elevated border border-workshop-border gap-6">
+      <div class="space-y-1 text-center sm:text-left">
+        <h3 class="text-xl font-serif text-workshop-bone">Return to the Workshop Overview</h3>
+        <p class="text-xs text-workshop-muted">Explore how BossLister MVP fits into the wider Jardin’s Outpost ecosystem.</p>
+      </div>
+      <a href="/" class="px-6 py-3 rounded-xl bg-workshop-surface hover:bg-workshop-border border border-workshop-border text-workshop-bone font-medium text-sm transition-all whitespace-nowrap">
+        ← Back to Homepage
+      </a>
+    </section>
+
+  </main>
+
+  <!-- Footer -->
+  <footer class="border-t border-workshop-border/80 bg-[#07090D] py-12 px-4 sm:px-6 lg:px-8 text-xs font-mono text-workshop-muted">
+    <div class="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-6">
+      <div class="flex items-center gap-3">
+        <div class="w-6 h-6 rounded-md bg-workshop-copper flex items-center justify-center text-white font-bold text-[10px]">JO</div>
+        <span class="text-workshop-bone font-sans font-medium">Jardin’s Outpost • BossLister MVP</span>
+      </div>
+      <div class="flex flex-wrap items-center gap-6">
+        <a href="/" class="hover:text-workshop-copper transition-colors">Workshop Home</a>
+        <a href="/storyforge" class="hover:text-workshop-copper transition-colors">StoryForge</a>
+        <a href="/crosspost" class="hover:text-workshop-copper transition-colors">Crosspost</a>
+        <a href="/bosslister" class="hover:text-workshop-copper transition-colors">BossLister</a>
+        <a href="/about" class="hover:text-workshop-copper transition-colors">About</a>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Interactive Simulator Script -->
+  <script>
+    let currentSimStep = 1;
+    const simSteps = [
+      {
+        title: "01. Mobile Photo Intake",
+        status: "INTAKE COMPLETE",
+        html: `
+          <div class="h-28 rounded-xl bg-workshop-elevated border border-workshop-border flex flex-col items-center justify-center text-center p-2">
+            <span class="text-3xl">📷 ✨</span>
+            <span class="text-xs font-semibold text-workshop-bone pt-1">Vintage Polaroid Sun 660</span>
+            <span class="text-[10px] text-workshop-copper font-mono">AutoFocus Autoflash</span>
+          </div>
+          <div class="p-2.5 rounded bg-workshop-bg border border-workshop-border text-[11px] font-mono text-workshop-muted space-y-1">
+            <div class="flex justify-between text-workshop-bone">
+              <span>Sold Comp Median:</span>
+              <span class="text-emerald-400 font-bold">$58.00</span>
+            </div>
+            <div class="flex justify-between">
+              <span>Target Net Profit:</span>
+              <span class="text-workshop-bone">$43.50</span>
+            </div>
+          </div>
+        `
+      },
+      {
+        title: "02. Sold Comps & Price Lock",
+        status: "COMPS VERIFIED",
+        html: `
+          <div class="p-3 rounded-xl bg-workshop-elevated border border-workshop-border space-y-2">
+            <div class="flex justify-between text-[11px] font-mono">
+              <span class="text-workshop-copper">eBay Solds (14):</span>
+              <span class="text-workshop-bone font-bold">$54 - $65</span>
+            </div>
+            <div class="flex justify-between text-[11px] font-mono">
+              <span class="text-emerald-400">Mercari Solds (8):</span>
+              <span class="text-workshop-bone font-bold">$50 - $60</span>
+            </div>
+            <div class="pt-1 text-[10px] text-workshop-muted">
+              Auto-priced at <strong>$58.00 Free Ship</strong> for optimal sell velocity (avg 2.8 days).
+            </div>
+          </div>
+        `
+      },
+      {
+        title: "03. Multi-Marketplace Post",
+        status: "QUEUED (3 CHANNELS)",
+        html: `
+          <div class="space-y-2 font-mono text-[11px]">
+            <div class="p-2 rounded bg-workshop-elevated flex justify-between items-center">
+              <span>eBay Listing</span>
+              <span class="text-emerald-400 font-bold">READY ✓</span>
+            </div>
+            <div class="p-2 rounded bg-workshop-elevated flex justify-between items-center">
+              <span>Mercari Listing</span>
+              <span class="text-emerald-400 font-bold">READY ✓</span>
+            </div>
+            <div class="p-2 rounded bg-workshop-elevated flex justify-between items-center">
+              <span>FB Marketplace</span>
+              <span class="text-emerald-400 font-bold">READY ✓</span>
+            </div>
+          </div>
+        `
+      },
+      {
+        title: "04. 15s Commercial Video",
+        status: "VIDEO RENDERED",
+        html: `
+          <div class="p-3 rounded-xl bg-gradient-to-br from-workshop-elevated to-workshop-bg border border-workshop-copper/50 text-center space-y-2">
+            <span class="text-2xl">🎬 🔥</span>
+            <div class="text-xs font-bold text-workshop-bone">15s TikTok/Reels Video Promo</div>
+            <p class="text-[10px] text-workshop-muted">
+              "Retro instant film vibes. Tested & working. Link in bio to grab it."
+            </p>
+            <div class="w-full bg-workshop-border h-1.5 rounded-full overflow-hidden">
+              <div class="bg-workshop-copper h-full w-full animate-pulse"></div>
+            </div>
+          </div>
+        `
+      }
+    ];
+
+    function setSimStep(step) {
+      currentSimStep = step;
+      document.getElementById('sim-status').innerText = simSteps[step-1].status;
+      document.getElementById('sim-screen').innerHTML = simSteps[step-1].html;
+      
+      for (let i = 1; i <= 4; i++) {
+        const btn = document.getElementById('btn-step-' + i);
+        if (btn) {
+          if (i === step) {
+            btn.className = "w-full text-left p-3.5 rounded-xl bg-workshop-elevated border border-workshop-copper text-workshop-bone font-mono text-xs flex items-center justify-between hover:bg-workshop-border transition-all";
+            btn.querySelector('span:last-child').className = "text-workshop-copper font-bold";
+            btn.querySelector('span:last-child').innerText = "ACTIVE";
+          } else {
+            btn.className = "w-full text-left p-3.5 rounded-xl bg-workshop-elevated border border-workshop-border text-workshop-muted font-mono text-xs flex items-center justify-between hover:bg-workshop-border transition-all";
+            btn.querySelector('span:last-child').className = "text-workshop-muted";
+            btn.querySelector('span:last-child').innerText = "STEP " + i;
+          }
+        }
+      }
+    }
+
+    function advanceSimStep() {
+      let next = currentSimStep + 1;
+      if (next > 4) next = 1;
+      setSimStep(next);
+    }
+  </script>
+</body>
+</html>

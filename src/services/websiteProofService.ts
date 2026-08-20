@@ -192,10 +192,10 @@ export class WebsiteProofService {
       {
         id: 'proof_relay_test_suite',
         productSlug: 'relay',
-        title: 'Deterministic Test Suite & Zero-Mock Execution',
+        title: 'Deterministic Test Suite & Controlled Integration Execution',
         type: 'TEST',
         verificationStatus: 'VERIFIED',
-        summary: '148+ automated end-to-end tests across 40 suites executing with zero mock data and clean TypeScript compilation.',
+        summary: '155 tests passing across 46 suites executing with controlled integration fixtures and clean TypeScript compilation.',
         sourceType: 'TEST_RUNNER',
         sourceReference: 'tsx --test src/tests/*.test.ts'
       },

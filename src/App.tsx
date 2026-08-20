@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Globe, ShieldAlert, Rocket, FolderGit2, Menu, Sparkles } from 'lucide-react';
 import { EmpireHeader } from './components/empire/EmpireHeader';
 import { EmpireSidebar } from './components/empire/EmpireSidebar';
 import { ContentStudio } from './components/studio/ContentStudio';
@@ -29,6 +30,7 @@ import { RecommendationHistory } from './components/growth/RecommendationHistory
 import { ElectricalWorkflowStudio } from './components/growth/ElectricalWorkflowStudio';
 import { PilotCommandCenter } from './components/pilot/PilotCommandCenter';
 import { WebsiteBuilderHub } from './components/website/WebsiteBuilderHub';
+import { GitSyncPanel } from './components/gitsync/GitSyncPanel';
 import { EvidenceDrawer } from './components/evidence/EvidenceDrawer';
 import { EvidenceItem } from './types/evidence';
 
@@ -62,7 +64,8 @@ import { ContentPost, MediaAsset, RelayTab } from './types/relay';
 export default function App() {
   const [darkMode, setDarkMode] = useState(true);
   const [activeModule, setActiveModule] = useState('relay');
-  const [activeTab, setActiveTab] = useState<RelayTab>('launch_program');
+  const [activeTab, setActiveTab] = useState<RelayTab>('website_builder');
+  const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
 
   // Application State - Growth OS & Evidence Graph
   const [businessProfile, setBusinessProfile] = useState(INITIAL_BUSINESS_PROFILE);
@@ -183,6 +186,7 @@ export default function App() {
           setIsModalOpen(true);
         }}
         pendingApprovalsCount={pendingApprovalsPosts.length}
+        onToggleMobileMenu={() => setIsMobileNavOpen(prev => !prev)}
       />
 
       {/* Main Container Layout */}
@@ -194,10 +198,12 @@ export default function App() {
           setActiveTab={setActiveTab}
           darkMode={darkMode}
           pendingApprovalsCount={pendingApprovalsPosts.length}
+          isMobileOpen={isMobileNavOpen}
+          onCloseMobile={() => setIsMobileNavOpen(false)}
         />
 
         {/* Main Workspace View */}
-        <main className="flex-1 p-4 md:p-6 overflow-y-auto max-h-[calc(100vh-64px)]">
+        <main className="flex-1 p-3 md:p-6 overflow-y-auto max-h-[calc(100vh-64px)] pb-20 lg:pb-6">
           {/* Relay v2.0 Website Builder & Web Presence Engine */}
           {activeTab === 'website_builder' && (
             <WebsiteBuilderHub
@@ -401,6 +407,10 @@ export default function App() {
               darkMode={darkMode}
             />
           )}
+
+          {activeTab === 'git_sync' && (
+            <GitSyncPanel />
+          )}
         </main>
 
       </div>
@@ -422,6 +432,59 @@ export default function App() {
         onSavePost={handleSavePost}
         initialDate={modalInitialDate}
       />
+
+      {/* Mobile Sticky Bottom Navigation Bar */}
+      <nav className={`fixed bottom-0 left-0 right-0 z-30 lg:hidden border-t backdrop-blur-lg px-2 py-1.5 flex items-center justify-around ${
+        darkMode ? 'bg-slate-950/95 border-slate-800 text-slate-400' : 'bg-white/95 border-slate-200 text-slate-600'
+      }`}>
+        <button
+          onClick={() => setActiveTab('website_builder')}
+          className={`flex flex-col items-center gap-1 p-1.5 rounded-lg text-[10px] font-medium transition-colors ${
+            activeTab === 'website_builder' ? 'text-emerald-400 font-bold' : 'hover:text-slate-200'
+          }`}
+        >
+          <Globe className="w-5 h-5" />
+          <span>Website</span>
+        </button>
+
+        <button
+          onClick={() => setActiveTab('pilot_command')}
+          className={`flex flex-col items-center gap-1 p-1.5 rounded-lg text-[10px] font-medium transition-colors ${
+            activeTab === 'pilot_command' ? 'text-amber-400 font-bold' : 'hover:text-slate-200'
+          }`}
+        >
+          <ShieldAlert className="w-5 h-5" />
+          <span>Pilot Ops</span>
+        </button>
+
+        <button
+          onClick={() => setActiveTab('launch_program')}
+          className={`flex flex-col items-center gap-1 p-1.5 rounded-lg text-[10px] font-medium transition-colors ${
+            activeTab === 'launch_program' ? 'text-indigo-400 font-bold' : 'hover:text-slate-200'
+          }`}
+        >
+          <Rocket className="w-5 h-5" />
+          <span>Launch</span>
+        </button>
+
+        <button
+          onClick={() => setActiveTab('git_sync')}
+          className={`flex flex-col items-center gap-1 p-1.5 rounded-lg text-[10px] font-medium transition-colors ${
+            activeTab === 'git_sync' ? 'text-[#D97757] font-bold' : 'hover:text-slate-200'
+          }`}
+        >
+          <FolderGit2 className="w-5 h-5" />
+          <span>Git Sync</span>
+        </button>
+
+        <button
+          onClick={() => setIsMobileNavOpen(true)}
+          className="flex flex-col items-center gap-1 p-1.5 rounded-lg text-[10px] font-medium text-slate-400 hover:text-slate-200"
+        >
+          <Menu className="w-5 h-5 text-indigo-400" />
+          <span>All Modules</span>
+        </button>
+      </nav>
 
     </div>
   );

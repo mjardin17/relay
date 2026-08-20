@@ -94,8 +94,8 @@ export class JardinOutpostService {
     const locStmt = db.prepare(`
       INSERT INTO tenant_locations (
         id, tenant_id, location_type, label, street_address, city, state_province,
-        postal_code, country, phone, verification_state, metadata_json, created_at, updated_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        postal_code, country, phone, source, verification_state, metadata_json, created_at, updated_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       ON CONFLICT(id) DO UPDATE SET
         label = excluded.label,
         street_address = excluded.street_address,
@@ -103,6 +103,7 @@ export class JardinOutpostService {
         state_province = excluded.state_province,
         postal_code = excluded.postal_code,
         phone = excluded.phone,
+        source = excluded.source,
         updated_at = excluded.updated_at
     `);
 
@@ -117,6 +118,7 @@ export class JardinOutpostService {
       '02110',
       'US',
       '+1-617-555-0142',
+      'VERIFIED_BUSINESS_PROFILE',
       'VERIFIED',
       JSON.stringify({
         website: 'https://jardinsoutpost.com',
