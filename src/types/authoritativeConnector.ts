@@ -20,6 +20,7 @@ export type AuthoritativeConnectorType =
   | 'OFFICIAL_API'
   | 'APPROVED_PARTNER'
   | 'DRAFT_ONLY'
+  | 'UPLOAD_PACKAGE'
   | 'UNSUPPORTED';
 
 export type AuthoritativeAuthMethod =

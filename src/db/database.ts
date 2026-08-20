@@ -41,25 +41,47 @@ function openAndInitDatabase(targetPath: string): DatabaseSync {
     db.exec('PRAGMA quick_check;');
     initializeDatabaseSchema(db);
   } catch (err: any) {
-    console.warn(`[Database] Error initializing database at ${targetPath} (${err?.message || err}). Recreating fresh database...`);
+    console.warn(`[Database] Error initializing database at ${targetPath} (${err?.message || err}).`);
     try {
       if (db!) {
         (db as any).close?.();
       }
     } catch {}
-    removeDatabaseFiles(targetPath);
-    db = new DatabaseSync(targetPath);
-    db.exec('PRAGMA busy_timeout = 5000;');
-    db.exec('PRAGMA foreign_keys = ON;');
-    db.exec('PRAGMA journal_mode = WAL;');
-    initializeDatabaseSchema(db);
+    // Only recreate if it's explicitly a test/temp database
+    const isTestDb = targetPath.includes('test') || targetPath.includes('tmp') || targetPath.includes('temp');
+    if (isTestDb) {
+      removeDatabaseFiles(targetPath);
+      db = new DatabaseSync(targetPath);
+      db.exec('PRAGMA busy_timeout = 5000;');
+      db.exec('PRAGMA foreign_keys = ON;');
+      db.exec('PRAGMA journal_mode = WAL;');
+      initializeDatabaseSchema(db);
+    } else {
+      throw err;
+    }
   }
   return db;
+}
+
+export function closeDatabase(): void {
+  if (dbInstance) {
+    try {
+      (dbInstance as any).close?.();
+    } catch {}
+    dbInstance = null;
+    currentDbPath = null;
+  }
 }
 
 export function getDatabase(): DatabaseSync {
   const targetPath = process.env.DATABASE_PATH || path.join(process.cwd(), 'relay.db');
   if (!dbInstance || currentDbPath !== targetPath) {
+    if (dbInstance) {
+      try {
+        (dbInstance as any).close?.();
+      } catch {}
+      dbInstance = null;
+    }
     dbInstance = openAndInitDatabase(targetPath);
     currentDbPath = targetPath;
     try {
@@ -1502,4 +1524,10 @@ export function initializeDatabaseSchema(db: DatabaseSync): void {
   safeAddColumn('launch_audit_logs', 'event_hash TEXT');
   safeAddColumn('launch_audit_logs', 'canonical_payload_hash TEXT');
   safeAddColumn('launch_audit_logs', 'execution_mode TEXT NOT NULL DEFAULT "DRY_RUN"');
+
+  safeAddColumn('universal_action_records', 'approval_signature TEXT');
+  safeAddColumn('universal_action_records', 'policy_version TEXT DEFAULT "v1.0"');
+  safeAddColumn('universal_action_records', 'retry_classification TEXT');
+  safeAddColumn('universal_action_records', 'next_retry_at TEXT');
+  safeAddColumn('universal_action_records', 'dead_letter_id TEXT');
 }

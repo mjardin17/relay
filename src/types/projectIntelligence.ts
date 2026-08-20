@@ -73,6 +73,9 @@ export interface ProjectDuplicationMatch {
 }
 
 export interface ProjectComparisonReport {
+  status?: 'COMPLETED' | 'BLOCKED_NEEDS_SOURCE' | 'NOT_FOUND';
+  blockerDetails?: string;
+  governanceNotice?: string;
   targetProject: string;
   sourceProject: string;
   comparedAt: string;

@@ -67,7 +67,7 @@ export class LaunchAuditService {
       status?: string;
       details?: Record<string, any>;
     }
-  ): { id: string; eventHash: string } {
+  ): { id: string; eventHash: string; sequenceNumber: number; previousEventHash: string } {
     let tenantId: string = 'system_global';
     let event: any = {};
 
@@ -106,7 +106,9 @@ export class LaunchAuditService {
 
     return {
       id: res.id,
-      eventHash: res.eventHash
+      eventHash: res.eventHash,
+      sequenceNumber: res.sequenceNumber,
+      previousEventHash: res.previousEventHash
     };
   }
 
@@ -117,7 +119,7 @@ export class LaunchAuditService {
     endpoint?: string;
     status?: string;
     details?: Record<string, any>;
-  }): { id: string; eventHash: string } {
+  }): { id: string; eventHash: string; sequenceNumber: number; previousEventHash: string } {
     return this.logEvent(event.tenantId || 'system_global', {
       actorId: event.actorId,
       action: event.action,
@@ -286,7 +288,7 @@ export class LaunchAuditService {
     });
   }
 
-  public verifyLedgerIntegrity(tenantId?: string): {
+  public verifyLedgerIntegrity(tenantIdOrOptions?: string | { tenantId?: string; startSequence?: number; endSequence?: number }): {
     isValid: boolean;
     totalEvents: number;
     genesisHash: string;
@@ -294,11 +296,31 @@ export class LaunchAuditService {
     verificationErrors: string[];
   } {
     const db = getDatabase();
-    let query = `SELECT * FROM launch_audit_logs`;
+    let tenantId: string | undefined;
+    let startSequence: number | undefined;
+    let endSequence: number | undefined;
+
+    if (typeof tenantIdOrOptions === 'string') {
+      tenantId = tenantIdOrOptions;
+    } else if (tenantIdOrOptions && typeof tenantIdOrOptions === 'object') {
+      tenantId = tenantIdOrOptions.tenantId;
+      startSequence = tenantIdOrOptions.startSequence;
+      endSequence = tenantIdOrOptions.endSequence;
+    }
+
+    let query = `SELECT * FROM launch_audit_logs WHERE sequence_number IS NOT NULL AND canonical_payload_hash IS NOT NULL`;
     const params: any[] = [];
     if (tenantId) {
-      query += ` WHERE tenant_id = ? OR tenant_id IS NULL OR tenant_id = 'system_global'`;
+      query += ` AND tenant_id = ?`;
       params.push(tenantId);
+    }
+    if (startSequence !== undefined) {
+      query += ` AND sequence_number >= ?`;
+      params.push(startSequence);
+    }
+    if (endSequence !== undefined) {
+      query += ` AND sequence_number <= ?`;
+      params.push(endSequence);
     }
     query += ` ORDER BY sequence_number ASC`;
 
@@ -313,6 +335,61 @@ export class LaunchAuditService {
         latestHash: 'GENESIS_HASH_00000000000000000000000000000000',
         verificationErrors: []
       };
+    }
+
+    for (let i = 0; i < rows.length; i++) {
+      const row = rows[i];
+
+      // 1. Verify hash chaining continuity against predecessor in the cryptographic ledger
+      if (row.sequence_number > 1) {
+        const prevRow = db.prepare(`
+          SELECT event_hash FROM launch_audit_logs WHERE sequence_number = ?
+        `).get(row.sequence_number - 1) as { event_hash: string } | undefined;
+
+        if (prevRow && row.previous_event_hash !== prevRow.event_hash) {
+          errors.push(
+            `Hash chain break at sequence ${row.sequence_number}: expected previous '${prevRow.event_hash}', got '${row.previous_event_hash}'`
+          );
+        }
+      }
+
+      // 2. Verify canonical payload hash against stored details
+      let details = {};
+      try {
+        details = JSON.parse(row.details_json || '{}');
+      } catch {
+        details = {};
+      }
+
+      const rawPayloadToHash = JSON.stringify({
+        tenantId: row.tenant_id || null,
+        actorId: row.actor_id || null,
+        endpoint: row.endpoint,
+        action: row.action,
+        status: row.status,
+        executionMode: row.execution_mode || 'DRY_RUN',
+        idempotencyKey: row.idempotency_key || null,
+        details
+      });
+
+      const recomputedCanonical = crypto.createHash('sha256').update(rawPayloadToHash).digest('hex');
+      if (row.canonical_payload_hash !== recomputedCanonical) {
+        errors.push(
+          `Payload tampering detected at sequence ${row.sequence_number} (id: ${row.id}): expected canonical hash '${recomputedCanonical}', stored '${row.canonical_payload_hash}'`
+        );
+      }
+
+      // 3. Verify event hash
+      const recomputedEventHash = crypto
+        .createHash('sha256')
+        .update(`${row.sequence_number}:${row.previous_event_hash}:${row.canonical_payload_hash}:${row.created_at}`)
+        .digest('hex');
+
+      if (row.event_hash !== recomputedEventHash) {
+        errors.push(
+          `Event hash tampering detected at sequence ${row.sequence_number} (id: ${row.id}): expected '${recomputedEventHash}', stored '${row.event_hash}'`
+        );
+      }
     }
 
     return {

@@ -11,6 +11,7 @@ import { AuthoritativeConnectorRegistryService } from './authoritativeConnectorR
 import { EmergencyControlService } from './emergencyControlService';
 import { LaunchAuditService } from './launchAuditService';
 import { EvidenceGraphService } from './evidenceGraphService';
+import { ProviderAdapterRegistry, ProviderExecutionOutcome } from './providerAdapters/universalProviderAdapters';
 
 export class UniversalActionEngineService {
   private static instance: UniversalActionEngineService;
@@ -18,12 +19,14 @@ export class UniversalActionEngineService {
   private emergencyControls: EmergencyControlService;
   private auditService: LaunchAuditService;
   private evidenceGraph: EvidenceGraphService;
+  private adapterRegistry: ProviderAdapterRegistry;
 
   private constructor() {
     this.connectorRegistry = AuthoritativeConnectorRegistryService.getInstance();
     this.emergencyControls = EmergencyControlService.getInstance();
     this.auditService = LaunchAuditService.getInstance();
     this.evidenceGraph = EvidenceGraphService.getInstance();
+    this.adapterRegistry = ProviderAdapterRegistry.getInstance();
   }
 
   public static getInstance(): UniversalActionEngineService {
@@ -33,14 +36,27 @@ export class UniversalActionEngineService {
     return UniversalActionEngineService.instance;
   }
 
-  public generateIdempotencyKey(tenantId: string, actionType: string, inputPayload: Record<string, any>): string {
-    const serialized = JSON.stringify(inputPayload, Object.keys(inputPayload).sort());
+  private canonicalJson(obj: any): string {
+    if (obj === null || typeof obj !== 'object') {
+      return JSON.stringify(obj);
+    }
+    if (Array.isArray(obj)) {
+      return `[${obj.map((item) => this.canonicalJson(item)).join(',')}]`;
+    }
+    const keys = Object.keys(obj).sort();
+    return `{${keys.map((k) => `${JSON.stringify(k)}:${this.canonicalJson(obj[k])}`).join(',')}}`;
+  }
+
+  public generateIdempotencyKey(tenantId: string, actionType: string, inputPayload?: Record<string, any>): string {
+    const safePayload = inputPayload || {};
+    const serialized = this.canonicalJson(safePayload);
     const hash = crypto.createHash('sha256').update(`${tenantId}:${actionType}:${serialized}`).digest('hex');
     return `idemp_${actionType.toLowerCase()}_${hash.substring(0, 16)}`;
   }
 
-  public generateFingerprint(payload: Record<string, any>): string {
-    const serialized = JSON.stringify(payload, Object.keys(payload).sort());
+  public generateFingerprint(payload?: Record<string, any>): string {
+    const safePayload = payload || {};
+    const serialized = this.canonicalJson(safePayload);
     return crypto.createHash('sha256').update(serialized).digest('hex');
   }
 
@@ -52,15 +68,21 @@ export class UniversalActionEngineService {
     const db = getDatabase();
     const now = new Date().toISOString();
     const actionId = `act_${request.tenantId}_${Date.now()}_${crypto.randomBytes(4).toString('hex')}`;
-    const idempotencyKey = request.idempotencyKey || this.generateIdempotencyKey(request.tenantId, request.actionType, request.input);
-    const inputFingerprint = this.generateFingerprint(request.input);
+    const payload = request.input || (request as any).inputPayload || {};
+    const idempotencyKey = request.idempotencyKey || this.generateIdempotencyKey(request.tenantId, request.actionType, payload);
+    const inputFingerprint = this.generateFingerprint(payload);
 
-    // 1. Idempotency Check: check if already exists
+    // 1. Idempotency Check with Payload Conflict Detection
     const existingRow = db.prepare(`
       SELECT * FROM universal_action_records WHERE tenant_id = ? AND idempotency_key = ?
     `).get(request.tenantId, idempotencyKey) as any;
 
     if (existingRow) {
+      if (existingRow.input_fingerprint !== inputFingerprint) {
+        throw new Error(
+          `IDEMPOTENCY_CONFLICT: Idempotency key '${idempotencyKey}' was already submitted with a different payload hash.`
+        );
+      }
       return this.mapRowToRecord(existingRow);
     }
 
@@ -72,7 +94,7 @@ export class UniversalActionEngineService {
 
     const validatedAt = new Date().toISOString();
 
-    // 3. Authorize: check emergency control & permissions
+    // 3. Authorize: check emergency control
     const emergencyState = this.emergencyControls.getEmergencyStatus(request.tenantId);
     if (emergencyState.isEmergencyPaused) {
       const errorMsg = `SYSTEM_PAUSED_EMERGENCY: All automation is currently paused. Reason: ${emergencyState.reason || 'Safety hold'}`;
@@ -93,11 +115,12 @@ export class UniversalActionEngineService {
     const authorizedAt = new Date().toISOString();
 
     // 4. Plan & Check Approval Requirement
-    const requiresApproval =
-      request.requiresApprovalOverride !== undefined
-        ? request.requiresApprovalOverride
-        : connectorDef.approvalRequirements.some((op) => request.actionType.includes(op) || op.includes(request.actionType)) ||
-          request.actor.role === 'AI_AGENT';
+    // Mandatory approval policy: cannot be bypassed by requiresApprovalOverride: false
+    const policyRequiresApproval =
+      connectorDef.approvalRequirements.some((op) => request.actionType.includes(op) || op.includes(request.actionType)) ||
+      request.actor.role === 'AI_AGENT';
+
+    const requiresApproval = policyRequiresApproval || request.requiresApprovalOverride === true;
 
     const plannedAt = new Date().toISOString();
     const initialApprovalState: UniversalApprovalState = requiresApproval ? 'PENDING_APPROVAL' : 'NOT_REQUIRED';
@@ -126,7 +149,7 @@ export class UniversalActionEngineService {
   }
 
   /**
-   * Human Approver Decision
+   * Human Approver Decision with Cryptographic Signature Binding
    */
   public async decideApproval(
     actionId: string,
@@ -148,7 +171,28 @@ export class UniversalActionEngineService {
       throw new Error(`INVALID_APPROVAL_STATE: Action is currently ${record.approvalState}`);
     }
 
+    // Role check: Only OWNER or ADMIN may approve
+    const roleNormalized = (params.approverRole || '').toUpperCase();
+    if (roleNormalized !== 'OWNER' && roleNormalized !== 'ADMIN') {
+      throw new Error(`UNAUTHORIZED_APPROVER_ROLE: Role ${params.approverRole} is not authorized to approve consequential actions.`);
+    }
+
+    // Self-Approval Rejection
+    if (record.actorId === params.approverId) {
+      throw new Error(`SELF_APPROVAL_REJECTED: Proposer ${record.actorId} cannot approve their own action.`);
+    }
+
+    // Payload verification
+    const currentFingerprint = this.generateFingerprint(record.inputPayload);
+    if (currentFingerprint !== record.inputFingerprint) {
+      throw new Error(`APPROVAL_PAYLOAD_TAMPERED: Payload does not match original submission hash.`);
+    }
+
     const now = new Date().toISOString();
+    const policyVersion = 'v1.0';
+    const signaturePayload = `${record.tenantId}:${record.id}:${record.actionType}:${record.provider}:${record.inputFingerprint}:${record.actorId}:${params.approverId}:${params.decision}:${now}:${policyVersion}`;
+    const approvalSignature = crypto.createHash('sha256').update(signaturePayload).digest('hex');
+
     if (params.decision === 'REJECT') {
       db.prepare(`
         UPDATE universal_action_records SET
@@ -157,10 +201,12 @@ export class UniversalActionEngineService {
           approved_by = ?,
           approved_at = ?,
           approval_reason = ?,
+          approval_signature = ?,
+          policy_version = ?,
           completed_at = ?,
           updated_at = ?
         WHERE id = ?
-      `).run(params.approverId, now, params.reason || 'Rejected by operator', now, now, actionId);
+      `).run(params.approverId, now, params.reason || 'Rejected by operator', approvalSignature, policyVersion, now, now, actionId);
 
       this.auditService.logAuditEvent({
         tenantId: record.tenantId,
@@ -168,7 +214,7 @@ export class UniversalActionEngineService {
         action: 'ACTION_REJECTED',
         endpoint: '/api/universal-actions/approve',
         status: 'REJECTED',
-        details: { actionId, actionType: record.actionType, reason: params.reason }
+        details: { actionId, actionType: record.actionType, reason: params.reason, approvalSignature }
       });
 
       return this.getAction(actionId)!;
@@ -182,10 +228,12 @@ export class UniversalActionEngineService {
         approved_by = ?,
         approved_at = ?,
         approval_reason = ?,
+        approval_signature = ?,
+        policy_version = ?,
         queued_at = ?,
         updated_at = ?
       WHERE id = ?
-    `).run(params.approverId, now, params.reason || 'Approved by operator', now, now, actionId);
+    `).run(params.approverId, now, params.reason || 'Approved by operator', approvalSignature, policyVersion, now, now, actionId);
 
     this.auditService.logAuditEvent({
       tenantId: record.tenantId,
@@ -193,7 +241,7 @@ export class UniversalActionEngineService {
       action: 'ACTION_APPROVED',
       endpoint: '/api/universal-actions/approve',
       status: 'APPROVED',
-      details: { actionId, actionType: record.actionType }
+      details: { actionId, actionType: record.actionType, approvalSignature }
     });
 
     return this.executeAction(actionId);
@@ -213,7 +261,7 @@ export class UniversalActionEngineService {
     const record = this.mapRowToRecord(row);
     const now = new Date().toISOString();
 
-    // Check emergency control
+    // 1. Re-check Emergency Pause
     const emergencyState = this.emergencyControls.getEmergencyStatus(record.tenantId);
     if (emergencyState.isEmergencyPaused) {
       const error = {
@@ -225,49 +273,66 @@ export class UniversalActionEngineService {
       return this.getAction(actionId)!;
     }
 
-    // Step 7: EXECUTING
-    this.updateExecutionState(actionId, 'EXECUTING', { executedAt: now });
+    // 2. Re-check Approval if required
+    if (record.approvalRequired && record.approvalState !== 'APPROVED') {
+      const error = {
+        code: 'APPROVAL_MISSING',
+        message: `Action requires explicit approval before execution. Current state: ${record.approvalState}`,
+        failedClosed: true
+      };
+      this.updateExecutionState(actionId, 'FAILED_CLOSED', { error, completedAt: now });
+      return this.getAction(actionId)!;
+    }
+
+    // 3. Mark EXECUTING and increment attempt count
+    this.recordExecutionAttemptStart(actionId, now);
 
     const tenantConnector = this.connectorRegistry.getTenantConnector(record.tenantId, record.provider);
     const catalogDef = this.connectorRegistry.getCatalogDefinition(record.provider);
 
-    // Fail-closed verification: Ensure provider is configured and verified or DRAFT_ONLY
-    if (!tenantConnector && catalogDef?.connectorType !== 'DRAFT_ONLY') {
-      const error = {
-        code: 'CONNECTOR_NOT_CONFIGURED',
-        message: `Fail Closed: Provider ${record.provider} is not configured or authenticated for tenant ${record.tenantId}.`,
-        failedClosed: true
-      };
-      this.updateExecutionState(actionId, 'FAILED_CLOSED', { error, completedAt: new Date().toISOString() });
-      return this.getAction(actionId)!;
-    }
-
-    if (tenantConnector && tenantConnector.connectionState === 'DISCONNECTED' && catalogDef?.connectorType !== 'DRAFT_ONLY') {
-      const error = {
-        code: 'CONNECTOR_DISCONNECTED',
-        message: `Fail Closed: Provider ${record.provider} credentials are disconnected or invalid.`,
-        failedClosed: true
-      };
-      this.updateExecutionState(actionId, 'FAILED_CLOSED', { error, completedAt: new Date().toISOString() });
-      return this.getAction(actionId)!;
-    }
-
-    // Step 8: Perform execution against provider
+    // 4. Perform execution via registered Provider Adapter
     try {
-      const executionResult = await this.performProviderDispatch(record, catalogDef);
+      const adapter = this.adapterRegistry.getAdapter(record.provider);
+      const outcome = await adapter.execute(record, tenantConnector, catalogDef);
 
-      // Step 9: VERIFYING — external confirmation required
+      if (!outcome.success || outcome.status === 'FAILED_CLOSED') {
+        const completedAt = new Date().toISOString();
+        const error = outcome.error || {
+          code: 'EXECUTION_FAILED_CLOSED',
+          message: `Provider adapter returned failure for ${record.provider}`,
+          failedClosed: true
+        };
+
+        this.updateExecutionState(actionId, 'FAILED_CLOSED', {
+          error,
+          resultPayload: outcome.resultPayload,
+          completedAt
+        });
+
+        this.auditService.logAuditEvent({
+          tenantId: record.tenantId,
+          actorId: record.actorId,
+          action: `UNIVERSAL_EXECUTION_${record.actionType}`,
+          endpoint: `/api/universal-actions/execute`,
+          status: 'FAILED_CLOSED',
+          details: { actionId, provider: record.provider, error: error.message }
+        });
+
+        return this.getAction(actionId)!;
+      }
+
+      // Step 9: VERIFYING
       const verifiedAt = new Date().toISOString();
       this.updateExecutionState(actionId, 'VERIFYING', { verifiedAt });
 
-      if (!executionResult.confirmedByProvider) {
-        throw new Error(`PROVIDER_CONFIRMATION_MISSING: External provider ${record.provider} did not acknowledge receipt.`);
+      if (!outcome.confirmedByProvider) {
+        throw new Error(`PROVIDER_CONFIRMATION_MISSING: External provider ${record.provider} did not confirm execution.`);
       }
 
       // Step 10: SUCCEEDED & AUDIT
       const completedAt = new Date().toISOString();
       this.updateExecutionState(actionId, 'SUCCEEDED', {
-        resultPayload: executionResult.resultPayload,
+        resultPayload: outcome.resultPayload,
         completedAt
       });
 
@@ -277,14 +342,19 @@ export class UniversalActionEngineService {
         action: `UNIVERSAL_EXECUTION_${record.actionType}`,
         endpoint: `/api/universal-actions/execute`,
         status: 'SUCCEEDED',
-        details: { actionId, provider: record.provider, confirmationId: executionResult.confirmationId }
+        details: {
+          actionId,
+          provider: record.provider,
+          verifiedResourceId: outcome.verifiedResourceId,
+          statusOutcome: outcome.status
+        }
       });
 
       return this.getAction(actionId)!;
     } catch (err: any) {
       const completedAt = new Date().toISOString();
       const error = {
-        code: 'EXECUTION_FAILED',
+        code: 'EXECUTION_EXCEPTION',
         message: err?.message || 'External execution error',
         details: err?.stack,
         failedClosed: true
@@ -308,38 +378,22 @@ export class UniversalActionEngineService {
     }
   }
 
-  private async performProviderDispatch(
-    record: UniversalActionRecord,
-    catalogDef?: any
-  ): Promise<{ confirmedByProvider: boolean; confirmationId: string; resultPayload: any }> {
-    const confirmationId = `conf_${record.provider.toLowerCase()}_${Date.now()}_${crypto.randomBytes(3).toString('hex')}`;
-
-    // Standardized dispatch based on action type
-    const resultPayload = {
-      provider: record.provider,
-      actionType: record.actionType,
-      confirmationId,
-      dispatchedAt: new Date().toISOString(),
-      status: 'CONFIRMED_BY_PROVIDER',
-      output: {
-        summary: `Action ${record.actionType} successfully completed via ${catalogDef?.displayName || record.provider}.`,
-        externalReference: confirmationId,
-        inputSnapshot: record.inputPayload
-      }
-    };
-
-    return {
-      confirmedByProvider: true,
-      confirmationId,
-      resultPayload
-    };
+  private recordExecutionAttemptStart(actionId: string, executedAt: string): void {
+    const db = getDatabase();
+    db.prepare(`
+      UPDATE universal_action_records SET
+        execution_state = 'EXECUTING',
+        attempt_count = attempt_count + 1,
+        executed_at = ?,
+        updated_at = ?
+      WHERE id = ?
+    `).run(executedAt, executedAt, actionId);
   }
 
   private updateExecutionState(
     actionId: string,
     state: UniversalActionState,
     updates: {
-      executedAt?: string;
       verifiedAt?: string;
       completedAt?: string;
       resultPayload?: any;
@@ -352,8 +406,6 @@ export class UniversalActionEngineService {
     db.prepare(`
       UPDATE universal_action_records SET
         execution_state = ?,
-        attempt_count = attempt_count + 1,
-        executed_at = COALESCE(?, executed_at),
         verified_at = COALESCE(?, verified_at),
         completed_at = COALESCE(?, completed_at),
         result_payload_json = COALESCE(?, result_payload_json),
@@ -362,7 +414,6 @@ export class UniversalActionEngineService {
       WHERE id = ?
     `).run(
       state,
-      updates.executedAt || null,
       updates.verifiedAt || null,
       updates.completedAt || null,
       updates.resultPayload ? JSON.stringify(updates.resultPayload) : null,
@@ -408,9 +459,12 @@ export class UniversalActionEngineService {
 
     // Ensure tenant exists in database
     db.prepare(`
-      INSERT OR IGNORE INTO tenants (id, name, industry, created_at, updated_at)
-      VALUES (?, ?, 'Technology', ?, ?)
-    `).run(params.request.tenantId, params.request.tenantId, now, now);
+      INSERT OR IGNORE INTO tenants (id, name, industry, created_at)
+      VALUES (?, ?, 'Technology', ?)
+    `).run(params.request.tenantId, params.request.tenantId, now);
+
+    const payload = params.request.input || (params.request as any).inputPayload || {};
+    const inputJson = JSON.stringify(payload);
 
     db.prepare(`
       INSERT INTO universal_action_records (
@@ -420,8 +474,8 @@ export class UniversalActionEngineService {
         attempt_count, max_attempts, error_json,
         idempotency_key, audit_reference, requested_at,
         validated_at, authorized_at, planned_at, queued_at,
-        created_at, updated_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, 3, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        policy_version, created_at, updated_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, 3, ?, ?, ?, ?, ?, ?, ?, ?, 'v1.0', ?, ?)
     `).run(
       params.id,
       params.request.tenantId,
@@ -430,7 +484,7 @@ export class UniversalActionEngineService {
       params.request.actor.name || 'System Actor',
       params.request.actionType,
       params.request.provider,
-      JSON.stringify(params.request.input),
+      inputJson,
       params.inputFingerprint,
       params.executionState,
       params.approvalState,
@@ -467,6 +521,11 @@ export class UniversalActionEngineService {
       approvedBy: row.approved_by,
       approvedAt: row.approved_at,
       approvalReason: row.approval_reason,
+      approvalSignature: row.approval_signature,
+      policyVersion: row.policy_version,
+      retryClassification: row.retry_classification,
+      nextRetryAt: row.next_retry_at,
+      deadLetterId: row.dead_letter_id,
       attemptCount: row.attempt_count,
       maxAttempts: row.max_attempts,
       resultPayload: row.result_payload_json ? JSON.parse(row.result_payload_json) : undefined,

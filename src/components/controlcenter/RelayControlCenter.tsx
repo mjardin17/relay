@@ -65,11 +65,16 @@ export const RelayControlCenter: React.FC<RelayControlCenterProps> = ({
   const [pauseReason, setPauseReason] = useState('');
   const [actionFeedback, setActionFeedback] = useState<string | null>(null);
 
+  const authHeaders = {
+    Authorization: 'Bearer demo-session',
+    'Content-Type': 'application/json'
+  };
+
   const fetchAllData = async () => {
     setLoading(true);
     try {
       // 1. Summary
-      const resSum = await fetch(`/api/control-center/summary?tenantId=${tenantId}`);
+      const resSum = await fetch('/api/control-center/summary', { headers: authHeaders });
       if (resSum.ok) {
         const d = await resSum.json();
         setSummary(d.summary);
@@ -78,35 +83,35 @@ export const RelayControlCenter: React.FC<RelayControlCenterProps> = ({
       }
 
       // 2. Tenants
-      const resTenants = await fetch('/api/control-center/tenants');
+      const resTenants = await fetch('/api/control-center/tenants', { headers: authHeaders });
       if (resTenants.ok) {
         const d = await resTenants.json();
         setTenants(d.tenants || []);
       }
 
       // 3. Workforce
-      const resWf = await fetch('/api/control-center/workforce');
+      const resWf = await fetch('/api/control-center/workforce', { headers: authHeaders });
       if (resWf.ok) {
         const d = await resWf.json();
         setWorkforce(d.workforce);
       }
 
       // 4. Growth
-      const resGrowth = await fetch(`/api/control-center/growth?tenantId=${tenantId}`);
+      const resGrowth = await fetch('/api/control-center/growth', { headers: authHeaders });
       if (resGrowth.ok) {
         const d = await resGrowth.json();
         setGrowthData(d.growth);
       }
 
       // 5. Content
-      const resContent = await fetch('/api/control-center/content');
+      const resContent = await fetch('/api/control-center/content', { headers: authHeaders });
       if (resContent.ok) {
         const d = await resContent.json();
         setContentData(d.content);
       }
 
       // 6. Connectors
-      const resConn = await fetch(`/api/control-center/connectors?tenantId=${tenantId}`);
+      const resConn = await fetch('/api/control-center/connectors', { headers: authHeaders });
       if (resConn.ok) {
         const d = await resConn.json();
         setConnectorsCatalog(d.catalog || []);
@@ -114,27 +119,27 @@ export const RelayControlCenter: React.FC<RelayControlCenterProps> = ({
       }
 
       // 7. Operations
-      const resOps = await fetch(`/api/control-center/operations?tenantId=${tenantId}`);
+      const resOps = await fetch('/api/control-center/operations', { headers: authHeaders });
       if (resOps.ok) {
         const d = await resOps.json();
         setOperationsData(d.operations);
       }
 
       // 8. Universal Actions
-      const resActions = await fetch(`/api/universal-actions/list?tenantId=${tenantId}`);
+      const resActions = await fetch('/api/universal-actions/list', { headers: authHeaders });
       if (resActions.ok) {
         const d = await resActions.json();
         setUniversalActions(d.actions || []);
       }
 
       // 9. Project Intelligence
-      const resProj = await fetch('/api/project-intelligence/projects');
+      const resProj = await fetch('/api/project-intelligence/projects', { headers: authHeaders });
       if (resProj.ok) {
         const d = await resProj.json();
         setProjects(d.projects || []);
       }
 
-      const resCap = await fetch('/api/project-intelligence/capability-inventory');
+      const resCap = await fetch('/api/project-intelligence/capability-inventory', { headers: authHeaders });
       if (resCap.ok) {
         const d = await resCap.json();
         setCapabilityInventory(d.capabilityInventory || []);
@@ -155,12 +160,10 @@ export const RelayControlCenter: React.FC<RelayControlCenterProps> = ({
       const nextState = !isEmergencyPaused;
       const res = await fetch('/api/control-center/emergency-pause', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: authHeaders,
         body: JSON.stringify({
-          tenantId,
           paused: nextState,
-          reason: nextState ? 'Operator manual pause from Control Center' : undefined,
-          actorId: 'operator-admin'
+          reason: nextState ? 'Operator manual pause from Control Center' : undefined
         })
       });
       if (res.ok) {
@@ -183,12 +186,10 @@ export const RelayControlCenter: React.FC<RelayControlCenterProps> = ({
     try {
       const res = await fetch('/api/universal-actions/approve', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: authHeaders,
         body: JSON.stringify({
           actionId,
-          decision,
-          approverId: 'operator-admin',
-          approverRole: 'OWNER'
+          decision
         })
       });
       if (res.ok) {
@@ -205,11 +206,9 @@ export const RelayControlCenter: React.FC<RelayControlCenterProps> = ({
     try {
       const res = await fetch('/api/connector-registry/verify', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: authHeaders,
         body: JSON.stringify({
-          tenantId,
-          provider,
-          simulateSuccess: true
+          provider
         })
       });
       if (res.ok) {
@@ -227,7 +226,7 @@ export const RelayControlCenter: React.FC<RelayControlCenterProps> = ({
     try {
       const res = await fetch('/api/project-intelligence/compare', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: authHeaders,
         body: JSON.stringify({
           targetId: selectedTargetProject,
           sourceId: selectedSourceProject

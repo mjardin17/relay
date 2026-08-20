@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import { VerifiedSession } from '../services/authService';
+import { VerifiedSession, authService } from '../services/authService';
 
 declare global {
   namespace Express {
@@ -116,7 +116,7 @@ export function authMiddleware(req: Request, res: Response, next: NextFunction) 
   }
 
   const token = parts[1];
-  const session = STATIC_SESSIONS[token];
+  const session = STATIC_SESSIONS[token] || authService.verifySession(token);
 
   if (!session) {
     return res.status(401).json({

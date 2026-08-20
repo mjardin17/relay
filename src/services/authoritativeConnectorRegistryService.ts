@@ -489,6 +489,30 @@ export class AuthoritativeConnectorRegistryService {
         verificationMethod: 'Server-Side Google GenAI SDK Session Probe',
         docUrl: 'https://ai.google.dev',
         safetyPolicies: ['Strict server-side key isolation', 'Input/Output safety evaluation']
+      },
+      {
+        id: 'static_export_engine',
+        provider: 'STATIC_EXPORT',
+        displayName: 'Static Website & Schema Draft Engine',
+        category: 'HOSTING',
+        connectorType: 'DRAFT_ONLY',
+        authMethod: 'NONE',
+        capabilities: ['DRAFT_GENERATION', 'SCHEMA_VALIDATION', 'STATIC_BUNDLE_EXPORT'],
+        readOperations: ['INSPECT_DRAFT_SCHEMA'],
+        writeOperations: ['GENERATE_DRAFT_BUNDLE', 'VALIDATE_SCHEMA'],
+        approvalRequirements: [],
+        rateLimitHandling: {
+          requestsPerMinute: 300,
+          backoffStrategy: 'LINEAR',
+          retryAfterSupported: false
+        },
+        tokenRefreshSupport: {
+          supported: false,
+          autoRefreshWindowSeconds: 0
+        },
+        verificationMethod: 'Local Draft Schema Validator (Deterministic SHA-256 Bundle Output)',
+        docUrl: 'https://relay.local/docs/static-export',
+        safetyPolicies: ['Drafts remain unverified until official domain/hosting configuration']
       }
     ];
 
@@ -625,7 +649,11 @@ export class AuthoritativeConnectorRegistryService {
   public verifyTenantConnector(
     tenantId: string,
     provider: string,
-    options?: { simulateSuccess?: boolean; credentials?: any }
+    options?: {
+      simulateSuccess?: boolean;
+      credentials?: any;
+      testDoubleProbe?: (conn: any, def: any) => ConnectorVerificationProbeResult;
+    }
   ): ConnectorVerificationProbeResult {
     const def = this.getCatalogDefinition(provider);
     if (!def) {
@@ -738,26 +766,40 @@ export class AuthoritativeConnectorRegistryService {
     }
 
     // Active probe verification
+    if (options?.testDoubleProbe) {
+      const probeResult = options.testDoubleProbe(conn, def);
+      if (conn) {
+        this.updateTenantConnectorState(tenantId, def.provider, {
+          connectionState: probeResult.connectionState,
+          lastVerificationAt: now,
+          lastVerificationStatus: probeResult.status === 'VERIFIED' ? 'SUCCESS' : 'FAILED',
+          lastVerificationMessage: probeResult.sanitizedMessage
+        });
+      }
+      return probeResult;
+    }
+
+    // Official API verification requires real authenticated probe.
+    // In the absence of live external network API execution, credential presence alone establishes CONFIGURED_UNVERIFIED.
     const latency = Math.max(12, Date.now() - probeStartTime + 15);
     const result: ConnectorVerificationProbeResult = {
       provider: def.provider,
-      status: 'VERIFIED',
-      connectionState: 'VERIFIED',
-      sanitizedMessage: `Official API probe confirmed successful connection to ${def.displayName} with verified permissions.`,
+      status: 'FAILED',
+      connectionState: 'CONFIGURED_UNVERIFIED',
+      sanitizedMessage: `Provider ${def.displayName} credentials configured. Real authenticated API handshake required to reach VERIFIED state.`,
       latencyMs: latency,
-      scopesGranted: def.capabilities,
-      scopesMissing: [],
+      scopesGranted: [],
+      scopesMissing: def.capabilities,
       probedAt: now,
-      evidenceRef: `ev_verif_success_${tenantId}_${def.provider}_${Date.now()}`
+      evidenceRef: `ev_verif_unverified_${tenantId}_${def.provider}_${Date.now()}`
     };
 
     if (conn) {
       this.updateTenantConnectorState(tenantId, def.provider, {
-        connectionState: 'VERIFIED',
+        connectionState: 'CONFIGURED_UNVERIFIED',
         lastVerificationAt: now,
-        lastVerificationStatus: 'SUCCESS',
-        lastVerificationMessage: result.sanitizedMessage,
-        lastSuccessfulRequestAt: now
+        lastVerificationStatus: 'FAILED',
+        lastVerificationMessage: result.sanitizedMessage
       });
     }
 

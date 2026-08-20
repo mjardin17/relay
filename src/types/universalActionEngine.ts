@@ -29,12 +29,15 @@ export type UniversalActionType =
   | 'COMMUNICATION_OUTBOUND_EMAIL'
   | 'WEBSITE_DEPLOY_STATIC'
   | 'WEBSITE_PUBLISH_PAGE'
+  | 'STATIC_WEBSITE_DRAFT'
   | 'GBP_UPDATE_POST'
   | 'GBP_REPLY_REVIEW'
+  | 'PROFILE_UPDATE_HOURS'
   | 'SOCIAL_PUBLISH_POST'
   | 'MARKETPLACE_STAGE_LISTING'
   | 'MARKETPLACE_PUBLISH_LISTING'
   | 'FINANCIAL_CHARGE_PAYMENT'
+  | 'PAYMENT_CAPTURE'
   | 'FIELD_SERVICE_SCHEDULE_JOB'
   | 'CODE_VCS_DEPLOY_COMMIT';
 
@@ -50,7 +53,8 @@ export interface UniversalActionRequest {
   actor: UniversalActor;
   actionType: UniversalActionType;
   provider: string;
-  input: Record<string, any>;
+  input?: Record<string, any>;
+  inputPayload?: Record<string, any>;
   idempotencyKey?: string;
   requiresApprovalOverride?: boolean;
   metadata?: Record<string, any>;
@@ -72,6 +76,11 @@ export interface UniversalActionRecord {
   approvedBy?: string;
   approvedAt?: string;
   approvalReason?: string;
+  approvalSignature?: string;
+  policyVersion?: string;
+  retryClassification?: string;
+  nextRetryAt?: string;
+  deadLetterId?: string;
   attemptCount: number;
   maxAttempts: number;
   resultPayload?: Record<string, any>;

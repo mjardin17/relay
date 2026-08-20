@@ -16,7 +16,10 @@ import { websiteBuilderApiRouter } from './src/routes/websiteBuilderApi';
 import { publicWebsiteFormsApiRouter } from './src/routes/publicWebsiteFormsApi';
 import { creativeRouterApi } from './src/routes/creativeRouterApi';
 import { gitSyncApiRouter } from './src/routes/gitSyncApi';
-import relayControlCenterRouter from './src/routes/relayControlCenterApi';
+import { controlCenterRouter } from './src/routes/controlCenterRouter';
+import { universalActionsRouter } from './src/routes/universalActionsRouter';
+import { connectorRegistryRouter } from './src/routes/connectorRegistryRouter';
+import { projectIntelligenceRouter } from './src/routes/projectIntelligenceRouter';
 
 dotenv.config();
 
@@ -49,10 +52,10 @@ app.use('/api/website-builder', websiteBuilderApiRouter);
 app.use('/api/public', publicWebsiteFormsApiRouter);
 app.use('/api/creative', creativeRouterApi);
 app.use('/api/git-sync', gitSyncApiRouter);
-app.use('/api/control-center', relayControlCenterRouter);
-app.use('/api/universal-actions', relayControlCenterRouter);
-app.use('/api/connector-registry', relayControlCenterRouter);
-app.use('/api/project-intelligence', relayControlCenterRouter);
+app.use('/api/control-center', controlCenterRouter);
+app.use('/api/universal-actions', universalActionsRouter);
+app.use('/api/connector-registry', connectorRegistryRouter);
+app.use('/api/project-intelligence', projectIntelligenceRouter);
 
 // Lazy initializer for Gemini client to prevent startup crash if GEMINI_API_KEY is missing
 function getGeminiClient(): GoogleGenAI {

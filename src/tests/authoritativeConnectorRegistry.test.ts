@@ -29,7 +29,7 @@ describe('Authoritative Connector Registry & Diagnostic Probes', () => {
     assert.strictEqual(poshmark?.connectorType, 'DRAFT_ONLY');
   });
 
-  it('configures and verifies tenant connector with sanitized credentials', () => {
+  it('configures and verifies tenant connector with sanitized credentials and authoritative test double probe', () => {
     const service = AuthoritativeConnectorRegistryService.getInstance();
     const tenantId = `tenant_connector_${Date.now()}`;
 
@@ -44,8 +44,20 @@ describe('Authoritative Connector Registry & Diagnostic Probes', () => {
     assert.strictEqual(configured.tenantId, tenantId);
     assert.strictEqual(configured.connectionState, 'CONFIGURED_UNVERIFIED');
 
-    // Run verification probe
-    const probe = service.verifyTenantConnector(tenantId, 'TWILIO', { simulateSuccess: true });
+    // Run verification probe with test double probe
+    const probe = service.verifyTenantConnector(tenantId, 'TWILIO', {
+      testDoubleProbe: (conn, def) => ({
+        provider: def.provider,
+        status: 'VERIFIED',
+        connectionState: 'VERIFIED',
+        sanitizedMessage: 'Official API probe confirmed successful connection to Twilio SMS API with verified permissions.',
+        latencyMs: 25,
+        scopesGranted: def.capabilities,
+        scopesMissing: [],
+        probedAt: new Date().toISOString(),
+        evidenceRef: 'ev_test_123'
+      })
+    });
     assert.strictEqual(probe.status, 'VERIFIED');
     assert.strictEqual(probe.connectionState, 'VERIFIED');
     assert.ok(probe.sanitizedMessage.includes('confirmed successful connection'));
@@ -74,5 +86,21 @@ describe('Authoritative Connector Registry & Diagnostic Probes', () => {
     const updated = service.getTenantConnector(tenantId, 'SENDGRID');
     assert.strictEqual(updated?.connectionState, 'ERROR');
     assert.ok(updated?.lastFailureMessage);
+  });
+
+  it('verifies DRAFT_ONLY connectors locally with schema validation', () => {
+    const service = AuthoritativeConnectorRegistryService.getInstance();
+    const tenantId = `tenant_draft_${Date.now()}`;
+
+    const configured = service.configureTenantConnector(tenantId, {
+      provider: 'POSHMARK',
+      configuredBy: 'operator-1'
+    });
+    assert.strictEqual(configured.connectionState, 'VERIFIED');
+
+    const probe = service.verifyTenantConnector(tenantId, 'POSHMARK');
+    assert.strictEqual(probe.status, 'VERIFIED');
+    assert.strictEqual(probe.connectionState, 'VERIFIED');
+    assert.ok(probe.sanitizedMessage.includes('Draft-only connector verified'));
   });
 });
