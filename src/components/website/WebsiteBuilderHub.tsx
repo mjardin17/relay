@@ -90,7 +90,6 @@ export const WebsiteBuilderHub: React.FC<WebsiteBuilderHubProps> = ({
   // Approval Modal / Dialog states
   const [approverName, setApproverName] = useState<string>('Shad Reis');
   const [approverRole, setApproverRole] = useState<string>('HUMAN_OWNER');
-  const [dogfoodFeedback, setDogfoodFeedback] = useState<any[]>([]);
 
   useEffect(() => {
     loadTenantWebsite(activeTenant);
@@ -107,11 +106,7 @@ export const WebsiteBuilderHub: React.FC<WebsiteBuilderHubProps> = ({
         proj = await websiteBuilderClient.getProject(tenantId);
         pgs = await websiteBuilderClient.getPages(tenantId, proj.id);
       } catch {
-        if (tenantId.includes('jardin') || tenantId.includes('outpost')) {
-          const res = await websiteBuilderClient.seedJardinOutpost(tenantId);
-          proj = res.project;
-          pgs = res.pages;
-        } else if (tenantId.includes('apex') || tenantId.includes('climate')) {
+        if (tenantId.includes('apex') || tenantId.includes('climate')) {
           const res = await websiteBuilderClient.seedSecondTenant(tenantId);
           proj = res.project;
           pgs = res.pages;
@@ -123,11 +118,7 @@ export const WebsiteBuilderHub: React.FC<WebsiteBuilderHubProps> = ({
       }
 
       if (pgs.length === 0) {
-        if (tenantId.includes('jardin') || tenantId.includes('outpost')) {
-          const res = await websiteBuilderClient.seedJardinOutpost(tenantId);
-          proj = res.project;
-          pgs = res.pages;
-        } else if (tenantId.includes('apex') || tenantId.includes('climate')) {
+        if (tenantId.includes('apex') || tenantId.includes('climate')) {
           const res = await websiteBuilderClient.seedSecondTenant(tenantId);
           proj = res.project;
           pgs = res.pages;
@@ -145,15 +136,14 @@ export const WebsiteBuilderHub: React.FC<WebsiteBuilderHubProps> = ({
       }
 
       // Load supporting records
-      const [brandData, ctxData, claimsData, reconData, funnelData, roiData, recsData, dogfoodLogs] = await Promise.all([
+      const [brandData, ctxData, claimsData, reconData, funnelData, roiData, recsData] = await Promise.all([
         websiteBuilderClient.getBrandProfile(tenantId),
         websiteBuilderClient.getBusinessContext(tenantId),
         websiteBuilderClient.validateClaims(tenantId, proj.id),
         websiteBuilderClient.getReconciliation(tenantId, proj.id),
         websiteBuilderClient.getFunnel(tenantId, proj.id),
         websiteBuilderClient.getRoi(tenantId, proj.id),
-        websiteBuilderClient.getRecommendations(tenantId, proj.id),
-        websiteBuilderClient.getDogfoodFeedback().catch(() => [])
+        websiteBuilderClient.getRecommendations(tenantId, proj.id)
       ]);
 
       setBrand(brandData);
@@ -163,7 +153,6 @@ export const WebsiteBuilderHub: React.FC<WebsiteBuilderHubProps> = ({
       setFunnel(funnelData);
       setRoi(roiData);
       setRecommendations(recsData);
-      setDogfoodFeedback(dogfoodLogs || []);
     } catch (err: any) {
       setActionMessage({ type: 'error', text: err.message || 'Error loading website data' });
     } finally {
@@ -289,11 +278,7 @@ export const WebsiteBuilderHub: React.FC<WebsiteBuilderHubProps> = ({
                   {project?.status || 'DRAFT'}
                 </span>
                 <span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-slate-100 text-slate-700">
-                  {activeTenant === 'tenant_jardins_outpost'
-                    ? "Jardin's Outpost Studio (Software & AI)"
-                    : activeTenant === 'tenant_ma_fresh_launch'
-                    ? 'Reis Electric LLC (MA)'
-                    : 'Apex Climate Solutions (CT)'}
+                  {activeTenant === 'tenant_ma_fresh_launch' ? 'Reis Electric LLC (MA)' : 'Apex Climate Solutions (CT)'}
                 </span>
               </div>
               <p className="text-xs text-slate-500 mt-0.5">
@@ -305,17 +290,6 @@ export const WebsiteBuilderHub: React.FC<WebsiteBuilderHubProps> = ({
           {/* Tenant Switcher & Global Actions */}
           <div className="flex items-center gap-3">
             <div className="flex items-center bg-slate-100 p-1 rounded-lg border border-slate-200 text-xs font-medium">
-              <button
-                id="btn-tenant-jardin"
-                onClick={() => setActiveTenant('tenant_jardins_outpost')}
-                className={`px-3 py-1.5 rounded-md transition-colors ${
-                  activeTenant === 'tenant_jardins_outpost'
-                    ? 'bg-white text-slate-900 shadow-xs font-semibold'
-                    : 'text-slate-600 hover:text-slate-900'
-                }`}
-              >
-                Jardin's Outpost (Studio)
-              </button>
               <button
                 id="btn-tenant-reis"
                 onClick={() => setActiveTenant('tenant_ma_fresh_launch')}
@@ -434,7 +408,7 @@ export const WebsiteBuilderHub: React.FC<WebsiteBuilderHubProps> = ({
                         {pages.map(page => (
                           <button
                             key={page.id}
-                            id={`btn-page-${page.slug.replace(/\//g, '-')}`}
+                            id={`btn-page-${page.slug}`}
                             onClick={() => setSelectedPageSlug(page.slug)}
                             className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors flex items-center justify-between ${
                               selectedPageSlug === page.slug
@@ -491,15 +465,13 @@ export const WebsiteBuilderHub: React.FC<WebsiteBuilderHubProps> = ({
                       <div className="flex items-center gap-2">
                         <div className="flex items-center bg-slate-100 p-1 rounded-lg border border-slate-200">
                           <button
-                            id="btn-preview-desktop"
                             onClick={() => setPreviewDevice('desktop')}
                             className={`p-1.5 rounded-md ${previewDevice === 'desktop' ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-500'}`}
-                            title="Desktop View (1440px / Responsive Max)"
+                            title="Desktop View (1200px)"
                           >
                             <Monitor className="w-4 h-4" />
                           </button>
                           <button
-                            id="btn-preview-tablet"
                             onClick={() => setPreviewDevice('tablet')}
                             className={`p-1.5 rounded-md ${previewDevice === 'tablet' ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-500'}`}
                             title="Tablet View (768px)"
@@ -507,10 +479,9 @@ export const WebsiteBuilderHub: React.FC<WebsiteBuilderHubProps> = ({
                             <Tablet className="w-4 h-4" />
                           </button>
                           <button
-                            id="btn-preview-mobile"
                             onClick={() => setPreviewDevice('mobile')}
                             className={`p-1.5 rounded-md ${previewDevice === 'mobile' ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-500'}`}
-                            title="Mobile View (390px)"
+                            title="Mobile View (375px)"
                           >
                             <Smartphone className="w-4 h-4" />
                           </button>
@@ -522,46 +493,36 @@ export const WebsiteBuilderHub: React.FC<WebsiteBuilderHubProps> = ({
                     <div className="bg-slate-100 p-4 sm:p-6 rounded-lg flex justify-center overflow-x-auto min-h-[500px]">
                       <div
                         id="rendered-preview-viewport"
-                        className={`rounded-lg shadow-sm border border-slate-300 transition-all duration-200 overflow-hidden ${
-                          brand?.colors?.background === '#0B0F17' ? 'bg-[#0B0F17] text-slate-100' : 'bg-white text-slate-900'
-                        } ${
-                          previewDevice === 'mobile' ? 'w-[390px]' :
-                          previewDevice === 'tablet' ? 'w-[768px]' : 'w-full max-w-5xl'
+                        className={`bg-white rounded-lg shadow-sm border border-slate-300 transition-all duration-200 overflow-hidden ${
+                          previewDevice === 'mobile' ? 'w-[375px]' :
+                          previewDevice === 'tablet' ? 'w-[768px]' : 'w-full max-w-4xl'
                         }`}
                       >
                         {/* Fake Browser Header */}
-                        <div className={`px-3 py-2 border-b flex items-center justify-between text-xs ${
-                          brand?.colors?.background === '#0B0F17'
-                            ? 'bg-slate-900 border-slate-800 text-slate-400'
-                            : 'bg-slate-200 border-slate-300 text-slate-600'
-                        }`}>
+                        <div className="bg-slate-200 px-3 py-2 border-b border-slate-300 flex items-center justify-between text-xs text-slate-600">
                           <div className="flex items-center gap-1.5">
                             <span className="w-2.5 h-2.5 rounded-full bg-rose-400 inline-block" />
                             <span className="w-2.5 h-2.5 rounded-full bg-amber-400 inline-block" />
                             <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 inline-block" />
                           </div>
                           <span className="font-mono text-[11px] truncate">
-                            https://{brand?.brandName ? brand.brandName.toLowerCase().replace(/[^a-z0-9]/g, '') : 'example'}.com/{selectedPage?.slug === 'home' ? 'index.html' : `${selectedPage?.slug}.html`}
+                            https://{brand?.brandName.toLowerCase().replace(/\s+/g, '')}.com/{selectedPage?.slug}.html
                           </span>
-                          <span className="text-[10px] text-emerald-500 font-mono">SSL Active</span>
+                          <span className="text-[10px] text-slate-400">SSL Active</span>
                         </div>
 
                         {/* Page Components Rendering */}
                         <div className="p-6 space-y-8">
                           {selectedPage?.components?.map((comp, idx) => (
-                            <div key={comp.id || idx} className="space-y-4">
+                            <div key={comp.id || idx} className="space-y-3">
                               {comp.type === 'Hero' && (
-                                <div className={`p-6 rounded-xl space-y-4 border ${
-                                  brand?.colors?.background === '#0B0F17'
-                                    ? 'bg-slate-900/90 border-slate-800 text-white'
-                                    : 'bg-slate-900 text-white border-transparent'
-                                }`}>
+                                <div className="p-6 rounded-xl bg-slate-900 text-white space-y-4">
                                   {comp.content.badgeText && (
-                                    <span className="inline-block px-2.5 py-1 rounded-full text-xs font-semibold bg-sky-500/20 text-sky-300 border border-sky-500/30">
+                                    <span className="inline-block px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-500 text-slate-950">
                                       {comp.content.badgeText}
                                     </span>
                                   )}
-                                  <h3 className="text-2xl sm:text-3xl font-bold leading-tight tracking-tight">
+                                  <h3 className="text-2xl sm:text-3xl font-bold leading-tight">
                                     {comp.content.headline}
                                   </h3>
                                   <p className="text-slate-300 text-sm leading-relaxed max-w-2xl">
@@ -570,8 +531,8 @@ export const WebsiteBuilderHub: React.FC<WebsiteBuilderHubProps> = ({
                                   {comp.content.trustBullets && (
                                     <div className="flex flex-wrap gap-2 pt-2">
                                       {comp.content.trustBullets.map((bullet: string, bIdx: number) => (
-                                        <span key={bIdx} className="text-xs bg-slate-800/80 text-slate-200 px-2.5 py-1 rounded-md border border-slate-700 flex items-center gap-1.5">
-                                          <Check className="w-3 h-3 text-sky-400" />
+                                        <span key={bIdx} className="text-xs bg-slate-800 text-slate-200 px-2.5 py-1 rounded-md border border-slate-700 flex items-center gap-1">
+                                          <Check className="w-3 h-3 text-emerald-400" />
                                           {bullet}
                                         </span>
                                       ))}
@@ -579,211 +540,15 @@ export const WebsiteBuilderHub: React.FC<WebsiteBuilderHubProps> = ({
                                   )}
                                   <div className="flex flex-wrap gap-3 pt-3">
                                     {comp.content.primaryCta && (
-                                      <button className="px-4 py-2 bg-sky-500 hover:bg-sky-400 text-slate-950 rounded-lg text-sm font-semibold transition-colors">
+                                      <button className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-sm font-semibold">
                                         {comp.content.primaryCta.label}
                                       </button>
                                     )}
                                     {comp.content.secondaryCta && (
-                                      <button className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-lg text-sm font-medium border border-slate-700 transition-colors">
+                                      <button className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-lg text-sm font-medium border border-slate-700">
                                         {comp.content.secondaryCta.label}
                                       </button>
                                     )}
-                                  </div>
-                                </div>
-                              )}
-
-                              {comp.type === 'ProductGrid' && (
-                                <div className="space-y-4">
-                                  <div className="space-y-1">
-                                    <h4 className="text-lg font-bold tracking-tight">{comp.content.sectionTitle || 'Product Suite'}</h4>
-                                    {comp.content.sectionSubtitle && (
-                                      <p className="text-xs text-slate-400">{comp.content.sectionSubtitle}</p>
-                                    )}
-                                  </div>
-                                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                    {comp.content.products?.map((prod: any, pIdx: number) => (
-                                      <div
-                                        key={pIdx}
-                                        className={`p-5 rounded-xl border space-y-3 transition-all ${
-                                          brand?.colors?.background === '#0B0F17'
-                                            ? 'bg-slate-900/60 border-slate-800 hover:border-sky-500/40 text-slate-200'
-                                            : 'bg-white border-slate-200 hover:border-emerald-300 text-slate-800'
-                                        }`}
-                                      >
-                                        <div className="flex items-center justify-between gap-2">
-                                          <div className={`font-bold text-base ${brand?.colors?.background === '#0B0F17' ? 'text-white' : 'text-slate-900'}`}>
-                                            {prod.title || prod.name}
-                                          </div>
-                                          <span className={`px-2 py-0.5 rounded text-[10px] font-mono uppercase font-bold tracking-wider ${
-                                            (prod.stage || prod.status)?.includes('PRODUCTION') || (prod.stage || prod.status)?.includes('DOGFOOD')
-                                              ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
-                                              : (prod.stage || prod.status)?.includes('DEVELOPMENT') || (prod.stage || prod.status)?.includes('ALPHA')
-                                              ? 'bg-sky-500/20 text-sky-300 border border-sky-500/30'
-                                              : 'bg-amber-500/20 text-amber-300 border border-amber-500/30'
-                                          }`}>
-                                            {prod.stage || prod.status || 'ACTIVE'}
-                                          </span>
-                                        </div>
-                                        <p className="text-xs text-slate-400 leading-relaxed">{prod.tagline || prod.description}</p>
-                                        {(prod.capabilities || prod.highlights) && (
-                                          <ul className="space-y-1 text-xs text-slate-300">
-                                            {(prod.capabilities || prod.highlights).map((h: string, hIdx: number) => (
-                                              <li key={hIdx} className="flex items-start gap-1.5">
-                                                <span className="text-sky-400 mt-0.5">&bull;</span>
-                                                <span>{h}</span>
-                                              </li>
-                                            ))}
-                                          </ul>
-                                        )}
-                                        {(prod.stackSummary || prod.techStack) && (
-                                          <div className="flex flex-wrap gap-1.5 pt-1">
-                                            {typeof (prod.stackSummary || prod.techStack) === 'string' ? (
-                                              <span className="px-2 py-0.5 rounded text-[10px] font-mono bg-slate-800 text-slate-300 border border-slate-700">
-                                                {prod.stackSummary || prod.techStack}
-                                              </span>
-                                            ) : (
-                                              (prod.techStack || []).map((tech: string, tIdx: number) => (
-                                                <span key={tIdx} className="px-2 py-0.5 rounded text-[10px] font-mono bg-slate-800 text-slate-300 border border-slate-700">
-                                                  {tech}
-                                                </span>
-                                              ))
-                                            )}
-                                          </div>
-                                        )}
-                                      </div>
-                                    ))}
-                                  </div>
-                                </div>
-                              )}
-
-                              {comp.type === 'ProofOfWork' && (
-                                <div className="space-y-4">
-                                  <div className="flex items-center justify-between">
-                                    <div className="space-y-1">
-                                      <h4 className="text-lg font-bold tracking-tight flex items-center gap-2">
-                                        <ShieldCheck className="w-5 h-5 text-sky-400" />
-                                        {comp.content.sectionTitle || 'Verified Proof of Work'}
-                                      </h4>
-                                      <p className="text-xs text-slate-400">
-                                        {comp.content.sectionSubtitle || 'Cryptographically verifiable evidence of deployed software capabilities.'}
-                                      </p>
-                                    </div>
-                                    <span className="text-[10px] font-mono px-2 py-1 bg-sky-950 text-sky-300 rounded border border-sky-800">
-                                      SHA-256 Gated
-                                    </span>
-                                  </div>
-
-                                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                    {comp.content.items?.map((item: any, iIdx: number) => (
-                                      <div
-                                        key={iIdx}
-                                        className={`p-4 rounded-xl border space-y-2 text-xs ${
-                                          brand?.colors?.background === '#0B0F17'
-                                            ? 'bg-slate-900/80 border-slate-800 text-slate-300'
-                                            : 'bg-white border-slate-200 text-slate-700'
-                                        }`}
-                                      >
-                                        <div className="flex items-center justify-between gap-2">
-                                          <span className="font-semibold text-white truncate">{item.title}</span>
-                                          <span className={`px-2 py-0.5 rounded text-[10px] font-mono font-bold uppercase tracking-wider ${
-                                            item.verificationStatus === 'VERIFIED'
-                                              ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
-                                              : item.verificationStatus === 'REPORTED'
-                                              ? 'bg-sky-500/20 text-sky-300 border border-sky-500/30'
-                                              : 'bg-slate-800 text-slate-400'
-                                          }`}>
-                                            {item.verificationStatus}
-                                          </span>
-                                        </div>
-                                        <p className="text-slate-400 leading-relaxed">{item.summary}</p>
-                                        <div className="flex items-center justify-between text-[10px] font-mono text-slate-500 pt-1 border-t border-slate-800">
-                                          <span>Src: {item.sourceReference || 'Test Suite'}</span>
-                                          {item.evidenceHash && (
-                                            <span title={item.evidenceHash}>
-                                              Hash: {item.evidenceHash.substring(0, 8)}...
-                                            </span>
-                                          )}
-                                        </div>
-                                      </div>
-                                    ))}
-                                  </div>
-                                </div>
-                              )}
-
-                              {comp.type === 'CaseStudySection' && (
-                                <div className={`p-6 rounded-xl border space-y-4 ${
-                                  brand?.colors?.background === '#0B0F17'
-                                    ? 'bg-slate-900/80 border-slate-800 text-slate-200'
-                                    : 'bg-slate-50 border-slate-200 text-slate-800'
-                                }`}>
-                                  <div className="space-y-1">
-                                    <div className="text-[10px] font-mono uppercase tracking-wider text-sky-400 font-semibold">
-                                      {comp.content.clientOrProject || comp.content.clientOrProduct || 'ENGINEERING DEEP DIVE'}
-                                    </div>
-                                    <h4 className="text-xl font-bold text-white">{comp.content.title}</h4>
-                                  </div>
-                                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
-                                    <div className="p-3 bg-slate-950/60 rounded-lg border border-slate-800 space-y-1">
-                                      <div className="font-semibold text-slate-300">Problem &amp; Challenge:</div>
-                                      <p className="text-slate-400">{comp.content.challenge || comp.content.problemStatement || comp.content.problem}</p>
-                                    </div>
-                                    <div className="p-3 bg-slate-950/60 rounded-lg border border-slate-800 space-y-1">
-                                      <div className="font-semibold text-slate-300">Solution Architecture:</div>
-                                      <p className="text-slate-400">{comp.content.solution || comp.content.solutionArchitecture || comp.content.approach}</p>
-                                    </div>
-                                  </div>
-                                  {(comp.content.metrics || comp.content.verifiedMetrics) && (
-                                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-2">
-                                      {(comp.content.metrics || comp.content.verifiedMetrics).map((m: any, mIdx: number) => (
-                                        <div key={mIdx} className="p-3 bg-slate-950/80 rounded-lg border border-slate-800 text-center">
-                                          <div className="text-base font-bold text-sky-400 font-mono">{m.value || m.metric}</div>
-                                          <div className="text-[11px] text-slate-400">{m.label || m.description}</div>
-                                        </div>
-                                      ))}
-                                    </div>
-                                  )}
-                                </div>
-                              )}
-
-                              {comp.type === 'StudioPortfolio' && (
-                                <div className="space-y-4">
-                                  <h4 className="text-lg font-bold text-white">{comp.content.sectionTitle || comp.content.title || 'Portfolio & Case Studies'}</h4>
-                                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                    {(comp.content.items || comp.content.projects || []).map((item: any, itIdx: number) => (
-                                      <div key={itIdx} className="p-4 rounded-xl bg-slate-900 border border-slate-800 space-y-2 text-xs">
-                                        <div className="flex items-center justify-between">
-                                          <div className="font-bold text-white text-sm">{item.title}</div>
-                                          {item.domain && (
-                                            <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-slate-800 text-slate-400 border border-slate-700">
-                                              {item.domain}
-                                            </span>
-                                          )}
-                                        </div>
-                                        <p className="text-slate-400 leading-relaxed">{item.summary || item.description}</p>
-                                        {item.tags && (
-                                          <div className="flex flex-wrap gap-1 pt-1">
-                                            {item.tags.map((tag: string, tgIdx: number) => (
-                                              <span key={tgIdx} className="px-2 py-0.5 rounded text-[10px] font-mono bg-slate-800 text-slate-300">
-                                                {tag}
-                                              </span>
-                                            ))}
-                                          </div>
-                                        )}
-                                      </div>
-                                    ))}
-                                  </div>
-                                </div>
-                              )}
-
-                              {comp.type === 'TextSection' && (
-                                <div className={`p-6 rounded-xl border space-y-3 ${
-                                  brand?.colors?.background === '#0B0F17'
-                                    ? 'bg-slate-900/60 border-slate-800 text-slate-300'
-                                    : 'bg-white border-slate-200 text-slate-700'
-                                }`}>
-                                  {comp.content.title && <h4 className="text-lg font-bold text-white">{comp.content.title}</h4>}
-                                  <div className="text-xs leading-relaxed space-y-2 whitespace-pre-line text-slate-300">
-                                    {comp.content.body}
                                   </div>
                                 </div>
                               )}
@@ -835,20 +600,16 @@ export const WebsiteBuilderHub: React.FC<WebsiteBuilderHubProps> = ({
                               )}
 
                               {comp.type === 'ContactForm' && (
-                                <div className={`p-5 rounded-xl border space-y-3 ${
-                                  brand?.colors?.background === '#0B0F17'
-                                    ? 'bg-slate-900 border-slate-800 text-slate-200'
-                                    : 'bg-slate-50 border-slate-300 text-slate-900'
-                                }`}>
+                                <div className="p-5 rounded-xl border border-slate-300 bg-slate-50 space-y-3">
                                   <div className="space-y-1">
-                                    <h4 className="font-bold text-sm text-white">{comp.content.title}</h4>
-                                    {comp.content.subtitle && <p className="text-xs text-slate-400">{comp.content.subtitle}</p>}
+                                    <h4 className="font-bold text-slate-900 text-sm">{comp.content.title}</h4>
+                                    {comp.content.subtitle && <p className="text-xs text-slate-500">{comp.content.subtitle}</p>}
                                   </div>
                                   <div className="space-y-2 text-xs">
-                                    <input disabled placeholder="Full Name *" className="w-full p-2 rounded border border-slate-700 bg-slate-950 text-slate-200" />
-                                    <input disabled placeholder="Email Address / Phone *" className="w-full p-2 rounded border border-slate-700 bg-slate-950 text-slate-200" />
-                                    <input disabled placeholder="Project Scope / System Goals *" className="w-full p-2 rounded border border-slate-700 bg-slate-950 text-slate-200" />
-                                    <button disabled className="w-full py-2 bg-sky-500 text-slate-950 rounded font-semibold">
+                                    <input disabled placeholder="Full Name *" className="w-full p-2 rounded border border-slate-300 bg-white" />
+                                    <input disabled placeholder="Phone Number *" className="w-full p-2 rounded border border-slate-300 bg-white" />
+                                    <input disabled placeholder="City / Municipality *" className="w-full p-2 rounded border border-slate-300 bg-white" />
+                                    <button disabled className="w-full py-2 bg-emerald-600 text-white rounded font-semibold">
                                       {comp.content.submitButtonLabel || 'Submit Request'}
                                     </button>
                                   </div>
@@ -856,16 +617,12 @@ export const WebsiteBuilderHub: React.FC<WebsiteBuilderHubProps> = ({
                               )}
 
                               {comp.type === 'Footer' && (
-                                <div className={`pt-6 border-t text-xs space-y-2 ${
-                                  brand?.colors?.background === '#0B0F17'
-                                    ? 'border-slate-800 text-slate-500'
-                                    : 'border-slate-200 text-slate-500'
-                                }`}>
+                                <div className="pt-6 border-t border-slate-200 text-xs text-slate-500 space-y-2">
                                   <div className="flex justify-between items-center">
-                                    <span className="font-semibold text-slate-300">{comp.content.companyName}</span>
-                                    <span>{comp.content.phone || comp.content.contactEmail || ''}</span>
+                                    <span className="font-semibold text-slate-800">{comp.content.companyName}</span>
+                                    <span>{comp.content.phone}</span>
                                   </div>
-                                  <p>{comp.content.licenseNotice || comp.content.disclaimer}</p>
+                                  <p>{comp.content.licenseNotice}</p>
                                 </div>
                               )}
                             </div>
@@ -1074,40 +831,6 @@ export const WebsiteBuilderHub: React.FC<WebsiteBuilderHubProps> = ({
                       </button>
                     </div>
                   </div>
-
-                  {/* Dogfood Validation Engine Feedback / Diagnostics */}
-                  {dogfoodFeedback && dogfoodFeedback.length > 0 && (
-                    <div className="bg-slate-900 text-slate-100 rounded-xl p-5 border border-slate-800 space-y-3">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          <ShieldCheck className="w-4 h-4 text-sky-400" />
-                          <h3 className="text-sm font-bold text-white">Relay Website Builder Engine Dogfood Verification Log</h3>
-                        </div>
-                        <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
-                          {dogfoodFeedback.length} SUBSYSTEMS RECORDED
-                        </span>
-                      </div>
-                      <p className="text-xs text-slate-400">
-                        Dogfood verification logs capturing engine-level adaptations for Studio and Multi-Tenant architecture.
-                      </p>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs pt-1">
-                        {dogfoodFeedback.map((fb: any, idx: number) => (
-                          <div key={fb.id || idx} className="p-3 bg-slate-950/70 rounded-lg border border-slate-800 space-y-1.5">
-                            <div className="flex items-center justify-between">
-                              <span className="font-mono text-[11px] text-sky-400 font-semibold">{fb.subsystem}</span>
-                              <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${
-                                fb.status === 'RESOLVED' ? 'bg-emerald-950 text-emerald-300' : 'bg-amber-950 text-amber-300'
-                              }`}>
-                                {fb.status}
-                              </span>
-                            </div>
-                            <p className="text-slate-300 text-[11px] leading-relaxed">{fb.finding}</p>
-                            <p className="text-slate-500 text-[10px] leading-tight"><span className="text-slate-400 font-medium">Fix:</span> {fb.resolution}</p>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
                 </div>
               </div>
             )}

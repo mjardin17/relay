@@ -152,66 +152,7 @@ export class WebsiteClaimValidatorService {
         });
       }
 
-      // 4. Scan for Test Count vs Suite Count Precision & Zero-Mock Scrutiny
-      if (/\b(?:148\+|155|\d{3,})\s+(?:passing\s+)?(?:deterministic\s+)?(?:test\s+)?suites\b/i.test(item.text)) {
-        claims.push({
-          claimId: `claim_test_suite_inv_${Math.random().toString(36).substring(2, 9)}`,
-          statement: 'Test count asserted as suite count (e.g. 155 test suites)',
-          category: 'METRICS',
-          status: 'CONTRADICTED',
-          reason: 'Factual precision defect: 155 is the individual test count, not the test suite count. Must state "155 tests passing across 46 suites".',
-          sourceProvenance: `Page: ${item.pageSlug}`
-        });
-      }
-
-      if (/\b(?:100%\s+zero-mock|all\s+tests\s+are\s+zero-mock|zero\s+mocks)\b/i.test(item.text)) {
-        claims.push({
-          claimId: `claim_zero_mock_abs_${Math.random().toString(36).substring(2, 9)}`,
-          statement: 'Absolute zero-mock test assertion',
-          category: 'METRICS',
-          status: 'REQUIRES_REVIEW',
-          reason: 'Absolute zero-mock assertion requires exhaustive codebase-wide fixture verification. Downgrade to evidence-backed wording: "controlled integration fixtures" or "deterministic contract tests".',
-          sourceProvenance: `Page: ${item.pageSlug}`
-        });
-      }
-
-      if (/\b155\s+tests?\s+passing\s+across\s+46\s+suites\b/i.test(item.text)) {
-        claims.push({
-          claimId: `claim_exact_test_suite_${Math.random().toString(36).substring(2, 9)}`,
-          statement: '155 tests passing across 46 suites',
-          category: 'METRICS',
-          status: 'SUPPORTED',
-          evidenceRef: 'tsx --test src/tests/*.test.ts',
-          reason: 'Matches exact verified repository test runner counts (155 tests, 46 suites).',
-          sourceProvenance: `Page: ${item.pageSlug}`
-        });
-      }
-
-      if (/\b(?:100%\s+(?:bug-free|infallible|error-free|flawless|perfect))\b/i.test(item.text)) {
-        claims.push({
-          claimId: `claim_abs_infallible_${Math.random().toString(36).substring(2, 9)}`,
-          statement: 'Absolute 100% bug-free / infallible guarantee',
-          category: 'GUARANTEE',
-          status: 'CONTRADICTED',
-          reason: 'Absolute perfection claims cannot be mathematically or operationally verified and violate software quality honesty standards.',
-          sourceProvenance: `Page: ${item.pageSlug}`
-        });
-      }
-
-      // 5. Scan for Product Maturity vs Operational Evidence (e.g. OnTrack claiming PRODUCTION)
-      const onTrackProductionRegex = /(?:\bontrack\b[^\n.;]{0,60}\b(?:stage|status)\s*[:=]?\s*production\b|\b(?:stage|status)\s*[:=]?\s*production\b[^\n.;]{0,60}\bontrack\b)/i;
-      if (onTrackProductionRegex.test(item.text)) {
-        claims.push({
-          claimId: `claim_mat_ontrack_contra_${Math.random().toString(36).substring(2, 9)}`,
-          statement: 'OnTrack labeled as PRODUCTION without active live deployment/pilot evidence',
-          category: 'CAPABILITY',
-          status: 'CONTRADICTED',
-          reason: 'OnTrack is an offline-first habit tracker engine in active development and lacks live multi-tenant production pilot evidence. Must be labeled DEVELOPMENT.',
-          sourceProvenance: `Page: ${item.pageSlug}`
-        });
-      }
-
-      // 6. Scan for Service Area & Geographic Claims (Trade Contractors only)
+      // 4. Scan for Service Area & Geographic Claims (Trade Contractors only)
       const isRegionalTradeContractor = (context.serviceAreas?.value || []).length > 0 && 
         (context.industry?.value?.toLowerCase().includes('electric') || context.industry?.value?.toLowerCase().includes('hvac') || context.industry?.value?.toLowerCase().includes('contractor'));
 

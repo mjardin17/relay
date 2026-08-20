@@ -217,19 +217,6 @@ export class BusinessWebsiteContextService {
       });
     }
 
-    const businessLicNum = compliance?.ma_a1_business_license_number || compliance?.a1_license_number || (isElectricalTenant && tenant.name.includes('Reis') ? '50421-A1' : undefined);
-    if (businessLicNum && isElectricalTenant) {
-      credentialsList.push({
-        type: 'BUSINESS_CERT',
-        identifier: businessLicNum,
-        holderName: compliance?.legal_business_name || tenant.name,
-        issuingAuthority: 'Commonwealth of Massachusetts Board of State Examiners of Electricians (A-1 Business Certificate)',
-        state: 'MA',
-        status: (compliance?.business_license_status === 'active' || compliance?.business_license_status === 'verified' || tenant.name.includes('Reis')) ? 'VERIFIED_ACTIVE' : 'PENDING_CONFIRMATION',
-        expirationDate: compliance?.business_license_expiration_date || '2027-07-31'
-      });
-    }
-
     if ((compliance?.insurance_policy_number || compliance?.insurance_carrier) && isElectricalTenant) {
       credentialsList.push({
         type: 'INSURANCE',

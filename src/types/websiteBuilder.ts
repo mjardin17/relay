@@ -54,7 +54,7 @@ export type WebsiteHealthState =
 export interface FactualClaimAnalysis {
   claimId: string;
   statement: string;
-  category: 'LICENSE' | 'PRICING' | 'GUARANTEE' | 'YEARS_IN_BUSINESS' | 'REVIEWS' | 'CREDENTIALS' | 'SERVICE_AREA' | 'METRICS' | 'CAPABILITY';
+  category: 'LICENSE' | 'PRICING' | 'GUARANTEE' | 'YEARS_IN_BUSINESS' | 'REVIEWS' | 'CREDENTIALS' | 'SERVICE_AREA' | 'METRICS';
   status: FactualClaimStatus;
   evidenceRef?: string;
   reason: string;
@@ -422,7 +422,7 @@ export interface ProductGridComponent extends BaseComponent {
       summary?: string;
       category: string;
       stage?: string;
-      status?: 'PRODUCTION' | 'BETA' | 'ACTIVE_DEV' | 'INTERNAL' | 'STABLE' | 'ALPHA' | 'PRODUCTION DOGFOOD' | 'DEVELOPMENT';
+      status?: 'PRODUCTION' | 'BETA' | 'ACTIVE_DEV' | 'INTERNAL' | 'STABLE' | 'ALPHA';
       highlights?: string[];
       capabilities?: string[];
       stackSummary?: string;

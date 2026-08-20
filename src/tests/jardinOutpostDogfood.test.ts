@@ -30,11 +30,6 @@ describe('Jardin’s Outpost Real Dogfood Build & Validation Suite', () => {
 
     // Ensure contractor base tenant data is seeded for cross-tenant isolation testing
     reisElectricPilotService.seedPilotScenario(contractorTenantId);
-
-    // Ensure studio tenant, brand profile, and project exist
-    jardinOutpostService.seedTenantAndLocations();
-    jardinOutpostService.seedBrandProfile();
-    websiteProjectService.getOrCreateProject(studioTenantId, "Jardin's Outpost Studio Site");
   });
 
   describe('1. Tenant Isolation & Context Compilation', () => {
@@ -46,7 +41,8 @@ describe('Jardin’s Outpost Real Dogfood Build & Validation Suite', () => {
       const context = businessWebsiteContextService.compileContext(studioTenantId);
       assert.strictEqual(context.tenantId, studioTenantId);
       assert.strictEqual(context.businessName.value, "Jardin's Outpost");
-      assert.ok(context.headquarters.value);
+      assert.strictEqual(context.headquarters.value.city, 'Boston');
+      assert.strictEqual(context.headquarters.value.state, 'MA');
 
       // Verify zero electrical contractor credentials or CMR 12.00 disclaimers
       assert.strictEqual(context.credentials.value.length, 0);
@@ -70,18 +66,18 @@ describe('Jardin’s Outpost Real Dogfood Build & Validation Suite', () => {
   });
 
   describe('2. Dark Technical Brand Profile & Aesthetic Directives', () => {
-    it('seeds warm dark brand profile for digital workshop', () => {
+    it('seeds obsidian & sky brand profile for technical founder studio', () => {
       const brand = jardinOutpostService.seedBrandProfile();
 
       assert.strictEqual(brand.tenantId, studioTenantId);
-      assert.strictEqual(brand.colors.background, '#0B0D11');
-      assert.strictEqual(brand.colors.accent, '#D97757');
-      assert.strictEqual(brand.typography.headingFont, 'Newsreader');
-      assert.strictEqual(brand.typography.bodyFont, 'Plus Jakarta Sans');
+      assert.strictEqual(brand.colors.background, '#0B0F17');
+      assert.strictEqual(brand.colors.accent, '#38BDF8');
+      assert.strictEqual(brand.typography.headingFont, 'Plus Jakarta Sans');
+      assert.strictEqual(brand.typography.bodyFont, 'Inter');
       assert.strictEqual(brand.imageryStyle, 'CLEAN_TECHNICAL');
       assert.strictEqual(brand.writingTone, 'DIRECT_PROFESSIONAL');
 
-      assert.ok(brand.approvedTerminology.includes('Deterministic Systems'));
+      assert.ok(brand.approvedTerminology.includes('Deterministic Execution'));
       assert.ok(brand.approvedTerminology.includes('Segregation of Duties'));
       assert.ok(brand.prohibitedClaims.includes('100% bug-free guarantee'));
     });
@@ -89,13 +85,13 @@ describe('Jardin’s Outpost Real Dogfood Build & Validation Suite', () => {
 
   describe('3. Proof of Work Infrastructure & Segregation of Duties', () => {
     it('seeds and verifies cryptographic proof items for all 4 products', () => {
-      const proofs = jardinOutpostService.seedProofItems(JardinOutpostService.PROJECT_ID);
+      const proofs = jardinOutpostService.seedProofItems('proj_jardins_outpost_main');
       assert.ok(proofs.length >= 7);
 
       // Verify Relay proof items exist
       const relayProofs = proofs.filter(p => p.productSlug === 'relay');
       assert.ok(relayProofs.length >= 3);
-      assert.ok(relayProofs.some(p => p.title.includes('Deterministic Test Suite')));
+      assert.ok(relayProofs.some(p => p.title.includes('Zero-Mock')));
       assert.ok(relayProofs.some(p => p.title.includes('Segregation of Duties')));
 
       // Verify all proofs have valid SHA-256 evidence hashes
@@ -106,10 +102,14 @@ describe('Jardin’s Outpost Real Dogfood Build & Validation Suite', () => {
     });
 
     it('enforces Segregation of Duties: AI Agent cannot self-approve proof publications', () => {
+      jardinOutpostService.seedTenantAndLocations();
+      jardinOutpostService.seedBrandProfile();
+      const projectId = jardinOutpostService.seedProject();
+
       const proof = websiteProofService.registerProofItem({
         id: 'proof_test_opt_01',
         tenantId: studioTenantId,
-        projectId: JardinOutpostService.PROJECT_ID,
+        projectId,
         title: 'Experimental Optimizer',
         type: 'TEST',
         verificationStatus: 'REPORTED',
@@ -144,20 +144,14 @@ describe('Jardin’s Outpost Real Dogfood Build & Validation Suite', () => {
     });
   });
 
-  describe('4. 4-Page Studio Architecture & Project Subpages', () => {
-    it('builds all 4 core pages and 3 dedicated project case studies with proper components and routing', () => {
-      const proofs = jardinOutpostService.seedProofItems(JardinOutpostService.PROJECT_ID);
-      const pages = jardinOutpostService.buildPages(proofs, JardinOutpostService.PROJECT_ID);
+  describe('4. 4-Page Studio Architecture & Component Tree', () => {
+    it('builds all 4 distinct pages with proper components and routing', () => {
+      const proofs = jardinOutpostService.seedProofItems('proj_jardins_outpost_main');
+      const pages = jardinOutpostService.buildPages(proofs);
 
-      assert.strictEqual(pages.length, 7);
+      assert.strictEqual(pages.length, 4);
 
-      const home = pages.find(p => p.slug === 'home')!;
-      const projects = pages.find(p => p.slug === 'projects')!;
-      const products = pages.find(p => p.slug === 'products')!;
-      const about = pages.find(p => p.slug === 'about')!;
-      const relayCase = pages.find(p => p.slug === 'projects/relay')!;
-      const bossListerCase = pages.find(p => p.slug === 'projects/bosslister')!;
-      const storyForgeCase = pages.find(p => p.slug === 'projects/storyforge')!;
+      const [home, projects, products, about] = pages;
 
       // Home Page
       assert.strictEqual(home.slug, 'home');
@@ -181,22 +175,16 @@ describe('Jardin’s Outpost Real Dogfood Build & Validation Suite', () => {
       assert.strictEqual(about.slug, 'about');
       assert.ok(about.components.some(c => c.type === 'TextSection'));
       assert.ok(about.components.some(c => c.type === 'ProofOfWork'));
-
-      // Project Detail Pages
-      assert.ok(relayCase);
-      assert.ok(bossListerCase);
-      assert.ok(storyForgeCase);
-      assert.strictEqual(pages.find(p => p.slug === 'projects/ontrack'), undefined, 'OnTrack must not have detailed case study without sufficient evidence');
     });
   });
 
   describe('5. Full End-to-End Build Pipeline Execution', () => {
-    it('executes full pipeline, passes claim validation, and compiles static version with disk export', () => {
+    it('executes full pipeline, passes claim validation, and compiles static version', () => {
       const result = jardinOutpostService.executeFullBuildPipeline();
 
       assert.ok(result.project);
       assert.strictEqual(result.project.tenantId, studioTenantId);
-      assert.strictEqual(result.pages.length, 7);
+      assert.strictEqual(result.pages.length, 4);
       assert.ok(result.proofs.length >= 7);
 
       // Claims analysis must allow publishing
@@ -205,41 +193,22 @@ describe('Jardin’s Outpost Real Dogfood Build & Validation Suite', () => {
 
       // Version must be compiled with immutable SHA-256 hash
       assert.ok(result.version);
-      assert.strictEqual(result.version.id, 'ver_jardin_dogfood_02');
       assert.strictEqual(result.version.contentHash.length, 64);
 
       // Check compiled site artifacts
       const compiled = result.compiledSite;
-      const homePageCompiled = compiled.pages.find((p: any) => p.slug === 'home');
-      const projectsPageCompiled = compiled.pages.find((p: any) => p.slug === 'projects');
-      const productsPageCompiled = compiled.pages.find((p: any) => p.slug === 'products');
-      const aboutPageCompiled = compiled.pages.find((p: any) => p.slug === 'about');
-      const relayCaseCompiled = compiled.pages.find((p: any) => p.slug === 'projects/relay');
-
-      assert.ok(homePageCompiled);
-      assert.ok(projectsPageCompiled);
-      assert.ok(productsPageCompiled);
-      assert.ok(aboutPageCompiled);
-      assert.ok(relayCaseCompiled);
+      assert.ok(compiled.pages['home']);
+      assert.ok(compiled.pages['projects']);
+      assert.ok(compiled.pages['products']);
+      assert.ok(compiled.pages['about']);
       assert.ok(compiled.sitemapXml);
       assert.ok(compiled.manifestJson);
 
-      // Check export result to disk
-      assert.ok(result.exportResult);
-      assert.ok(result.exportResult.exportPath.includes('tenant_jardins_outpost'));
-      assert.ok(result.exportResult.files.includes('index.html'));
-      assert.ok(result.exportResult.files.includes('projects.html'));
-      assert.ok(result.exportResult.files.includes('products.html'));
-      assert.ok(result.exportResult.files.includes('about.html'));
-      assert.ok(result.exportResult.files.includes('sitemap.xml'));
-      assert.ok(result.exportResult.files.includes('robots.txt'));
-      assert.ok(result.exportResult.files.includes('manifest.json'));
-
-      const homeHtml = homePageCompiled.html;
+      const homeHtml = compiled.pages['home'].html;
 
       // Check dark theme styling in compiled HTML
-      assert.ok(homeHtml.includes('background-color: #0B0D11') || homeHtml.includes('#0B0D11'));
-      assert.ok(homeHtml.includes('Built from real problems') || homeHtml.includes('Digital Workshop'));
+      assert.ok(homeHtml.includes('background-color: #0B0F17'));
+      assert.ok(homeHtml.includes('Building practical AI systems'));
       assert.ok(homeHtml.includes('Relay'));
       assert.ok(homeHtml.includes('BossLister'));
       assert.ok(homeHtml.includes('StoryForge'));
@@ -247,8 +216,8 @@ describe('Jardin’s Outpost Real Dogfood Build & Validation Suite', () => {
       assert.ok(homeHtml.includes('Verified Proof of Work'));
 
       // Check JSON-LD Schema in HTML
-      assert.ok(homeHtml.includes('"@type": "Organization"') || homeHtml.includes('"@type":"Organization"'));
-      assert.ok(homeHtml.includes('"@type": "SoftwareApplication"') || homeHtml.includes('"@type":"SoftwareApplication"'));
+      assert.ok(homeHtml.includes('"@type":"Organization"'));
+      assert.ok(homeHtml.includes('"@type":"SoftwareApplication"'));
 
       // Check Dogfood feedback
       assert.ok(result.feedbackLogs.length >= 4);

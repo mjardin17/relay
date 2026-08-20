@@ -1,5 +1,3 @@
-import fs from 'fs';
-import path from 'path';
 import { BusinessWebsiteContext, WebsiteBrandProfile, WebsiteComponent, WebsitePage, CompiledSite } from '../types/websiteBuilder';
 
 export class WebsiteRendererService {
@@ -12,58 +10,6 @@ export class WebsiteRendererService {
       WebsiteRendererService.instance = new WebsiteRendererService();
     }
     return WebsiteRendererService.instance;
-  }
-
-  public exportSiteToDisk(compiledSite: CompiledSite, baseDir?: string): { exportPath: string; files: string[] } {
-    const exportPath = baseDir || path.resolve(process.cwd(), 'dist/exported-sites', compiledSite.tenantId);
-    fs.mkdirSync(exportPath, { recursive: true });
-
-    const writtenFiles: string[] = [];
-
-    // Write all compiled HTML pages
-    for (const page of compiledSite.pages) {
-      const filePath = path.join(exportPath, page.filename);
-      const parentDir = path.dirname(filePath);
-      if (!fs.existsSync(parentDir)) {
-        fs.mkdirSync(parentDir, { recursive: true });
-      }
-      fs.writeFileSync(filePath, page.html, 'utf-8');
-      writtenFiles.push(page.filename);
-    }
-
-    // Write all static assets (CSS, etc.)
-    for (const asset of compiledSite.assets) {
-      const assetPath = path.join(exportPath, asset.path);
-      const parentDir = path.dirname(assetPath);
-      if (!fs.existsSync(parentDir)) {
-        fs.mkdirSync(parentDir, { recursive: true });
-      }
-      fs.writeFileSync(assetPath, asset.content, 'utf-8');
-      writtenFiles.push(asset.path);
-    }
-
-    // Write sitemap.xml
-    if (compiledSite.sitemapXml) {
-      fs.writeFileSync(path.join(exportPath, 'sitemap.xml'), compiledSite.sitemapXml, 'utf-8');
-      writtenFiles.push('sitemap.xml');
-    }
-
-    // Write robots.txt
-    if (compiledSite.robotsTxt) {
-      fs.writeFileSync(path.join(exportPath, 'robots.txt'), compiledSite.robotsTxt, 'utf-8');
-      writtenFiles.push('robots.txt');
-    }
-
-    // Write manifest.json
-    if (compiledSite.manifestJson) {
-      fs.writeFileSync(path.join(exportPath, 'manifest.json'), compiledSite.manifestJson, 'utf-8');
-      writtenFiles.push('manifest.json');
-    }
-
-    return {
-      exportPath,
-      files: writtenFiles
-    };
   }
 
   public compileSite(
@@ -191,7 +137,7 @@ export class WebsiteRendererService {
 ${JSON.stringify(jsonLd, null, 2)}
   </script>
 </head>
-<body class="${isDarkTheme ? 'bg-[#0B0F17] text-slate-100' : 'bg-[#F8FAFC] text-slate-900'} font-sans antialiased min-h-full flex flex-col selection:bg-sky-500 selection:text-white" style="background-color: ${brand.colors.background}; color: ${brand.colors.text};">
+<body class="${isDarkTheme ? 'bg-[#0B0F17] text-slate-100' : 'bg-[#F8FAFC] text-slate-900'} font-sans antialiased min-h-full flex flex-col selection:bg-sky-500 selection:text-white">
   <!-- Header / Navigation Bar -->
   <header class="sticky top-0 z-40 ${isDarkTheme ? 'bg-[#0B0F17]/90 border-slate-800/80' : 'bg-white/95 border-slate-200'} backdrop-blur border-b">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -683,7 +629,7 @@ ${bodyHtml}
     if (isStudio) {
       const studioOrg: any = {
         '@context': 'https://schema.org',
-        '@type': 'Organization',
+        '@type': ['Organization', 'ResearchOrganization'],
         'name': brand.brandName,
         'description': context.description?.value || 'Building practical AI systems, software products, and business infrastructure.',
         'url': domain || 'https://jardinsoutpost.com',

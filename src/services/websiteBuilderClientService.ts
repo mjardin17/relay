@@ -211,23 +211,5 @@ export const websiteBuilderClient = {
     const data = await res.json();
     if (!data.success) throw new Error(data.error || 'Failed to seed second tenant site');
     return data.result;
-  },
-
-  async seedJardinOutpost(tenantId: string = 'tenant_jardins_outpost'): Promise<any> {
-    const res = await fetch('/api/website-builder/seed/jardins-outpost', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ tenantId })
-    });
-    const data = await res.json();
-    if (!data.success) throw new Error(data.error || 'Failed to execute Jardin Outpost dogfood build');
-    return data.result;
-  },
-
-  async getDogfoodFeedback(): Promise<any[]> {
-    const res = await fetch('/api/website-builder/dogfood/feedback');
-    const data = await res.json();
-    if (!data.success) throw new Error(data.error || 'Failed to fetch dogfood feedback logs');
-    return data.logs;
   }
 };

@@ -196,8 +196,7 @@ export class WebsiteProjectService {
   public createVersionSnapshot(
     projectId: string,
     tenantId: string,
-    creatorRole: string = 'OPERATOR',
-    customVersionId?: string
+    creatorRole: string = 'OPERATOR'
   ): WebsiteVersion {
     const db = getDatabase();
     const project = this.getProject(projectId, tenantId);
@@ -220,7 +219,7 @@ export class WebsiteProjectService {
     const versionNumber = (countRow?.cnt || 0) + 1;
 
     const contentHash = this.calculateCanonicalContentHash(pages, brand, context);
-    const versionId = customVersionId || `ver_${projectId}_v${versionNumber}`;
+    const versionId = `ver_${projectId}_v${versionNumber}`;
 
     const version: WebsiteVersion = {
       id: versionId,

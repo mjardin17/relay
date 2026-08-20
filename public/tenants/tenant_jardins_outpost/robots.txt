@@ -1,4 +1,0 @@
-User-agent: *
-Allow: /
-
-Sitemap: https://jardinsoutpost.com/sitemap.xml
