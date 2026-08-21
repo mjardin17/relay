@@ -20,6 +20,7 @@ import { controlCenterRouter } from './src/routes/controlCenterRouter';
 import { universalActionsRouter } from './src/routes/universalActionsRouter';
 import { connectorRegistryRouter } from './src/routes/connectorRegistryRouter';
 import { projectIntelligenceRouter } from './src/routes/projectIntelligenceRouter';
+import { miniMaxApi } from './src/routes/miniMaxApi';
 
 dotenv.config();
 
@@ -56,6 +57,9 @@ app.use('/api/control-center', controlCenterRouter);
 app.use('/api/universal-actions', universalActionsRouter);
 app.use('/api/connector-registry', connectorRegistryRouter);
 app.use('/api/project-intelligence', projectIntelligenceRouter);
+app.use('/api/minimax', miniMaxApi);
+app.use('/api/creative/minimax', miniMaxApi);
+app.use('/api/commercial-factory', miniMaxApi);
 
 // Lazy initializer for Gemini client to prevent startup crash if GEMINI_API_KEY is missing
 function getGeminiClient(): GoogleGenAI {

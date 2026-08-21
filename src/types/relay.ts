@@ -29,6 +29,7 @@ export type RelayTab =
   | 'customer_growth'
   | 'operations'
   | 'studio'
+  | 'commercial_factory'
   | 'repurposer'
   | 'schedule'
   | 'analytics'

@@ -3,6 +3,7 @@ import { Globe, ShieldAlert, Rocket, FolderGit2, Menu, Sparkles } from 'lucide-r
 import { EmpireHeader } from './components/empire/EmpireHeader';
 import { EmpireSidebar } from './components/empire/EmpireSidebar';
 import { ContentStudio } from './components/studio/ContentStudio';
+import { CommercialFactoryStudio } from './components/studio/CommercialFactoryStudio';
 import { RepurposingEngine } from './components/repurposer/RepurposingEngine';
 import { SmartSchedule } from './components/schedule/SmartSchedule';
 import { AnalyticsDashboard } from './components/analytics/AnalyticsDashboard';

@@ -202,17 +202,31 @@ export function initializeDatabaseSchema(db: DatabaseSync): void {
       description TEXT NOT NULL,
       action_type TEXT NOT NULL,
       status TEXT NOT NULL DEFAULT 'Detected',
+      lifecycle_state TEXT NOT NULL DEFAULT 'DISCOVERED',
+      product_id TEXT,
+      assigned_worker_id TEXT,
+      assigned_worker_name TEXT,
       effort TEXT NOT NULL DEFAULT 'Medium',
       risk_level TEXT NOT NULL DEFAULT 'Medium',
       affected_records_count INTEGER NOT NULL DEFAULT 0,
       estimated_monthly_value REAL NOT NULL DEFAULT 0,
       estimated_annual_value REAL NOT NULL DEFAULT 0,
+      cost_estimate REAL NOT NULL DEFAULT 0,
       actual_realized_monthly_value REAL NOT NULL DEFAULT 0,
       confidence TEXT NOT NULL DEFAULT 'High',
+      confidence_score TEXT NOT NULL DEFAULT 'High',
       detected_condition TEXT NOT NULL,
       recommended_playbook TEXT NOT NULL,
+      supporting_evidence_json TEXT NOT NULL DEFAULT '[]',
+      deliverable_draft_json TEXT,
+      deliverable_version_hash TEXT,
+      approval_record_json TEXT,
+      execution_record_json TEXT,
+      measurement_record_json TEXT,
+      action_record_id TEXT,
       activated_at TEXT,
       created_at TEXT NOT NULL,
+      updated_at TEXT NOT NULL,
       FOREIGN KEY (tenant_id) REFERENCES tenants(id) ON DELETE CASCADE
     );
 
@@ -1574,5 +1588,18 @@ export function initializeDatabaseSchema(db: DatabaseSync): void {
   safeAddColumn('universal_action_records', 'retry_classification TEXT');
   safeAddColumn('universal_action_records', 'next_retry_at TEXT');
   safeAddColumn('universal_action_records', 'dead_letter_id TEXT');
+  safeAddColumn('opportunities', 'lifecycle_state TEXT DEFAULT "DISCOVERED"');
+  safeAddColumn('opportunities', 'product_id TEXT');
+  safeAddColumn('opportunities', 'assigned_worker_id TEXT');
+  safeAddColumn('opportunities', 'assigned_worker_name TEXT');
+  safeAddColumn('opportunities', 'cost_estimate REAL DEFAULT 0');
+  safeAddColumn('opportunities', 'confidence_score TEXT DEFAULT "High"');
+  safeAddColumn('opportunities', 'supporting_evidence_json TEXT DEFAULT "[]"');
+  safeAddColumn('opportunities', 'deliverable_draft_json TEXT');
+  safeAddColumn('opportunities', 'deliverable_version_hash TEXT');
+  safeAddColumn('opportunities', 'approval_record_json TEXT');
+  safeAddColumn('opportunities', 'execution_record_json TEXT');
+  safeAddColumn('opportunities', 'measurement_record_json TEXT');
+  safeAddColumn('opportunities', 'action_record_id TEXT');
   safeAddColumn('opportunities', 'updated_at TEXT');
 }

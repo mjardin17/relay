@@ -23,7 +23,8 @@ import {
   Zap,
   Globe,
   Boxes,
-  FolderGit2
+  FolderGit2,
+  Film
 } from 'lucide-react';
 import { RelayTab } from '../../types/relay';
 
@@ -64,6 +65,7 @@ export const EmpireSidebar: React.FC<EmpireSidebarProps> = ({
 
   const contentSuiteNav = [
     { id: 'studio', label: 'AI Content Studio', icon: Sparkles, badge: 'Gemini 3.6', badgeColor: 'bg-indigo-500/20 text-indigo-400' },
+    { id: 'commercial_factory', label: 'Commercial Factory', icon: Film, badge: 'MiniMax H3', badgeColor: 'bg-gradient-to-r from-amber-500/30 to-orange-500/30 text-amber-300 font-bold border border-amber-500/30' },
     { id: 'repurposer', label: 'Repurposing Engine', icon: Repeat },
     { id: 'schedule', label: 'Smart Schedule', icon: Calendar },
     { id: 'analytics', label: 'Analytics & ROI', icon: BarChart3 },

@@ -3,6 +3,7 @@ export type CreativeProviderType =
   | 'LOVABLE'
   | 'GOOGLE_AI_STUDIO'
   | 'FIREBASE_STUDIO'
+  | 'MINIMAX_H3'
   | 'OTHER_FREE_PROVIDER';
 
 export type CreativeProviderQuotaState =

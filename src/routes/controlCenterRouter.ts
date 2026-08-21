@@ -3,6 +3,8 @@ import { getDatabase } from '../db/database';
 import { authMiddleware } from '../middleware/authMiddleware';
 import { EmergencyControlService } from '../services/emergencyControlService';
 import { AuthoritativeConnectorRegistryService } from '../services/authoritativeConnectorRegistryService';
+import { productLauncherService } from '../services/productLauncherService';
+import { revenueActivationService } from '../services/revenueActivationService';
 
 export const controlCenterRouter = express.Router();
 controlCenterRouter.use(authMiddleware);
@@ -628,7 +630,227 @@ controlCenterRouter.put('/business-profile', (req: Request, res: Response) => {
   }
 });
 
-// 11. Convert Opportunity to Governed Action
+// 10.5. Product Launcher API
+controlCenterRouter.get('/products', (req: Request, res: Response) => {
+  try {
+    const tenantId = (req as any).tenantId;
+    const products = productLauncherService.getProducts(tenantId);
+    res.json({ success: true, products });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err?.message || 'Failed to fetch products' });
+  }
+});
+
+controlCenterRouter.get('/products/:id', (req: Request, res: Response) => {
+  try {
+    const tenantId = (req as any).tenantId;
+    const product = productLauncherService.getProductById(req.params.id, tenantId);
+    if (!product) {
+      return res.status(404).json({ success: false, error: `Product '${req.params.id}' not found.` });
+    }
+    res.json({ success: true, product });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err?.message || 'Failed to fetch product' });
+  }
+});
+
+// 11. Opportunity Workspace & Lifecycle API
+controlCenterRouter.get('/opportunities', (req: Request, res: Response) => {
+  try {
+    const tenantId = (req as any).tenantId;
+    const opportunities = revenueActivationService.listOpportunities(tenantId);
+    res.json({ success: true, opportunities });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err?.message || 'Failed to list opportunities' });
+  }
+});
+
+controlCenterRouter.post('/opportunities', (req: Request, res: Response) => {
+  try {
+    const tenantId = (req as any).tenantId;
+    const {
+      title,
+      category,
+      description,
+      actionType,
+      productId,
+      assignedWorkerId,
+      revenueEstimate,
+      costEstimate,
+      confidenceScore,
+      riskLevel,
+      supportingEvidence,
+      detectedCondition,
+      recommendedPlaybook
+    } = req.body;
+
+    if (!title || !description || !actionType) {
+      return res.status(400).json({ success: false, error: 'Title, description, and actionType are required.' });
+    }
+
+    const opportunity = revenueActivationService.createOpportunity({
+      tenantId,
+      title,
+      category: category || 'Growth & Revenue',
+      description,
+      actionType,
+      productId,
+      assignedWorkerId,
+      revenueEstimate: Number(revenueEstimate || 1000),
+      costEstimate: Number(costEstimate || 100),
+      confidenceScore,
+      riskLevel,
+      supportingEvidence,
+      detectedCondition,
+      recommendedPlaybook
+    });
+
+    res.status(201).json({ success: true, opportunity });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err?.message || 'Failed to create opportunity' });
+  }
+});
+
+controlCenterRouter.get('/opportunities/:id', (req: Request, res: Response) => {
+  try {
+    const tenantId = (req as any).tenantId;
+    const opportunity = revenueActivationService.getOpportunity(tenantId, req.params.id);
+    if (!opportunity) {
+      return res.status(404).json({ success: false, error: `Opportunity '${req.params.id}' not found.` });
+    }
+    res.json({ success: true, opportunity });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err?.message || 'Failed to fetch opportunity' });
+  }
+});
+
+controlCenterRouter.post('/opportunities/:id/transition', (req: Request, res: Response) => {
+  try {
+    const tenantId = (req as any).tenantId;
+    const userId = (req as any).userId;
+    const { targetState, notes } = req.body;
+
+    if (!targetState) {
+      return res.status(400).json({ success: false, error: 'targetState is required.' });
+    }
+
+    const opportunity = revenueActivationService.transitionLifecycle(
+      tenantId,
+      req.params.id,
+      targetState,
+      userId,
+      notes
+    );
+
+    res.json({ success: true, opportunity });
+  } catch (err: any) {
+    res.status(400).json({ success: false, error: err?.message || 'Failed to transition lifecycle' });
+  }
+});
+
+controlCenterRouter.post('/opportunities/:id/draft', (req: Request, res: Response) => {
+  try {
+    const tenantId = (req as any).tenantId;
+    const customInputs = req.body.customInputs || req.body;
+    const opportunity = revenueActivationService.generateDeliverableDraft(tenantId, req.params.id, customInputs);
+    res.json({ success: true, opportunity });
+  } catch (err: any) {
+    res.status(400).json({ success: false, error: err?.message || 'Failed to generate deliverable draft' });
+  }
+});
+
+controlCenterRouter.post('/opportunities/:id/submit-approval', (req: Request, res: Response) => {
+  try {
+    const tenantId = (req as any).tenantId;
+    const userId = (req as any).userId;
+    const opportunity = revenueActivationService.submitForApproval(tenantId, req.params.id, userId);
+    res.json({ success: true, opportunity });
+  } catch (err: any) {
+    res.status(400).json({ success: false, error: err?.message || 'Failed to submit for approval' });
+  }
+});
+
+controlCenterRouter.post('/opportunities/:id/approve', (req: Request, res: Response) => {
+  try {
+    const tenantId = (req as any).tenantId;
+    const userId = (req as any).userId;
+    const userRole = ((req as any).userRole || 'OWNER').toUpperCase();
+    const { decision, notes, approverName } = req.body;
+
+    if (!decision || !['APPROVED', 'REJECTED', 'REVISED'].includes(decision)) {
+      return res.status(400).json({ success: false, error: "Decision must be 'APPROVED', 'REJECTED', or 'REVISED'." });
+    }
+
+    const opportunity = revenueActivationService.recordApprovalDecision({
+      tenantId,
+      opportunityId: req.params.id,
+      approverId: userId,
+      approverName: approverName || 'Operator (Owner)',
+      approverRole: userRole,
+      decision,
+      notes
+    });
+
+    res.json({ success: true, opportunity });
+  } catch (err: any) {
+    res.status(400).json({ success: false, error: err?.message || 'Failed to record approval decision' });
+  }
+});
+
+controlCenterRouter.post('/opportunities/:id/execute', async (req: Request, res: Response) => {
+  try {
+    const tenantId = (req as any).tenantId;
+    const userId = (req as any).userId;
+    const { executionMode } = req.body;
+
+    const opportunity = await revenueActivationService.executeOpportunityAction({
+      tenantId,
+      opportunityId: req.params.id,
+      executionMode: executionMode || 'DRY_RUN',
+      actorId: userId
+    });
+
+    res.json({ success: true, opportunity });
+  } catch (err: any) {
+    res.status(400).json({ success: false, error: err?.message || 'Failed to execute opportunity action' });
+  }
+});
+
+controlCenterRouter.post('/opportunities/:id/measure', (req: Request, res: Response) => {
+  try {
+    const tenantId = (req as any).tenantId;
+    const { realizedRevenue, actualCost, attributableConversions, evidenceNotes } = req.body;
+
+    if (realizedRevenue === undefined || isNaN(Number(realizedRevenue))) {
+      return res.status(400).json({ success: false, error: 'realizedRevenue number is required.' });
+    }
+
+    const opportunity = revenueActivationService.recordMeasurement({
+      tenantId,
+      opportunityId: req.params.id,
+      realizedRevenue: Number(realizedRevenue),
+      actualCost: actualCost !== undefined ? Number(actualCost) : undefined,
+      attributableConversions: attributableConversions !== undefined ? Number(attributableConversions) : 1,
+      evidenceNotes
+    });
+
+    res.json({ success: true, opportunity });
+  } catch (err: any) {
+    res.status(400).json({ success: false, error: err?.message || 'Failed to record measurement' });
+  }
+});
+
+controlCenterRouter.post('/opportunities/dogfood-demo', (req: Request, res: Response) => {
+  try {
+    const tenantId = (req as any).tenantId;
+    const result = revenueActivationService.executeJardinOutpostDogfoodWorkflow(tenantId);
+    res.json({ success: true, ...result });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err?.message || 'Failed to execute dogfood demo' });
+  }
+});
+
+// 11.5 Convert Opportunity to Governed Action (Backward Compatibility)
 controlCenterRouter.post('/opportunities/:id/convert-action', (req: Request, res: Response) => {
   try {
     const db = getDatabase();

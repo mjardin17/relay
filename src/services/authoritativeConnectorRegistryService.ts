@@ -491,6 +491,42 @@ export class AuthoritativeConnectorRegistryService {
         safetyPolicies: ['Strict server-side key isolation', 'Input/Output safety evaluation']
       },
       {
+        id: 'minimax_h3',
+        provider: 'MINIMAX_H3',
+        displayName: 'MiniMax H3 Video & Commercial Factory',
+        category: 'AI_INFERENCE',
+        connectorType: 'OFFICIAL_API',
+        authMethod: 'API_KEY',
+        capabilities: [
+          'TEXT_TO_VIDEO',
+          'IMAGE_TO_VIDEO',
+          'FIRST_LAST_FRAME_VIDEO',
+          'MULTIMODAL_REFERENCE_VIDEO',
+          'SYNCHRONIZED_AUDIO',
+          'MANUAL_TRIAL_WORKFLOW'
+        ],
+        readOperations: ['GET_GENERATION_STATUS', 'FETCH_ESTIMATE', 'LIST_REFERENCE_ASSETS', 'INSPECT_TRIAL_PACKAGE'],
+        writeOperations: ['SUBMIT_VIDEO_JOB', 'CREATE_TRIAL_PACKAGE', 'IMPORT_VIDEO_RESULT', 'REGISTER_REFERENCE_ASSET'],
+        approvalRequirements: ['SUBMIT_VIDEO_JOB'],
+        rateLimitHandling: {
+          requestsPerMinute: 60,
+          backoffStrategy: 'EXPONENTIAL',
+          retryAfterSupported: true
+        },
+        tokenRefreshSupport: {
+          supported: false,
+          autoRefreshWindowSeconds: 0
+        },
+        verificationMethod: 'MiniMax H3 Official REST API Key Auth Probe (Model: MiniMax-H3)',
+        docUrl: 'https://github.com/MiniMax-AI/MiniMax-H3',
+        safetyPolicies: [
+          'Zero-cost Manual Trial mode without credentials',
+          'Explicit human approval required immediately prior to paid generation',
+          'Fail-closed authentication',
+          'Max 12 reference assets limit'
+        ]
+      },
+      {
         id: 'static_export_engine',
         provider: 'STATIC_EXPORT',
         displayName: 'Static Website & Schema Draft Engine',

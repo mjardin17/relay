@@ -15,6 +15,7 @@ import {
 import { RelayNativeCreativeProvider } from './providers/relayNativeCreativeProvider';
 import { LovableCreativeProvider } from './providers/lovableCreativeProvider';
 import { GoogleAiStudioCreativeProvider } from './providers/googleAiStudioCreativeProvider';
+import { MiniMaxH3CreativeProvider } from './providers/miniMaxH3CreativeProvider';
 
 export class CreativeProviderRouter {
   private static instance: CreativeProviderRouter;
@@ -39,7 +40,10 @@ export class CreativeProviderRouter {
     // 2. Google AI Studio (Free Gemini Capacity - priority 92)
     this.registerProvider(new GoogleAiStudioCreativeProvider());
 
-    // 3. Relay Native Engine (Zero-Dependency Guaranteed Local Fallback - priority 90)
+    // 3. MiniMax H3 (Video Commercials & Multi-shot Factory - priority 85)
+    this.registerProvider(new MiniMaxH3CreativeProvider());
+
+    // 4. Relay Native Engine (Zero-Dependency Guaranteed Local Fallback - priority 90)
     this.registerProvider(new RelayNativeCreativeProvider());
   }
 

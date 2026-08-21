@@ -803,6 +803,11 @@ export class JardinOutpostService {
       feedbackLogs: this.getDogfoodFeedbackLogs()
     };
   }
+
+  public executeRevenueActivationDemo() {
+    const { revenueActivationService } = require('./revenueActivationService');
+    return revenueActivationService.executeJardinOutpostDogfoodWorkflow(JardinOutpostService.TENANT_ID);
+  }
 }
 
 export const jardinOutpostService = JardinOutpostService.getInstance();
