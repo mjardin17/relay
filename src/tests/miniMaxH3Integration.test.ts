@@ -230,7 +230,7 @@ describe('MiniMax H3 & Commercial Factory Integration Suite', () => {
       assert.strictEqual(probe.statusCode, 402);
     });
 
-    it('submits video generation to official endpoint /v2/video_generation', async () => {
+    it('submits video generation using official V2 discriminated content contract', async () => {
       let submittedBody: any = null;
 
       const mockTransport: HttpTransport = async (url, options) => {
@@ -254,15 +254,21 @@ describe('MiniMax H3 & Commercial Factory Integration Suite', () => {
         durationSeconds: 6,
         resolution: '768p',
         aspectRatio: '16:9',
-        mode: 'TEXT_TO_VIDEO'
+        mode: 'TEXT_TO_VIDEO',
+        referenceImages: ['https://images.example.com/ref1.jpg']
       });
 
       assert.strictEqual(result.taskId, 'minimax_task_987654321');
       assert.ok(result.requestHash);
       assert.strictEqual(submittedBody.model, 'MiniMax-H3');
-      assert.strictEqual(submittedBody.prompt, 'A hero commercial shot of an electrical distribution hub.');
       assert.strictEqual(submittedBody.duration, 6);
       assert.strictEqual(submittedBody.resolution, '768P');
+      assert.strictEqual(submittedBody.ratio, '16:9');
+      assert.ok(Array.isArray(submittedBody.content));
+      assert.strictEqual(submittedBody.content[0].type, 'text');
+      assert.strictEqual(submittedBody.content[0].text, 'A hero commercial shot of an electrical distribution hub.');
+      assert.strictEqual(submittedBody.content[1].type, 'image_url');
+      assert.strictEqual(submittedBody.content[1].image_url.url, 'https://images.example.com/ref1.jpg');
     });
 
     it('queries task status and maps official statuses (Preparing/Processing/Success/Fail)', async () => {
@@ -429,10 +435,13 @@ describe('MiniMax H3 & Commercial Factory Integration Suite', () => {
         /SUBMISSION_BLOCKED/
       );
 
+      const testIdemKey = `idem_test_panel_shot_${Date.now()}_${Math.random().toString(36).slice(2)}`;
+
       // Approved submission must succeed
       const job = await service.submitApiJob({
         projectId: project.id,
         shotId,
+        idempotencyKey: testIdemKey,
         humanApproved: true,
         approvedBy: 'joshua_jardin'
       });
@@ -440,6 +449,7 @@ describe('MiniMax H3 & Commercial Factory Integration Suite', () => {
       assert.ok(job.id.startsWith('job_minimax_'));
       assert.strictEqual(job.externalTaskId, 'task_persisted_test_123');
       assert.strictEqual(job.status, 'QUEUED');
+      assert.strictEqual(job.actualCostIncurredUsd, 0); // Incurred cost in initial job record starts at 0
 
       // Verify DB storage
       const storedJob = service.getJob(job.id);
@@ -447,16 +457,34 @@ describe('MiniMax H3 & Commercial Factory Integration Suite', () => {
       assert.strictEqual(storedJob?.externalTaskId, 'task_persisted_test_123');
       assert.strictEqual(storedJob?.humanApproved, true);
 
+      // Idempotency: Duplicate submission with same key must return existing job
+      const duplicateJob = await service.submitApiJob({
+        projectId: project.id,
+        shotId,
+        idempotencyKey: testIdemKey,
+        humanApproved: true,
+        approvedBy: 'joshua_jardin'
+      });
+      assert.strictEqual(duplicateJob.id, job.id);
+
       // Sync job status from API mock
       const syncedJob = await service.syncJobStatus(job.id);
       assert.strictEqual(syncedJob.status, 'SUCCESS');
-      assert.strictEqual(syncedJob.outputVideoUrl, 'https://cdn.minimax.io/output/persisted_test.mp4');
+      assert.ok(syncedJob.outputVideoUrl?.includes('persisted_test.mp4'));
+      assert.ok(syncedJob.actualCostIncurredUsd > 0); // Actual cost set upon completion
 
       // Verify shot status updated to COMPLETED
       const updatedProject = service.getProject(project.id);
       const updatedShot = updatedProject?.shots.find(s => s.shotId === shotId);
       assert.strictEqual(updatedShot?.status, 'COMPLETED');
-      assert.strictEqual(updatedShot?.generatedVideoUrl, 'https://cdn.minimax.io/output/persisted_test.mp4');
+      assert.ok(updatedShot?.generatedVideoUrl?.includes('persisted_test.mp4'));
+
+      // Tenant isolation: querying another tenant must not leak this job
+      const otherTenantJobs = service.listJobs('tenant_other_unrelated');
+      assert.strictEqual(otherTenantJobs.length, 0);
+
+      const thisTenantJobs = service.listJobs('tenant_reis_electric');
+      assert.ok(thisTenantJobs.some(j => j.id === job.id));
     });
   });
 });

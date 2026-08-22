@@ -49,17 +49,21 @@ export class MiniMaxCostCalculator {
 
     // Base generation cost
     let baseRate = is2K ? config.baseRate2KPerSec : config.baseRate768pPerSec;
+    let extraImgCost = config.extraImageReferenceCost;
+    let videoRefRate = is2K ? config.referenceVideoRate2KPerSec : config.referenceVideoRate768pPerSec;
+
     if (params.isRegenerationFrom768p && is2K) {
-      baseRate = config.regen768pTo2KPerSec;
+      baseRate = config.regen768pTo2KPerSec; // $0.05 / output sec
+      extraImgCost = 0.025;                   // $0.025 per additional image after 5
+      videoRefRate = 0.05;                    // $0.05 per sec of reference video
     }
     const baseCost = Number((duration * baseRate).toFixed(4));
 
-    // Image reference cost (first 5 free, $0.04 per additional)
+    // Image reference cost (first 5 free)
     const chargeableImages = Math.max(0, numImages - config.freeImageReferencesCount);
-    const imageReferencesCost = Number((chargeableImages * config.extraImageReferenceCost).toFixed(4));
+    const imageReferencesCost = Number((chargeableImages * extraImgCost).toFixed(4));
 
-    // Video reference input cost ($0.08/s for 768P output, $0.13/s for 2K output)
-    const videoRefRate = is2K ? config.referenceVideoRate2KPerSec : config.referenceVideoRate768pPerSec;
+    // Video reference input cost
     const videoReferencesCost = Number((refVideoDuration * videoRefRate).toFixed(4));
 
     // Audio reference cost (free)

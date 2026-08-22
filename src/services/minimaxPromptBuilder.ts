@@ -3,7 +3,8 @@ import {
   MiniMaxReferenceAsset,
   MiniMaxGenerationMode,
   VideoResolution,
-  VideoAspectRatio
+  VideoAspectRatio,
+  MiniMaxRatio
 } from '../types/miniMaxH3';
 
 export interface ValidationIssue {
@@ -23,6 +24,7 @@ export interface PromptValidationResult {
   audioCount: number;
   officialResolution: '768P' | '2K';
   officialAspectRatio: VideoAspectRatio;
+  officialRatio: MiniMaxRatio;
 }
 
 export class MiniMaxPromptBuilder {
@@ -42,12 +44,31 @@ export class MiniMaxPromptBuilder {
     '9:16'
   ];
 
+  public static readonly VALID_V2_RATIOS: MiniMaxRatio[] = [
+    '16:9',
+    '9:16',
+    '1:1',
+    '4:3',
+    '3:4',
+    '21:9'
+  ];
+
   /**
    * Maps display resolution string ('768p' or '768P') to official API value ('768P' or '2K').
    */
   public static mapResolutionToApi(res: VideoResolution): '768P' | '2K' {
     if (res === '2K') return '2K';
     return '768P';
+  }
+
+  /**
+   * Maps aspect ratio to official MiniMax top-level ratio ('16:9', '9:16', '1:1', '4:3', '3:4', '21:9').
+   */
+  public static mapRatioToApi(ratio: string): MiniMaxRatio {
+    if (this.VALID_V2_RATIOS.includes(ratio as MiniMaxRatio)) {
+      return ratio as MiniMaxRatio;
+    }
+    return '16:9';
   }
 
   /**
@@ -285,7 +306,8 @@ export class MiniMaxPromptBuilder {
       videoCount,
       audioCount,
       officialResolution: officialRes,
-      officialAspectRatio: officialRatio
+      officialAspectRatio: officialRatio,
+      officialRatio: this.mapRatioToApi(params.aspectRatio)
     };
   }
 

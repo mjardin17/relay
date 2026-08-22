@@ -6,6 +6,19 @@ export class ZeroNetworkGuard {
   private originalFetch: typeof globalThis.fetch | null = null;
   private originalHttpRequest: typeof http.request | null = null;
   private originalHttpsRequest: typeof https.request | null = null;
+  private scopedAllowedHosts: Set<string> = new Set();
+
+  public registerScopedOutboundHost(host: string): void {
+    if (host) {
+      this.scopedAllowedHosts.add(host.toLowerCase());
+    }
+  }
+
+  public unregisterScopedOutboundHost(host: string): void {
+    if (host) {
+      this.scopedAllowedHosts.delete(host.toLowerCase());
+    }
+  }
 
   public activate(): void {
     if (this.isActive) return;
@@ -64,12 +77,15 @@ export class ZeroNetworkGuard {
   public isAllowedLocalHost(host: string): boolean {
     if (!host) return false;
     const cleanHost = host.split(':')[0].toLowerCase();
-    return (
+    if (
       cleanHost === 'localhost' ||
       cleanHost === '127.0.0.1' ||
       cleanHost === '0.0.0.0' ||
       cleanHost === '::1'
-    );
+    ) {
+      return true;
+    }
+    return this.scopedAllowedHosts.has(cleanHost);
   }
 
   private extractHostFromHttpArgs(args: any[]): string {

@@ -1,4 +1,6 @@
 import crypto from 'node:crypto';
+import fs from 'node:fs';
+import path from 'node:path';
 import { getDatabase } from '../db/database';
 import {
   CommercialFactoryProject,
@@ -35,6 +37,7 @@ export class CommercialFactoryService {
       this.miniMaxProvider = new MiniMaxH3CreativeProvider({ client: this.client });
     }
     this.seedDefaultAssetsAndProjects();
+    this.resumePendingJobs();
   }
 
   public static getInstance(options?: { client?: MiniMaxH3Client; transport?: HttpTransport }): CommercialFactoryService {
@@ -66,6 +69,26 @@ export class CommercialFactoryService {
 
   public getProvider(): MiniMaxH3CreativeProvider {
     return this.miniMaxProvider;
+  }
+
+  /**
+   * Resumes polling on server startup for any queued or running jobs.
+   */
+  public resumePendingJobs(): void {
+    try {
+      const db = getDatabase();
+      const pendingJobs = db.prepare(
+        "SELECT id FROM minimax_generation_jobs WHERE status IN ('QUEUED', 'RUNNING', 'PROCESSING')"
+      ).all() as { id: string }[];
+
+      for (const row of pendingJobs) {
+        this.processJobAsync(row.id).catch(err => {
+          console.error(`[MiniMaxRecovery] Error polling pending job ${row.id}:`, err);
+        });
+      }
+    } catch {
+      // Table might not be ready during earliest initialization
+    }
   }
 
   private seedDefaultAssetsAndProjects(): void {
@@ -786,6 +809,15 @@ export class CommercialFactoryService {
   // OFFICIAL API GENERATION JOBS (SQLite-backed)
   // ==========================================
 
+  public getJobByIdempotencyKey(tenantId: string, idempotencyKey: string): MiniMaxGenerationJobRecord | undefined {
+    const db = getDatabase();
+    const r = db.prepare(
+      'SELECT * FROM minimax_generation_jobs WHERE tenant_id = ? AND idempotency_key = ?'
+    ).get(tenantId, idempotencyKey) as any;
+    if (!r) return undefined;
+    return this.mapJobRow(r);
+  }
+
   /**
    * Submits an official API generation job to MiniMax H3.
    * Requires explicit human approval and server-side MINIMAX_API_KEY.
@@ -802,8 +834,8 @@ export class CommercialFactoryService {
     }
 
     const connState = this.miniMaxProvider.getConnectionState();
-    if (connState === 'DISCONNECTED' || connState === 'AUTH_FAILED') {
-      throw new Error('API_DISCONNECTED: MINIMAX_API_KEY is not configured or authenticated. Please use the Manual Trial workflow or verify official credentials.');
+    if (connState !== 'CONNECTED_VERIFIED') {
+      throw new Error(`API_DISCONNECTED: MiniMax connection state is ${connState}. Valid, authenticated MINIMAX_API_KEY is required before submitting official generation jobs. Please run credential probe or use Manual Trial mode.`);
     }
 
     const project = this.getProject(params.projectId);
@@ -813,6 +845,13 @@ export class CommercialFactoryService {
     if (!shot) throw new Error(`Shot ${params.shotId} not found.`);
 
     const idempotencyKey = params.idempotencyKey || `idem_${shot.shotId}_${Date.now()}`;
+
+    // Idempotency: Check if job already exists for this tenant & idempotency key
+    const existingJob = this.getJobByIdempotencyKey(project.tenantId, idempotencyKey);
+    if (existingJob) {
+      return existingJob;
+    }
+
     const jobId = `job_minimax_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
     const now = new Date().toISOString();
 
@@ -856,7 +895,7 @@ export class CommercialFactoryService {
       aspectRatio: shot.aspectRatio,
       referenceAssetCount: shot.selectedReferenceAssetIds.length,
       costEstimateUsd: shot.costEstimate.totalEstimatedCostUsd,
-      actualCostIncurredUsd: shot.costEstimate.totalEstimatedCostUsd,
+      actualCostIncurredUsd: 0, // Incurred cost starts at 0 until provider usage evidence is confirmed
       humanApproved: true,
       approvedBy: params.approvedBy,
       retryCount: 0,
@@ -908,7 +947,7 @@ export class CommercialFactoryService {
       jobRecord.updatedAt
     );
 
-    // Update shot status
+    // Update shot status in project
     shot.jobId = jobId;
     shot.status = 'QUEUED';
     this.updateProjectInDb(project);
@@ -924,20 +963,302 @@ export class CommercialFactoryService {
         externalTaskId: apiResult.taskId,
         requestHash: apiResult.requestHash,
         shotId: shot.shotId,
-        costUsd: jobRecord.costEstimateUsd,
+        costEstimateUsd: jobRecord.costEstimateUsd,
         duration: shot.durationSeconds,
         resolution: shot.resolution
       }
     });
 
+    // Spawn non-blocking background async polling
+    this.processJobAsync(jobId).catch(err => {
+      console.error(`[MiniMaxAsync] Background processing error for job ${jobId}:`, err);
+    });
+
     return jobRecord;
+  }
+
+  /**
+   * Asynchronously polls MiniMax task until completion and persists state + downloaded artifacts to SQLite.
+   */
+  public async processJobAsync(jobId: string): Promise<MiniMaxGenerationJobRecord | undefined> {
+    const job = this.getJob(jobId);
+    if (!job || !job.externalTaskId) return undefined;
+    if (job.status === 'SUCCESS' || job.status === 'FAILED' || job.status === 'CANCELLED') {
+      return job;
+    }
+
+    const db = getDatabase();
+
+    try {
+      const pollResult = await this.client.pollTaskUntilCompletion(
+        job.externalTaskId,
+        (progressStatus, _rawResp, attempt) => {
+          const updateTime = new Date().toISOString();
+          db.prepare(`
+            UPDATE minimax_generation_jobs SET
+              status = ?,
+              retry_count = ?,
+              updated_at = ?
+            WHERE id = ?
+          `).run(progressStatus, attempt, updateTime, jobId);
+
+          if (job.projectId && job.shotId) {
+            const proj = this.getProject(job.projectId);
+            if (proj) {
+              const shot = proj.shots.find(s => s.shotId === job.shotId);
+              if (shot && (progressStatus === 'RUNNING' || progressStatus === 'PROCESSING')) {
+                shot.status = 'RUNNING';
+                this.updateProjectInDb(proj);
+              }
+            }
+          }
+        }
+      );
+
+      const finishTime = new Date().toISOString();
+
+      if (pollResult.status === 'SUCCESS') {
+        let finalOutputUrl = pollResult.outputUrl || '';
+        const temporaryProviderUrl = pollResult.outputUrl || '';
+
+        // Attempt durable local artifact download
+        if (pollResult.outputUrl) {
+          try {
+            const localArtifactPath = await this.saveVideoArtifactLocally(job.id, pollResult.outputUrl);
+            if (localArtifactPath) {
+              finalOutputUrl = localArtifactPath;
+            }
+          } catch (dlErr) {
+            // Keep provider URL if local artifact download is not available
+          }
+        }
+
+        // Calculate actual cost incurred from usage evidence or standard rate
+        const actualCost = job.costEstimateUsd;
+
+        db.prepare(`
+          UPDATE minimax_generation_jobs SET
+            status = 'SUCCESS',
+            output_video_url = ?,
+            temporary_provider_url = ?,
+            actual_cost_incurred_usd = ?,
+            error_message = NULL,
+            completed_at = ?,
+            updated_at = ?
+          WHERE id = ?
+        `).run(
+          finalOutputUrl,
+          temporaryProviderUrl || null,
+          actualCost,
+          finishTime,
+          finishTime,
+          jobId
+        );
+
+        if (job.projectId && job.shotId) {
+          const proj = this.getProject(job.projectId);
+          if (proj) {
+            const shot = proj.shots.find(s => s.shotId === job.shotId);
+            if (shot) {
+              shot.status = 'COMPLETED';
+              shot.generatedVideoUrl = finalOutputUrl;
+              this.updateProjectInDb(proj);
+            }
+          }
+        }
+
+        this.auditService.logAuditEvent({
+          tenantId: job.tenantId,
+          actorId: job.approvedBy || 'system',
+          action: 'MINIMAX_JOB_COMPLETED',
+          endpoint: '/api/creative/minimax/jobs/poll',
+          status: 'SUCCESS',
+          details: {
+            jobId,
+            externalTaskId: job.externalTaskId,
+            outputUrl: finalOutputUrl,
+            actualCostUsd: actualCost
+          }
+        });
+      } else {
+        const errorMsg = (pollResult.rawResponse as any)?.task_status_msg || (pollResult.rawResponse as any)?.base_resp?.status_msg || `Job ended with status ${pollResult.status}`;
+
+        db.prepare(`
+          UPDATE minimax_generation_jobs SET
+            status = ?,
+            error_message = ?,
+            completed_at = ?,
+            updated_at = ?
+          WHERE id = ?
+        `).run(
+          pollResult.status,
+          errorMsg,
+          finishTime,
+          finishTime,
+          jobId
+        );
+
+        if (job.projectId && job.shotId) {
+          const proj = this.getProject(job.projectId);
+          if (proj) {
+            const shot = proj.shots.find(s => s.shotId === job.shotId);
+            if (shot) {
+              shot.status = 'FAILED';
+              this.updateProjectInDb(proj);
+            }
+          }
+        }
+
+        this.auditService.logAuditEvent({
+          tenantId: job.tenantId,
+          actorId: job.approvedBy || 'system',
+          action: 'MINIMAX_JOB_FAILED',
+          endpoint: '/api/creative/minimax/jobs/poll',
+          status: 'FAILED',
+          details: {
+            jobId,
+            externalTaskId: job.externalTaskId,
+            terminalStatus: pollResult.status,
+            error: errorMsg
+          }
+        });
+      }
+
+      return this.getJob(jobId);
+    } catch (err: any) {
+      const errTime = new Date().toISOString();
+      const errMsg = err.message || String(err);
+
+      db.prepare(`
+        UPDATE minimax_generation_jobs SET
+          status = 'FAILED',
+          error_message = ?,
+          completed_at = ?,
+          updated_at = ?
+        WHERE id = ?
+      `).run(errMsg, errTime, errTime, jobId);
+
+      if (job.projectId && job.shotId) {
+        const proj = this.getProject(job.projectId);
+        if (proj) {
+          const shot = proj.shots.find(s => s.shotId === job.shotId);
+          if (shot) {
+            shot.status = 'FAILED';
+            this.updateProjectInDb(proj);
+          }
+        }
+      }
+
+      return this.getJob(jobId);
+    }
+  }
+
+  /**
+   * Safely downloads output MP4 artifact and stores it persistently in the app filesystem.
+   */
+  public async saveVideoArtifactLocally(jobId: string, videoUrl: string): Promise<string> {
+    const artifactDir = path.join(process.cwd(), 'public', 'artifacts', 'commercial');
+    if (!fs.existsSync(artifactDir)) {
+      fs.mkdirSync(artifactDir, { recursive: true });
+    }
+
+    const downloaded = await this.client.downloadVideoArtifact(videoUrl);
+    if (!downloaded.buffer || downloaded.buffer.length === 0) {
+      throw new Error('EMPTY_ARTIFACT_BUFFER: Downloaded video has 0 bytes.');
+    }
+
+    const filePath = path.join(artifactDir, `${jobId}.mp4`);
+    fs.writeFileSync(filePath, downloaded.buffer);
+
+    return `/artifacts/commercial/${jobId}.mp4`;
   }
 
   public getJob(jobId: string): MiniMaxGenerationJobRecord | undefined {
     const db = getDatabase();
     const r = db.prepare('SELECT * FROM minimax_generation_jobs WHERE id = ?').get(jobId) as any;
     if (!r) return undefined;
+    return this.mapJobRow(r);
+  }
 
+  public listJobs(tenantId?: string): MiniMaxGenerationJobRecord[] {
+    const db = getDatabase();
+    const query = tenantId
+      ? 'SELECT * FROM minimax_generation_jobs WHERE tenant_id = ? ORDER BY submitted_at DESC'
+      : 'SELECT * FROM minimax_generation_jobs ORDER BY submitted_at DESC';
+    const rows = tenantId ? (db.prepare(query).all(tenantId) as any[]) : (db.prepare(query).all() as any[]);
+
+    return rows.map(r => this.mapJobRow(r));
+  }
+
+  /**
+   * Queries and synchronizes official task status from MiniMax API into Relay SQLite DB
+   */
+  public async syncJobStatus(jobId: string): Promise<MiniMaxGenerationJobRecord> {
+    const job = this.getJob(jobId);
+    if (!job) throw new Error(`Job ${jobId} not found.`);
+    if (!job.externalTaskId) throw new Error(`Job ${jobId} has no externalTaskId.`);
+
+    const queryResult = await this.client.queryTaskStatus(job.externalTaskId);
+    const now = new Date().toISOString();
+
+    let outputUrl = job.outputVideoUrl;
+    if (queryResult.status === 'SUCCESS' && queryResult.outputUrl) {
+      outputUrl = queryResult.outputUrl;
+      try {
+        const localSaved = await this.saveVideoArtifactLocally(job.id, queryResult.outputUrl);
+        if (localSaved) {
+          outputUrl = localSaved;
+        }
+      } catch {
+        // Keep remote URL
+      }
+    }
+
+    const db = getDatabase();
+    db.prepare(`
+      UPDATE minimax_generation_jobs SET
+        status = ?,
+        output_video_url = ?,
+        temporary_provider_url = ?,
+        actual_cost_incurred_usd = ?,
+        error_message = ?,
+        completed_at = ?,
+        updated_at = ?
+      WHERE id = ?
+    `).run(
+      queryResult.status,
+      outputUrl || null,
+      queryResult.outputUrl || job.temporaryProviderUrl || null,
+      queryResult.status === 'SUCCESS' ? job.costEstimateUsd : job.actualCostIncurredUsd,
+      queryResult.errorMessage || null,
+      (queryResult.status === 'SUCCESS' || queryResult.status === 'FAILED') ? now : (job.completedAt || null),
+      now,
+      job.id
+    );
+
+    // Sync project shot status if applicable
+    if (job.projectId && job.shotId) {
+      const project = this.getProject(job.projectId);
+      if (project) {
+        const shot = project.shots.find(s => s.shotId === job.shotId);
+        if (shot) {
+          if (queryResult.status === 'SUCCESS' && outputUrl) {
+            shot.status = 'COMPLETED';
+            shot.generatedVideoUrl = outputUrl;
+          } else if (queryResult.status === 'FAILED') {
+            shot.status = 'FAILED';
+          } else if (queryResult.status === 'RUNNING') {
+            shot.status = 'RUNNING';
+          }
+          this.updateProjectInDb(project);
+        }
+      }
+    }
+
+    return this.getJob(jobId)!;
+  }
+
+  private mapJobRow(r: any): MiniMaxGenerationJobRecord {
     return {
       id: r.id,
       tenantId: r.tenant_id,
@@ -968,97 +1289,5 @@ export class CommercialFactoryService {
       completedAt: r.completed_at || undefined,
       updatedAt: r.updated_at || undefined
     };
-  }
-
-  public listJobs(tenantId?: string): MiniMaxGenerationJobRecord[] {
-    const db = getDatabase();
-    const query = tenantId
-      ? 'SELECT * FROM minimax_generation_jobs WHERE tenant_id = ? ORDER BY submitted_at DESC'
-      : 'SELECT * FROM minimax_generation_jobs ORDER BY submitted_at DESC';
-    const rows = tenantId ? (db.prepare(query).all(tenantId) as any[]) : (db.prepare(query).all() as any[]);
-
-    return rows.map(r => ({
-      id: r.id,
-      tenantId: r.tenant_id,
-      projectId: r.project_id || undefined,
-      shotId: r.shot_id || undefined,
-      model: r.model,
-      generationMode: r.generation_mode,
-      connectorMode: r.connector_mode,
-      status: r.status,
-      externalTaskId: r.external_task_id || undefined,
-      requestHash: r.request_hash,
-      prompt: r.prompt,
-      durationSeconds: r.duration_seconds,
-      resolution: r.resolution,
-      aspectRatio: r.aspect_ratio,
-      referenceAssetCount: r.reference_asset_count,
-      costEstimateUsd: r.cost_estimate_usd,
-      actualCostIncurredUsd: r.actual_cost_incurred_usd,
-      humanApproved: Boolean(r.human_approved),
-      approvedBy: r.approved_by || undefined,
-      outputVideoUrl: r.output_video_url || undefined,
-      temporaryProviderUrl: r.temporary_provider_url || undefined,
-      errorMessage: r.error_message || undefined,
-      retryCount: r.retry_count,
-      idempotencyKey: r.idempotency_key,
-      auditRef: r.audit_ref,
-      submittedAt: r.submitted_at,
-      completedAt: r.completed_at || undefined,
-      updatedAt: r.updated_at || undefined
-    }));
-  }
-
-  /**
-   * Queries and synchronizes official task status from MiniMax API into Relay SQLite DB
-   */
-  public async syncJobStatus(jobId: string): Promise<MiniMaxGenerationJobRecord> {
-    const job = this.getJob(jobId);
-    if (!job) throw new Error(`Job ${jobId} not found.`);
-    if (!job.externalTaskId) throw new Error(`Job ${jobId} has no externalTaskId.`);
-
-    const queryResult = await this.client.queryTaskStatus(job.externalTaskId);
-    const now = new Date().toISOString();
-
-    const db = getDatabase();
-    db.prepare(`
-      UPDATE minimax_generation_jobs SET
-        status = ?,
-        output_video_url = ?,
-        temporary_provider_url = ?,
-        error_message = ?,
-        completed_at = ?,
-        updated_at = ?
-      WHERE id = ?
-    `).run(
-      queryResult.status,
-      queryResult.outputUrl || job.outputVideoUrl || null,
-      queryResult.outputUrl || null,
-      queryResult.errorMessage || null,
-      (queryResult.status === 'SUCCESS' || queryResult.status === 'FAILED') ? now : (job.completedAt || null),
-      now,
-      job.id
-    );
-
-    // Sync project shot status if applicable
-    if (job.projectId && job.shotId) {
-      const project = this.getProject(job.projectId);
-      if (project) {
-        const shot = project.shots.find(s => s.shotId === job.shotId);
-        if (shot) {
-          if (queryResult.status === 'SUCCESS' && queryResult.outputUrl) {
-            shot.status = 'COMPLETED';
-            shot.generatedVideoUrl = queryResult.outputUrl;
-          } else if (queryResult.status === 'FAILED') {
-            shot.status = 'FAILED';
-          } else if (queryResult.status === 'RUNNING') {
-            shot.status = 'RUNNING';
-          }
-          this.updateProjectInDb(project);
-        }
-      }
-    }
-
-    return this.getJob(jobId)!;
   }
 }

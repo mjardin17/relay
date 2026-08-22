@@ -10,10 +10,12 @@ import {
   MiniMaxCreateTaskResponse,
   MiniMaxQueryTaskResponse,
   MiniMaxListTasksResponse,
-  MiniMaxContentObject,
-  MiniMaxContentRole
+  MiniMaxContentItem,
+  MiniMaxRatio,
+  MiniMaxTaskUsage
 } from '../types/miniMaxH3';
 import { MiniMaxPromptBuilder } from './minimaxPromptBuilder';
+import { zeroNetworkGuard } from '../utils/zeroNetworkGuard';
 
 export type HttpTransport = (url: string, init?: RequestInit) => Promise<Response>;
 
@@ -57,6 +59,16 @@ export class MiniMaxH3Client {
     this.defaultTimeoutMs = options?.defaultTimeoutMs ?? 15000;
     this.pollingIntervalMs = options?.pollingIntervalMs ?? 2500;
     this.maxPollingDeadlineMs = options?.maxPollingDeadlineMs ?? 300000; // 5 minutes max
+
+    // Register MiniMax API host in scoped network guard
+    try {
+      const url = new URL(this.baseUrl);
+      zeroNetworkGuard.registerScopedOutboundHost(url.hostname);
+      zeroNetworkGuard.registerScopedOutboundHost('api.minimax.io');
+      zeroNetworkGuard.registerScopedOutboundHost('api-hailuo.minimax.io');
+    } catch {
+      // Ignore invalid URL in constructor
+    }
   }
 
   public setApiKey(key: string | null): void {
@@ -179,6 +191,7 @@ export class MiniMaxH3Client {
         };
       }
 
+      // Valid response with items/tasks or status_code 0
       return {
         success: true,
         state: 'CONNECTED_VERIFIED',
@@ -202,6 +215,15 @@ export class MiniMaxH3Client {
   /**
    * Submits a truthful video generation request:
    * POST https://api.minimax.io/v2/video_generation
+   *
+   * Enforces official MiniMax H3 V2 request payload:
+   * - model: "MiniMax-H3"
+   * - duration: integer 4 - 15
+   * - resolution: "768P" | "2K"
+   * - ratio: "16:9" | "9:16" | "1:1" | "4:3" | "3:4" | "21:9"
+   * - content: Array of discriminated items ({ type: "text", text: "..." }, { type: "image_url", ... }, etc.)
+   * - No legacy/unsupported top-level fields
+   * - Mutual exclusion between first/last-frame and reference media
    */
   public async submitVideoGeneration(params: {
     prompt: string;
@@ -209,7 +231,7 @@ export class MiniMaxH3Client {
     resolution: VideoResolution;
     aspectRatio: VideoAspectRatio;
     mode: MiniMaxGenerationMode;
-    content?: MiniMaxContentObject[];
+    content?: MiniMaxContentItem[];
     firstFrameUrl?: string;
     lastFrameUrl?: string;
     referenceImages?: string[];
@@ -225,12 +247,28 @@ export class MiniMaxH3Client {
       throw new Error('MINIMAX_API_KEY_REQUIRED: Official API key is missing. Cannot submit paid generation job.');
     }
 
-    // Validation
+    // Strict boundary validation - no silent clamping
+    if (!params.prompt || !params.prompt.trim()) {
+      throw new Error('VALIDATION_ERROR: Prompt cannot be empty for MiniMax H3 generation.');
+    }
+    if (params.prompt.length > MiniMaxPromptBuilder.MAX_PROMPT_CHARS) {
+      throw new Error(`VALIDATION_ERROR: Prompt exceeds maximum allowed length of ${MiniMaxPromptBuilder.MAX_PROMPT_CHARS} characters.`);
+    }
+
+    // Duration validation (4-15 integer)
+    if (!Number.isInteger(params.durationSeconds) || params.durationSeconds < 4 || params.durationSeconds > 15) {
+      throw new Error(`VALIDATION_ERROR: Duration must be an integer between 4 and 15 seconds (received ${params.durationSeconds}).`);
+    }
+    const duration = params.durationSeconds;
+
+    // Resolution validation
     const officialRes = MiniMaxPromptBuilder.mapResolutionToApi(params.resolution);
-    const duration = Math.max(4, Math.min(15, Math.round(params.durationSeconds || 6)));
-    const aspectRatio = MiniMaxPromptBuilder.OFFICIAL_RATIOS.includes(params.aspectRatio)
-      ? params.aspectRatio
-      : '16:9';
+    if (params.resolution !== '768p' && params.resolution !== '768P' && params.resolution !== '2K') {
+      throw new Error(`VALIDATION_ERROR: Unsupported resolution '${params.resolution}'. Supported resolutions are 768P and 2K.`);
+    }
+
+    // Ratio validation
+    const ratio: MiniMaxRatio = MiniMaxPromptBuilder.mapRatioToApi(params.aspectRatio);
 
     // Mutual exclusion check
     const hasFirstOrLast = Boolean(params.firstFrameUrl || params.lastFrameUrl);
@@ -241,44 +279,84 @@ export class MiniMaxH3Client {
     );
 
     if (hasFirstOrLast && hasRefs) {
-      throw new Error('MUTUAL_EXCLUSION_VIOLATION: First/last-frame continuity cannot be combined with reference media in a single MiniMax H3 request.');
+      throw new Error('MUTUAL_EXCLUSION_VIOLATION: First/last-frame continuity inputs cannot be combined with reference images/videos/audio in a single MiniMax H3 request.');
     }
 
-    // Build content objects array
-    const contentObjects: MiniMaxContentObject[] = params.content ? [...params.content] : [];
+    // Build official discriminated content array
+    let content: MiniMaxContentItem[] = [];
 
-    if (contentObjects.length === 0) {
-      contentObjects.push({ role: 'text', text: params.prompt });
+    if (params.content && params.content.length > 0) {
+      content = [...params.content];
+    } else {
+      // 1. Text prompt
+      content.push({
+        type: 'text',
+        text: params.prompt
+      });
 
+      // 2. First and last frame continuity images
       if (params.firstFrameUrl) {
-        contentObjects.push({ role: 'first_frame', url: params.firstFrameUrl });
+        content.push({
+          type: 'image_url',
+          image_url: { url: params.firstFrameUrl },
+          role: 'first_frame'
+        });
       }
       if (params.lastFrameUrl) {
-        contentObjects.push({ role: 'last_frame', url: params.lastFrameUrl });
+        content.push({
+          type: 'image_url',
+          image_url: { url: params.lastFrameUrl },
+          role: 'last_frame'
+        });
       }
+
+      // 3. Reference images
       for (const imgUrl of params.referenceImages || []) {
-        contentObjects.push({ role: 'reference_image', url: imgUrl });
+        content.push({
+          type: 'image_url',
+          image_url: { url: imgUrl },
+          role: 'reference_image'
+        });
       }
+
+      // 4. Reference videos
       for (const vidUrl of params.referenceVideos || []) {
-        contentObjects.push({ role: 'reference_video', url: vidUrl });
+        content.push({
+          type: 'video_url',
+          video_url: { url: vidUrl },
+          role: 'reference_video'
+        });
       }
+
+      // 5. Reference audio
       for (const audUrl of params.referenceAudio || []) {
-        contentObjects.push({ role: 'reference_audio', url: audUrl });
+        content.push({
+          type: 'audio_url',
+          audio_url: { url: audUrl },
+          role: 'reference_audio'
+        });
       }
+    }
+
+    // Verify mutual exclusion on content items directly
+    const contentHasFrame = content.some(
+      c => c.type === 'image_url' && (c.role === 'first_frame' || c.role === 'last_frame')
+    );
+    const contentHasRef = content.some(
+      c => (c.type === 'image_url' && c.role === 'reference_image') ||
+           c.type === 'video_url' ||
+           c.type === 'audio_url'
+    );
+    if (contentHasFrame && contentHasRef) {
+      throw new Error('MUTUAL_EXCLUSION_VIOLATION: Content array contains both frame continuity items and reference media items.');
     }
 
     const payload: MiniMaxCreateTaskRequest = {
       model: MiniMaxH3Client.MODEL,
-      prompt: params.prompt,
       duration,
       resolution: officialRes,
-      aspect_ratio: aspectRatio,
-      content: contentObjects,
-      first_frame_image: params.firstFrameUrl,
-      last_frame_image: params.lastFrameUrl,
-      reference_images: params.referenceImages,
-      reference_videos: params.referenceVideos,
-      reference_audio: params.referenceAudio
+      ratio,
+      content
     };
 
     const requestHash = crypto.createHash('sha256').update(JSON.stringify(payload)).digest('hex');
@@ -337,7 +415,7 @@ export class MiniMaxH3Client {
 
   /**
    * Queries the status of an existing task:
-   * GET https://api.minimax.io/v2/query/video_generation/{task_id}
+   * GET https://api.minimax.io/v2/query/video_generation?task_id={task_id} or /{task_id}
    */
   public async queryTaskStatus(taskId: string): Promise<{
     taskId: string;
@@ -345,6 +423,7 @@ export class MiniMaxH3Client {
     outputUrl?: string;
     fileId?: string;
     errorMessage?: string;
+    usage?: MiniMaxTaskUsage;
     rawResponse: MiniMaxQueryTaskResponse;
   }> {
     const key = this.apiKey ?? process.env.MINIMAX_API_KEY ?? null;
@@ -352,7 +431,7 @@ export class MiniMaxH3Client {
       throw new Error('MINIMAX_API_KEY_REQUIRED: Cannot query MiniMax task without an API key.');
     }
 
-    const endpoint = `${this.baseUrl}/v2/query/video_generation/${encodeURIComponent(taskId)}`;
+    const endpoint = `${this.baseUrl}/v2/query/video_generation?task_id=${encodeURIComponent(taskId)}`;
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), this.defaultTimeoutMs);
 
@@ -391,16 +470,22 @@ export class MiniMaxH3Client {
       throw new Error(`MINIMAX_QUERY_ERROR_${respData.base_resp.status_code}: ${respData.base_resp.status_msg}`);
     }
 
-    const mappedStatus = this.mapApiStatus(respData.status);
-    const outputUrl = respData.content?.url;
-    const fileId = respData.file_id || respData.content?.file_id;
+    // Support both official V2 task object schema { task: { id, status, content: { url }, usage, error } } and legacy flat schema
+    const rawStatus = respData.task?.status || respData.status || '';
+    const mappedStatus = this.mapApiStatus(rawStatus);
+    const outputUrl = respData.task?.content?.url || respData.content?.url;
+    const fileId = respData.task?.content?.file_id || respData.file_id || respData.content?.file_id;
+    const errorMessage = respData.task?.error?.message || respData.error_msg;
+    const usage = respData.task?.usage;
+    const returnedTaskId = respData.task?.id || respData.task_id || taskId;
 
     return {
-      taskId: respData.task_id || taskId,
+      taskId: returnedTaskId,
       status: mappedStatus,
       outputUrl,
       fileId,
-      errorMessage: respData.error_msg,
+      errorMessage,
+      usage,
       rawResponse: respData
     };
   }
@@ -417,6 +502,7 @@ export class MiniMaxH3Client {
     status: MiniMaxJobStatus;
     outputUrl?: string;
     fileId?: string;
+    usage?: MiniMaxTaskUsage;
     rawResponse?: MiniMaxQueryTaskResponse;
     attempts: number;
     durationMs: number;
@@ -451,6 +537,7 @@ export class MiniMaxH3Client {
             status: 'SUCCESS',
             outputUrl: queryResult.outputUrl,
             fileId: queryResult.fileId,
+            usage: queryResult.usage,
             rawResponse: queryResult.rawResponse,
             attempts: attempt,
             durationMs: Date.now() - startTime
@@ -513,6 +600,13 @@ export class MiniMaxH3Client {
   }> {
     if (!videoUrl || !videoUrl.startsWith('http')) {
       throw new Error('INVALID_VIDEO_URL: Cannot download artifact from empty or invalid URL.');
+    }
+
+    try {
+      const urlObj = new URL(videoUrl);
+      zeroNetworkGuard.registerScopedOutboundHost(urlObj.hostname);
+    } catch {
+      // Ignore
     }
 
     const res = await this.transport(videoUrl, {

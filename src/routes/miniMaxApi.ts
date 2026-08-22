@@ -1,13 +1,40 @@
-import { Router } from 'express';
+import { Router, Request, Response, NextFunction } from 'express';
 import { MiniMaxH3CreativeProvider } from '../services/providers/miniMaxH3CreativeProvider';
 import { CommercialFactoryService } from '../services/commercialFactoryService';
 import { MiniMaxPromptBuilder } from '../services/minimaxPromptBuilder';
 import { MiniMaxCostCalculator } from '../services/minimaxCostCalculator';
+import { AuthService } from '../services/authService';
 
 export const miniMaxApi = Router();
 
+const authService = AuthService.getInstance();
 const commercialService = CommercialFactoryService.getInstance();
 const miniMaxProvider = commercialService.getProvider();
+
+// Helper to resolve authenticated session or default tenant context
+function resolveSessionContext(req: Request): { tenantId: string; actorId: string; role: string } {
+  const authHeader = req.headers.authorization;
+  if (authHeader && authHeader.startsWith('Bearer ')) {
+    const token = authHeader.substring(7);
+    const session = authService.validateSession(token);
+    if (session) {
+      return {
+        tenantId: session.tenantId,
+        actorId: session.actorId,
+        role: session.role
+      };
+    }
+  }
+
+  const queryTenant = typeof req.query.tenantId === 'string' ? req.query.tenantId : undefined;
+  const bodyTenant = req.body && typeof req.body.tenantId === 'string' ? req.body.tenantId : undefined;
+
+  return {
+    tenantId: bodyTenant || queryTenant || 'tenant_reis_electric',
+    actorId: req.body?.approvedBy || req.body?.actorId || 'operator',
+    role: 'OPERATOR'
+  };
+}
 
 // 1. Status & Connector State
 miniMaxApi.get('/status', async (req, res) => {
@@ -124,9 +151,9 @@ miniMaxApi.post('/validate-prompt', (req, res) => {
 // 5. Tenant Reference Assets (SQLite backed)
 miniMaxApi.get('/assets', (req, res) => {
   try {
-    const tenantId = (req.query.tenantId as string) || 'tenant_reis_electric';
-    const assets = commercialService.listReferenceAssets(tenantId);
-    return res.json({ success: true, tenantId, assets });
+    const sessionCtx = resolveSessionContext(req);
+    const assets = commercialService.listReferenceAssets(sessionCtx.tenantId);
+    return res.json({ success: true, tenantId: sessionCtx.tenantId, assets });
   } catch (err: any) {
     return res.status(500).json({ success: false, error: err.message });
   }
@@ -134,8 +161,8 @@ miniMaxApi.get('/assets', (req, res) => {
 
 miniMaxApi.post('/assets/add', (req, res) => {
   try {
+    const sessionCtx = resolveSessionContext(req);
     const {
-      tenantId,
       category,
       name,
       mediaType,
@@ -148,12 +175,12 @@ miniMaxApi.post('/assets/add', (req, res) => {
       tags
     } = req.body;
 
-    if (!tenantId || !name || !url || !category) {
-      return res.status(400).json({ success: false, error: 'tenantId, name, url, and category are required' });
+    if (!name || !url || !category) {
+      return res.status(400).json({ success: false, error: 'name, url, and category are required' });
     }
 
     const created = commercialService.registerReferenceAsset({
-      tenantId,
+      tenantId: sessionCtx.tenantId,
       category,
       name,
       mediaType: mediaType || 'image',
@@ -175,8 +202,8 @@ miniMaxApi.post('/assets/add', (req, res) => {
 // 6. Commercial Factory Projects (SQLite backed)
 miniMaxApi.get('/projects', (req, res) => {
   try {
-    const tenantId = req.query.tenantId as string | undefined;
-    const projects = commercialService.listProjects(tenantId);
+    const sessionCtx = resolveSessionContext(req);
+    const projects = commercialService.listProjects(sessionCtx.tenantId);
     return res.json({ success: true, projects });
   } catch (err: any) {
     return res.status(500).json({ success: false, error: err.message });
@@ -185,13 +212,14 @@ miniMaxApi.get('/projects', (req, res) => {
 
 miniMaxApi.post('/projects/create', (req, res) => {
   try {
-    const { tenantId, title, commercialType, brandVoice, targetAudience, conceptBrief } = req.body;
+    const sessionCtx = resolveSessionContext(req);
+    const { title, commercialType, brandVoice, targetAudience, conceptBrief } = req.body;
     if (!title || !commercialType) {
       return res.status(400).json({ success: false, error: 'title and commercialType are required' });
     }
 
     const project = commercialService.createProject({
-      tenantId: tenantId || 'tenant_reis_electric',
+      tenantId: sessionCtx.tenantId,
       title,
       commercialType,
       brandVoice: brandVoice || 'Authoritative and trustworthy commercial tone',
@@ -241,7 +269,8 @@ miniMaxApi.post('/projects/update-shot', (req, res) => {
 // 8. Import Video Result Back Into Relay
 miniMaxApi.post('/projects/import-video', (req, res) => {
   try {
-    const { projectId, shotId, videoUrl, importedBy, notes } = req.body;
+    const sessionCtx = resolveSessionContext(req);
+    const { projectId, shotId, videoUrl, notes } = req.body;
     if (!projectId || !shotId || !videoUrl) {
       return res.status(400).json({ success: false, error: 'projectId, shotId, and videoUrl are required' });
     }
@@ -250,7 +279,7 @@ miniMaxApi.post('/projects/import-video', (req, res) => {
       projectId,
       shotId,
       videoUrl,
-      importedBy,
+      importedBy: sessionCtx.actorId,
       notes
     });
 
@@ -263,7 +292,8 @@ miniMaxApi.post('/projects/import-video', (req, res) => {
 // 9. Submit Official API Job
 miniMaxApi.post('/submit-job', async (req, res) => {
   try {
-    const { projectId, shotId, idempotencyKey, humanApproved, approvedBy } = req.body;
+    const sessionCtx = resolveSessionContext(req);
+    const { projectId, shotId, idempotencyKey, humanApproved } = req.body;
 
     if (!projectId || !shotId) {
       return res.status(400).json({ success: false, error: 'projectId and shotId are required' });
@@ -274,7 +304,7 @@ miniMaxApi.post('/submit-job', async (req, res) => {
       shotId,
       idempotencyKey,
       humanApproved: Boolean(humanApproved),
-      approvedBy: approvedBy || 'operator'
+      approvedBy: sessionCtx.actorId
     });
 
     return res.json({ success: true, job });
@@ -320,10 +350,11 @@ miniMaxApi.post('/jobs/:jobId/sync', async (req, res) => {
 
 miniMaxApi.get('/jobs', (req, res) => {
   try {
-    const tenantId = req.query.tenantId as string | undefined;
-    const jobs = commercialService.listJobs(tenantId);
+    const sessionCtx = resolveSessionContext(req);
+    const jobs = commercialService.listJobs(sessionCtx.tenantId);
     return res.json({ success: true, jobs });
   } catch (err: any) {
     return res.status(500).json({ success: false, error: err.message });
   }
 });
+

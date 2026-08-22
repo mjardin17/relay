@@ -1006,6 +1006,7 @@ export function initializeDatabaseSchema(db: DatabaseSync): void {
     CREATE INDEX IF NOT EXISTS idx_commercial_asset_tenant ON commercial_reference_assets(tenant_id);
     CREATE INDEX IF NOT EXISTS idx_minimax_jobs_tenant ON minimax_generation_jobs(tenant_id);
     CREATE INDEX IF NOT EXISTS idx_minimax_jobs_ext_task ON minimax_generation_jobs(external_task_id);
+    CREATE UNIQUE INDEX IF NOT EXISTS idx_minimax_jobs_idem ON minimax_generation_jobs(tenant_id, idempotency_key);
     CREATE INDEX IF NOT EXISTS idx_outcomes_tenant ON outcome_events(tenant_id);
     CREATE INDEX IF NOT EXISTS idx_attr_tenant ON attribution_records(tenant_id);
     CREATE INDEX IF NOT EXISTS idx_supp_tenant ON suppression_decisions(tenant_id);
