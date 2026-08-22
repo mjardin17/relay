@@ -312,7 +312,7 @@ export const CommercialFactoryStudio: React.FC<CommercialFactoryStudioProps> = (
             <div className="text-xs space-y-0.5">
               <span className="font-semibold text-slate-200">MiniMax H3 Execution & Billing Transparency:</span>
               <p className="text-slate-400">
-                Manual Trial mode is completely free via the official Hailuo platform. Official API billing: <strong className="text-amber-400">$0.08/s (768p)</strong> and <strong className="text-amber-400">$0.13/s (2K)</strong>. Pricing verified: 2026-08-20. Relay never charges without explicit human confirmation.
+                Manual browser handoff causes no Relay API charge. Hailuo availability, trial credits, subscriptions, and external charges are controlled by MiniMax and may vary. Official API billing: <strong className="text-amber-400">$0.08/s (768p)</strong> and <strong className="text-amber-400">$0.13/s (2K)</strong>. Relay never charges without explicit human confirmation.
               </p>
             </div>
           </div>

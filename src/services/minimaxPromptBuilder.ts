@@ -21,6 +21,8 @@ export interface PromptValidationResult {
   imageCount: number;
   videoCount: number;
   audioCount: number;
+  officialResolution: '768P' | '2K';
+  officialAspectRatio: VideoAspectRatio;
 }
 
 export class MiniMaxPromptBuilder {
@@ -29,6 +31,24 @@ export class MiniMaxPromptBuilder {
   public static readonly MAX_VIDEOS = 3;
   public static readonly MAX_AUDIO = 3;
   public static readonly MAX_TOTAL_FILES = 12;
+
+  public static readonly OFFICIAL_RATIOS: VideoAspectRatio[] = [
+    'adaptive',
+    '21:9',
+    '16:9',
+    '4:3',
+    '1:1',
+    '3:4',
+    '9:16'
+  ];
+
+  /**
+   * Maps display resolution string ('768p' or '768P') to official API value ('768P' or '2K').
+   */
+  public static mapResolutionToApi(res: VideoResolution): '768P' | '2K' {
+    if (res === '2K') return '2K';
+    return '768P';
+  }
 
   /**
    * Composes a structured MiniMax H3 prompt following official GitHub guidance:
@@ -73,7 +93,7 @@ export class MiniMaxPromptBuilder {
       sections.push(`[Timing] ${structure.timingAndPacing.trim()}`);
     }
 
-    // 7. Native Audio Elements (Synchronized Stereo)
+    // 7. Native Audio Elements (Synchronized Stereo & Dialogue)
     const audioParts: string[] = [];
     if (structure.dialogue) audioParts.push(`Dialogue: "${structure.dialogue.trim()}"`);
     if (structure.voiceDirection) audioParts.push(`Voice: ${structure.voiceDirection.trim()}`);
@@ -108,7 +128,7 @@ export class MiniMaxPromptBuilder {
   }
 
   /**
-   * Validates duration, resolution, aspect ratio, prompt length, and reference file limits.
+   * Validates duration, resolution, aspect ratio, prompt length, media counts, and mutual exclusion rules.
    */
   public static validate(params: {
     prompt: string;
@@ -117,6 +137,8 @@ export class MiniMaxPromptBuilder {
     aspectRatio: VideoAspectRatio;
     mode: MiniMaxGenerationMode;
     references?: MiniMaxReferenceAsset[];
+    firstFrameUrl?: string;
+    lastFrameUrl?: string;
   }): PromptValidationResult {
     const issues: ValidationIssue[] = [];
     const prompt = params.prompt || '';
@@ -147,15 +169,29 @@ export class MiniMaxPromptBuilder {
     }
 
     // 3. Resolution
-    if (params.resolution !== '768p' && params.resolution !== '2K') {
+    const officialRes = this.mapResolutionToApi(params.resolution);
+    if (params.resolution !== '768p' && params.resolution !== '768P' && params.resolution !== '2K') {
       issues.push({
         field: 'resolution',
         level: 'ERROR',
-        message: `Unsupported resolution '${params.resolution}'. Only '768p' and '2K' are officially supported.`
+        message: `Unsupported resolution '${params.resolution}'. Only 768P and 2K are officially supported.`
       });
     }
 
-    // 4. Reference file counts & limits
+    // 4. Aspect Ratio Validation
+    const officialRatio: VideoAspectRatio = this.OFFICIAL_RATIOS.includes(params.aspectRatio)
+      ? params.aspectRatio
+      : '16:9';
+
+    if (!this.OFFICIAL_RATIOS.includes(params.aspectRatio)) {
+      issues.push({
+        field: 'aspectRatio',
+        level: 'ERROR',
+        message: `Unsupported aspect ratio '${params.aspectRatio}'. Supported ratios: ${this.OFFICIAL_RATIOS.join(', ')}.`
+      });
+    }
+
+    // 5. Reference file counts & limits
     const refs = params.references || [];
     const imageCount = refs.filter(r => r.mediaType === 'image').length;
     const videoCount = refs.filter(r => r.mediaType === 'video').length;
@@ -194,24 +230,40 @@ export class MiniMaxPromptBuilder {
       });
     }
 
-    // 5. Mode specific checks
-    if (params.mode === 'IMAGE_TO_VIDEO' && imageCount === 0) {
+    // 6. Mode specific & Mutual Exclusion Rules:
+    // First/last-frame continuity inputs and reference inputs are mutually exclusive in MiniMax H3 v2 API.
+    const hasFirstOrLastFrame = Boolean(params.firstFrameUrl || params.lastFrameUrl || refs.some(r => r.category === 'first_frame' || r.category === 'last_frame'));
+    const hasReferenceAssets = refs.some(r => r.category !== 'first_frame' && r.category !== 'last_frame');
+
+    if (hasFirstOrLastFrame && hasReferenceAssets) {
       issues.push({
-        field: 'mode',
+        field: 'mutualExclusion',
         level: 'ERROR',
-        message: 'IMAGE_TO_VIDEO mode requires at least one first-frame or subject image reference.'
+        message: 'First/Last frame continuity inputs cannot be combined with reference images/videos/audio in the same generation request (MiniMax H3 Mutual Exclusion rule).'
       });
     }
 
-    if (params.mode === 'FIRST_LAST_FRAME_VIDEO' && imageCount < 2) {
+    if (params.mode === 'IMAGE_TO_VIDEO' && imageCount === 0 && !params.firstFrameUrl) {
       issues.push({
         field: 'mode',
         level: 'ERROR',
-        message: 'FIRST_LAST_FRAME_VIDEO mode requires both a first-frame and a last-frame image reference.'
+        message: 'IMAGE_TO_VIDEO mode requires at least one first-frame or subject image.'
       });
     }
 
-    // 6. Check ownership verification
+    if (params.mode === 'FIRST_LAST_FRAME_VIDEO') {
+      const hasFirst = Boolean(params.firstFrameUrl || refs.some(r => r.category === 'first_frame'));
+      const hasLast = Boolean(params.lastFrameUrl || refs.some(r => r.category === 'last_frame'));
+      if (!hasFirst || !hasLast) {
+        issues.push({
+          field: 'mode',
+          level: 'ERROR',
+          message: 'FIRST_LAST_FRAME_VIDEO mode requires both a first_frame and a last_frame image input.'
+        });
+      }
+    }
+
+    // 7. Ownership verification warnings
     const unverified = refs.filter(r => !r.ownershipVerified);
     if (unverified.length > 0) {
       issues.push({
@@ -231,7 +283,9 @@ export class MiniMaxPromptBuilder {
       totalReferenceFiles: totalFiles,
       imageCount,
       videoCount,
-      audioCount
+      audioCount,
+      officialResolution: officialRes,
+      officialAspectRatio: officialRatio
     };
   }
 

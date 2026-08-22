@@ -60,6 +60,7 @@ app.use('/api/project-intelligence', projectIntelligenceRouter);
 app.use('/api/minimax', miniMaxApi);
 app.use('/api/creative/minimax', miniMaxApi);
 app.use('/api/commercial-factory', miniMaxApi);
+app.use('/api/creative/commercial-factory', miniMaxApi);
 
 // Lazy initializer for Gemini client to prevent startup crash if GEMINI_API_KEY is missing
 function getGeminiClient(): GoogleGenAI {

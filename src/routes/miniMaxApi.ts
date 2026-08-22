@@ -6,8 +6,8 @@ import { MiniMaxCostCalculator } from '../services/minimaxCostCalculator';
 
 export const miniMaxApi = Router();
 
-const miniMaxProvider = new MiniMaxH3CreativeProvider();
 const commercialService = CommercialFactoryService.getInstance();
+const miniMaxProvider = commercialService.getProvider();
 
 // 1. Status & Connector State
 miniMaxApi.get('/status', async (req, res) => {
@@ -15,6 +15,7 @@ miniMaxApi.get('/status', async (req, res) => {
     const connState = miniMaxProvider.getConnectionState();
     const pricing = MiniMaxCostCalculator.getPricingConfig();
     const availability = await miniMaxProvider.checkAvailability();
+    const quota = await miniMaxProvider.checkFreeQuota();
 
     return res.json({
       success: true,
@@ -22,6 +23,7 @@ miniMaxApi.get('/status', async (req, res) => {
       provider: 'MINIMAX_H3',
       connectionState: connState,
       availability,
+      quota,
       pricingConfig: pricing,
       officialTrialUrl: miniMaxProvider.officialTrialUrl,
       officialGithubDocsUrl: miniMaxProvider.officialGithubDocsUrl,
@@ -32,7 +34,8 @@ miniMaxApi.get('/status', async (req, res) => {
         maxAudio: MiniMaxPromptBuilder.MAX_AUDIO,
         maxTotalFiles: MiniMaxPromptBuilder.MAX_TOTAL_FILES,
         minDurationSec: 4,
-        maxDurationSec: 15
+        maxDurationSec: 15,
+        officialRatios: MiniMaxPromptBuilder.OFFICIAL_RATIOS
       }
     });
   } catch (err: any) {
@@ -40,7 +43,7 @@ miniMaxApi.get('/status', async (req, res) => {
   }
 });
 
-// 2. Verify API Key
+// 2. Verify API Key Probe (Server-side execution only)
 miniMaxApi.post('/verify', async (req, res) => {
   try {
     const { apiKey } = req.body;
@@ -100,14 +103,16 @@ miniMaxApi.post('/compose-prompt', (req, res) => {
 
 miniMaxApi.post('/validate-prompt', (req, res) => {
   try {
-    const { prompt, durationSeconds, resolution, aspectRatio, mode, references } = req.body;
+    const { prompt, durationSeconds, resolution, aspectRatio, mode, references, firstFrameUrl, lastFrameUrl } = req.body;
     const validation = MiniMaxPromptBuilder.validate({
       prompt: prompt || '',
       durationSeconds: Number(durationSeconds) || 6,
       resolution: resolution || '768p',
       aspectRatio: aspectRatio || '16:9',
       mode: mode || 'TEXT_TO_VIDEO',
-      references: references || []
+      references: references || [],
+      firstFrameUrl,
+      lastFrameUrl
     });
 
     return res.json({ success: true, validation });
@@ -116,7 +121,7 @@ miniMaxApi.post('/validate-prompt', (req, res) => {
   }
 });
 
-// 5. Tenant Reference Assets
+// 5. Tenant Reference Assets (SQLite backed)
 miniMaxApi.get('/assets', (req, res) => {
   try {
     const tenantId = (req.query.tenantId as string) || 'tenant_reis_electric';
@@ -138,8 +143,6 @@ miniMaxApi.post('/assets/add', (req, res) => {
       mimeType,
       fileSizeBytes,
       durationSeconds,
-      dimensions,
-      ownershipVerified,
       ownershipDeclaration,
       bindingRole,
       tags
@@ -149,17 +152,15 @@ miniMaxApi.post('/assets/add', (req, res) => {
       return res.status(400).json({ success: false, error: 'tenantId, name, url, and category are required' });
     }
 
-    const created = commercialService.addReferenceAsset({
+    const created = commercialService.registerReferenceAsset({
       tenantId,
       category,
       name,
       mediaType: mediaType || 'image',
       url,
-      mimeType: mimeType || 'image/jpeg',
+      mimeType: mimeType || (mediaType === 'audio' ? 'audio/mpeg' : 'image/jpeg'),
       fileSizeBytes: Number(fileSizeBytes) || 1000000,
       durationSeconds: durationSeconds ? Number(durationSeconds) : undefined,
-      dimensions,
-      ownershipVerified: Boolean(ownershipVerified),
       ownershipDeclaration: ownershipDeclaration || 'User confirmed ownership rights for promotional asset.',
       bindingRole: bindingRole || name,
       tags: tags || []
@@ -171,7 +172,7 @@ miniMaxApi.post('/assets/add', (req, res) => {
   }
 });
 
-// 6. Commercial Factory Projects
+// 6. Commercial Factory Projects (SQLite backed)
 miniMaxApi.get('/projects', (req, res) => {
   try {
     const tenantId = req.query.tenantId as string | undefined;
@@ -189,7 +190,7 @@ miniMaxApi.post('/projects/create', (req, res) => {
       return res.status(400).json({ success: false, error: 'title and commercialType are required' });
     }
 
-    const project = commercialService.createCommercialProject({
+    const project = commercialService.createProject({
       tenantId: tenantId || 'tenant_reis_electric',
       title,
       commercialType,
@@ -279,5 +280,50 @@ miniMaxApi.post('/submit-job', async (req, res) => {
     return res.json({ success: true, job });
   } catch (err: any) {
     return res.status(400).json({ success: false, error: err.message });
+  }
+});
+
+// 10. Query / Sync Job Status
+miniMaxApi.get('/jobs/:jobId', async (req, res) => {
+  try {
+    const { jobId } = req.params;
+    const sync = req.query.sync === 'true';
+
+    let job = commercialService.getJob(jobId);
+    if (!job) {
+      return res.status(404).json({ success: false, error: `Job ${jobId} not found.` });
+    }
+
+    if (sync && job.externalTaskId && job.status !== 'SUCCESS' && job.status !== 'FAILED') {
+      try {
+        job = await commercialService.syncJobStatus(jobId);
+      } catch (syncErr: any) {
+        console.warn(`Failed to sync job ${jobId}:`, syncErr.message);
+      }
+    }
+
+    return res.json({ success: true, job });
+  } catch (err: any) {
+    return res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+miniMaxApi.post('/jobs/:jobId/sync', async (req, res) => {
+  try {
+    const { jobId } = req.params;
+    const job = await commercialService.syncJobStatus(jobId);
+    return res.json({ success: true, job });
+  } catch (err: any) {
+    return res.status(400).json({ success: false, error: err.message });
+  }
+});
+
+miniMaxApi.get('/jobs', (req, res) => {
+  try {
+    const tenantId = req.query.tenantId as string | undefined;
+    const jobs = commercialService.listJobs(tenantId);
+    return res.json({ success: true, jobs });
+  } catch (err: any) {
+    return res.status(500).json({ success: false, error: err.message });
   }
 });

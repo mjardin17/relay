@@ -2,6 +2,7 @@
  * MiniMax H3 Video Generation & Commercial Factory Types
  * Official Model: MiniMax-H3
  * Official Guidance: https://github.com/MiniMax-AI/MiniMax-H3
+ * Official API Docs: https://platform.minimax.io/docs/api-reference/video-generation-v2-create
  */
 
 export type MiniMaxModelId = 'MiniMax-H3';
@@ -18,7 +19,20 @@ export type MiniMaxConnectorMode =
   | 'MANUAL_TRIAL'
   | 'OFFICIAL_API';
 
+/**
+ * Honest Connection States for MiniMax H3 Connector:
+ * - DISCONNECTED / DRY_RUN: No API key configured
+ * - CONFIGURED_UNVERIFIED: Key present in env/settings but unprobed
+ * - CONNECTED_VERIFIED: Real authenticated probe returned successful 200 with status_code 0
+ * - AUTH_FAILED: Official API returned 401 Unauthorized
+ * - INSUFFICIENT_BALANCE: Official API returned 402 Payment Required
+ */
 export type MiniMaxConnectionState =
+  | 'DISCONNECTED'
+  | 'CONFIGURED_UNVERIFIED'
+  | 'CONNECTED_VERIFIED'
+  | 'AUTH_FAILED'
+  | 'INSUFFICIENT_BALANCE'
   | 'MANUAL_TRIAL_AVAILABLE'
   | 'API_NOT_CONFIGURED'
   | 'API_CONFIGURED'
@@ -31,14 +45,41 @@ export type MiniMaxConnectionState =
 export type MiniMaxJobStatus =
   | 'QUEUED'
   | 'PROCESSING'
+  | 'RUNNING'
   | 'SUCCESS'
   | 'FAILED'
   | 'CANCELLED'
   | 'TIMEOUT'
   | 'UNKNOWN';
 
-export type VideoResolution = '768p' | '2K';
-export type VideoAspectRatio = '16:9' | '9:16' | '1:1' | 'adaptive';
+export type VideoResolution = '768p' | '768P' | '2K';
+
+export type VideoAspectRatio =
+  | 'adaptive'
+  | '21:9'
+  | '16:9'
+  | '4:3'
+  | '1:1'
+  | '3:4'
+  | '9:16';
+
+export type MiniMaxContentRole =
+  | 'text'
+  | 'image_url'
+  | 'video_url'
+  | 'audio_url'
+  | 'first_frame'
+  | 'last_frame'
+  | 'reference_image'
+  | 'reference_video'
+  | 'reference_audio';
+
+export interface MiniMaxContentObject {
+  role: MiniMaxContentRole;
+  text?: string;
+  url?: string;
+  file_id?: string;
+}
 
 export type ReferenceAssetCategory =
   | 'character_face'
@@ -98,13 +139,14 @@ export interface MiniMaxPromptStructure {
 
 export interface MiniMaxPricingConfig {
   pricingLastVerifiedDate: string;
-  baseRate768pPerSec: number;     // $0.08
-  baseRate2KPerSec: number;        // $0.13
-  regen768pTo2KPerSec: number;     // $0.05
-  freeImageReferencesCount: number; // First 5 images free
-  extraImageReferenceCost: number;  // $0.01 per additional image
-  audioReferenceCost: number;       // $0.00 (free)
-  referenceVideoRatePerSec: number; // $0.08 / sec of ref video
+  baseRate768pPerSec: number;        // $0.08 / output second
+  baseRate2KPerSec: number;           // $0.13 / output second
+  regen768pTo2KPerSec: number;        // $0.05 / output second
+  freeImageReferencesCount: number;   // First 5 images free
+  extraImageReferenceCost: number;     // $0.04 per additional image
+  audioReferenceCost: number;          // $0.00 (free)
+  referenceVideoRate768pPerSec: number; // $0.08 / sec of ref video for 768P output
+  referenceVideoRate2KPerSec: number;   // $0.13 / sec of ref video for 2K output
   officialPricingSource: string;
 }
 
@@ -225,6 +267,7 @@ export interface MiniMaxGenerationJobRecord {
   connectorMode: MiniMaxConnectorMode;
   status: MiniMaxJobStatus;
   externalTaskId?: string;
+  requestHash: string;
   prompt: string;
   durationSeconds: number;
   resolution: VideoResolution;
@@ -237,8 +280,71 @@ export interface MiniMaxGenerationJobRecord {
   outputVideoUrl?: string;
   temporaryProviderUrl?: string;
   errorMessage?: string;
+  retryCount: number;
   idempotencyKey: string;
   auditRef: string;
   submittedAt: string;
   completedAt?: string;
+  updatedAt?: string;
+}
+
+/**
+ * Official MiniMax Video Generation API v2 Schemas
+ */
+export interface MiniMaxApiBaseResp {
+  status_code: number;
+  status_msg: string;
+}
+
+export interface MiniMaxCreateTaskRequest {
+  model: 'MiniMax-H3';
+  prompt: string;
+  duration?: number;
+  resolution?: '768P' | '2K';
+  aspect_ratio?: VideoAspectRatio;
+  content?: MiniMaxContentObject[];
+  first_frame_image?: string;
+  last_frame_image?: string;
+  reference_images?: string[];
+  reference_videos?: string[];
+  reference_audio?: string[];
+}
+
+export interface MiniMaxCreateTaskResponse {
+  base_resp: MiniMaxApiBaseResp;
+  task_id: string;
+}
+
+export interface MiniMaxQueryTaskResponse {
+  base_resp: MiniMaxApiBaseResp;
+  task_id: string;
+  status:
+    | 'Preparing'
+    | 'Queueing'
+    | 'Processing'
+    | 'Success'
+    | 'Fail'
+    | 'Cancel'
+    | 'queued'
+    | 'running'
+    | 'succeeded'
+    | 'failed'
+    | 'cancelled';
+  file_id?: string;
+  content?: {
+    url?: string;
+    file_id?: string;
+  };
+  error_msg?: string;
+}
+
+export interface MiniMaxListTasksResponse {
+  base_resp: MiniMaxApiBaseResp;
+  tasks?: Array<{
+    task_id: string;
+    status: string;
+    created_at?: number | string;
+    file_id?: string;
+  }>;
+  total?: number;
 }

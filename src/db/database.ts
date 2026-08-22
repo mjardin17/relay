@@ -225,8 +225,8 @@ export function initializeDatabaseSchema(db: DatabaseSync): void {
       measurement_record_json TEXT,
       action_record_id TEXT,
       activated_at TEXT,
-      created_at TEXT NOT NULL,
-      updated_at TEXT NOT NULL,
+      created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (tenant_id) REFERENCES tenants(id) ON DELETE CASCADE
     );
 
@@ -922,12 +922,90 @@ export function initializeDatabaseSchema(db: DatabaseSync): void {
       FOREIGN KEY (tenant_id) REFERENCES tenants(id) ON DELETE CASCADE
     );
 
+    -- 38. Commercial Factory Projects
+    CREATE TABLE IF NOT EXISTS commercial_projects (
+      id TEXT PRIMARY KEY,
+      tenant_id TEXT NOT NULL,
+      title TEXT NOT NULL,
+      commercial_type TEXT NOT NULL,
+      total_duration_seconds INTEGER NOT NULL DEFAULT 30,
+      brand_voice TEXT NOT NULL DEFAULT '',
+      target_audience TEXT NOT NULL DEFAULT '',
+      concept_brief TEXT NOT NULL DEFAULT '',
+      continuity_manifest_json TEXT NOT NULL DEFAULT '{}',
+      shots_json TEXT NOT NULL DEFAULT '[]',
+      selected_provider TEXT NOT NULL DEFAULT 'MINIMAX_H3',
+      connector_mode TEXT NOT NULL DEFAULT 'MANUAL_TRIAL',
+      overall_status TEXT NOT NULL DEFAULT 'PLANNING',
+      assembled_video_url TEXT,
+      created_at TEXT NOT NULL,
+      updated_at TEXT NOT NULL,
+      FOREIGN KEY (tenant_id) REFERENCES tenants(id) ON DELETE CASCADE
+    );
+
+    -- 39. Commercial Reference Assets (Tenant-Isolated Asset Library)
+    CREATE TABLE IF NOT EXISTS commercial_reference_assets (
+      id TEXT PRIMARY KEY,
+      tenant_id TEXT NOT NULL,
+      category TEXT NOT NULL,
+      name TEXT NOT NULL,
+      media_type TEXT NOT NULL,
+      url TEXT NOT NULL,
+      mime_type TEXT NOT NULL DEFAULT 'image/png',
+      file_size_bytes INTEGER NOT NULL DEFAULT 0,
+      duration_seconds REAL,
+      dimensions_json TEXT,
+      ownership_verified INTEGER NOT NULL DEFAULT 1,
+      ownership_declaration TEXT NOT NULL DEFAULT '',
+      binding_role TEXT NOT NULL DEFAULT '',
+      tags_json TEXT NOT NULL DEFAULT '[]',
+      created_at TEXT NOT NULL,
+      FOREIGN KEY (tenant_id) REFERENCES tenants(id) ON DELETE CASCADE
+    );
+
+    -- 40. MiniMax H3 Video Generation Jobs
+    CREATE TABLE IF NOT EXISTS minimax_generation_jobs (
+      id TEXT PRIMARY KEY,
+      tenant_id TEXT NOT NULL,
+      project_id TEXT,
+      shot_id TEXT,
+      model TEXT NOT NULL DEFAULT 'MiniMax-H3',
+      generation_mode TEXT NOT NULL,
+      connector_mode TEXT NOT NULL,
+      status TEXT NOT NULL DEFAULT 'QUEUED',
+      external_task_id TEXT,
+      request_hash TEXT NOT NULL,
+      prompt TEXT NOT NULL,
+      duration_seconds INTEGER NOT NULL DEFAULT 6,
+      resolution TEXT NOT NULL DEFAULT '768p',
+      aspect_ratio TEXT NOT NULL DEFAULT '16:9',
+      reference_asset_count INTEGER NOT NULL DEFAULT 0,
+      cost_estimate_usd REAL NOT NULL DEFAULT 0,
+      actual_cost_incurred_usd REAL NOT NULL DEFAULT 0,
+      human_approved INTEGER NOT NULL DEFAULT 0,
+      approved_by TEXT,
+      output_video_url TEXT,
+      temporary_provider_url TEXT,
+      error_message TEXT,
+      retry_count INTEGER NOT NULL DEFAULT 0,
+      idempotency_key TEXT NOT NULL,
+      audit_ref TEXT NOT NULL,
+      submitted_at TEXT NOT NULL,
+      completed_at TEXT,
+      updated_at TEXT,
+      FOREIGN KEY (tenant_id) REFERENCES tenants(id) ON DELETE CASCADE
+    );
+
     -- Indexes for performance and tenant isolation
     CREATE INDEX IF NOT EXISTS idx_leads_tenant ON leads(tenant_id);
     CREATE INDEX IF NOT EXISTS idx_opps_tenant ON opportunities(tenant_id);
     CREATE INDEX IF NOT EXISTS idx_appr_tenant ON approval_requests(tenant_id);
     CREATE INDEX IF NOT EXISTS idx_exec_tenant ON execution_events(tenant_id);
     CREATE INDEX IF NOT EXISTS idx_exec_idempotency ON execution_events(idempotency_key);
+    CREATE INDEX IF NOT EXISTS idx_commercial_proj_tenant ON commercial_projects(tenant_id);
+    CREATE INDEX IF NOT EXISTS idx_commercial_asset_tenant ON commercial_reference_assets(tenant_id);
+    CREATE INDEX IF NOT EXISTS idx_minimax_jobs_tenant ON minimax_generation_jobs(tenant_id);
+    CREATE INDEX IF NOT EXISTS idx_minimax_jobs_ext_task ON minimax_generation_jobs(external_task_id);
     CREATE INDEX IF NOT EXISTS idx_outcomes_tenant ON outcome_events(tenant_id);
     CREATE INDEX IF NOT EXISTS idx_attr_tenant ON attribution_records(tenant_id);
     CREATE INDEX IF NOT EXISTS idx_supp_tenant ON suppression_decisions(tenant_id);

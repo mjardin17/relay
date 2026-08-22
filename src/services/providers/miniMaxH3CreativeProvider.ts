@@ -24,6 +24,7 @@ import {
 import { MiniMaxPromptBuilder } from '../minimaxPromptBuilder';
 import { MiniMaxCostCalculator, OFFICIAL_MINIMAX_PRICING } from '../minimaxCostCalculator';
 import { LaunchAuditService } from '../launchAuditService';
+import { MiniMaxH3Client, HttpTransport } from '../minimaxH3Client';
 
 export class MiniMaxH3CreativeProvider implements CreativeWebsiteProvider {
   public readonly id = 'provider_minimax_h3';
@@ -33,13 +34,33 @@ export class MiniMaxH3CreativeProvider implements CreativeWebsiteProvider {
   public readonly officialGithubDocsUrl = 'https://github.com/MiniMax-AI/MiniMax-H3';
 
   private auditService: LaunchAuditService;
-  private apiKey: string | null = null;
+  private client: MiniMaxH3Client;
   private isVerified: boolean = false;
+  private lastVerificationState: MiniMaxConnectionState = 'DISCONNECTED';
   private lastVerificationAt: string | null = null;
 
-  constructor() {
+  constructor(options?: { client?: MiniMaxH3Client; transport?: HttpTransport; apiKey?: string }) {
     this.auditService = LaunchAuditService.getInstance();
-    this.apiKey = process.env.MINIMAX_API_KEY || null;
+    if (options?.client) {
+      this.client = options.client;
+    } else {
+      this.client = new MiniMaxH3Client({
+        apiKey: options?.apiKey,
+        transport: options?.transport
+      });
+    }
+  }
+
+  public getClient(): MiniMaxH3Client {
+    return this.client;
+  }
+
+  public setTransport(transport: HttpTransport): void {
+    const key = this.client.getApiKey();
+    this.client = new MiniMaxH3Client({
+      apiKey: key || undefined,
+      transport
+    });
   }
 
   public getMetadata(): ProviderMetadata {
@@ -57,25 +78,41 @@ export class MiniMaxH3CreativeProvider implements CreativeWebsiteProvider {
 
   /**
    * Checks availability state.
-   * Clearly distinguishes MANUAL_TRIAL vs DISCONNECTED API vs VERIFIED API.
+   * Clearly distinguishes MANUAL_TRIAL vs DISCONNECTED vs CONFIGURED_UNVERIFIED vs CONNECTED_VERIFIED.
    * Never claims "CONNECTED" without authenticated API verification.
    */
   public async checkAvailability(): Promise<ProviderAvailabilityResult> {
-    const key = process.env.MINIMAX_API_KEY || this.apiKey;
+    const key = this.client.getApiKey() || process.env.MINIMAX_API_KEY;
 
     if (!key) {
       return {
         available: true,
-        state: 'FREE_AVAILABLE', // Available via Manual Trial without API key
-        reason: 'MiniMax H3 Manual Trial mode is active. Free shot-by-shot generation packages & prompt builder available with zero API billing.'
+        state: 'FREE_AVAILABLE', // Available via manual browser trial without API key
+        reason: 'MiniMax H3 Manual Trial mode is active. Manual browser handoff causes no Relay API charge. Hailuo availability, trial credits, subscriptions, and external charges are controlled by MiniMax and may vary.'
       };
     }
 
-    if (this.isVerified) {
+    if (this.isVerified && this.lastVerificationState === 'CONNECTED_VERIFIED') {
       return {
         available: true,
         state: 'FREE_AVAILABLE',
         reason: 'MiniMax H3 Official API is authenticated and operational.'
+      };
+    }
+
+    if (this.lastVerificationState === 'AUTH_FAILED') {
+      return {
+        available: false,
+        state: 'AUTH_REQUIRED',
+        reason: 'MINIMAX_API_KEY authentication probe failed (HTTP 401). Valid key required.'
+      };
+    }
+
+    if (this.lastVerificationState === 'INSUFFICIENT_BALANCE') {
+      return {
+        available: false,
+        state: 'AUTH_REQUIRED',
+        reason: 'MiniMax account has insufficient balance or billing hold (HTTP 402).'
       };
     }
 
@@ -86,21 +123,26 @@ export class MiniMaxH3CreativeProvider implements CreativeWebsiteProvider {
     };
   }
 
+  /**
+   * Quota check for provider router.
+   * Manual package workflow does not claim automated free units in router; API is pay-as-you-go.
+   */
   public async checkFreeQuota(): Promise<ProviderQuotaResult> {
-    const key = process.env.MINIMAX_API_KEY || this.apiKey;
+    const key = this.client.getApiKey() || process.env.MINIMAX_API_KEY;
 
     if (!key) {
       return {
-        quotaState: 'FREE_AVAILABLE',
-        isPaidOnly: false,
-        freeUnitsRemaining: Infinity,
-        costWarning: 'Manual Trial Workflow: Free browser-based trial on official Hailuo platform. No API charges.'
+        quotaState: 'AUTH_REQUIRED',
+        isPaidOnly: true,
+        freeUnitsRemaining: 0,
+        costWarning: 'Manual browser handoff causes no Relay API charge. Hailuo availability, trial credits, subscriptions, and external charges are controlled by MiniMax and may vary. Automated API video generation requires MINIMAX_API_KEY.'
       };
     }
 
     return {
-      quotaState: this.isVerified ? 'FREE_AVAILABLE' : 'AUTH_REQUIRED',
+      quotaState: this.isVerified ? 'PAID_ONLY' : 'AUTH_REQUIRED',
       isPaidOnly: true,
+      freeUnitsRemaining: 0,
       costWarning: `Official API billing: $${OFFICIAL_MINIMAX_PRICING.baseRate768pPerSec}/s (768p) or $${OFFICIAL_MINIMAX_PRICING.baseRate2KPerSec}/s (2K). Explicit human approval required before submission.`
     };
   }
@@ -109,19 +151,26 @@ export class MiniMaxH3CreativeProvider implements CreativeWebsiteProvider {
    * Gets current connector status
    */
   public getConnectionState(): MiniMaxConnectionState {
-    const key = process.env.MINIMAX_API_KEY || this.apiKey;
+    const key = this.client.getApiKey() || process.env.MINIMAX_API_KEY;
     if (!key) {
-      return 'MANUAL_TRIAL_AVAILABLE';
+      return 'DISCONNECTED';
     }
-    if (this.isVerified) {
-      return 'AUTHENTICATION_VERIFIED';
+    if (this.isVerified && this.lastVerificationState === 'CONNECTED_VERIFIED') {
+      return 'CONNECTED_VERIFIED';
     }
-    return 'API_CONFIGURED';
+    if (this.lastVerificationState === 'AUTH_FAILED') {
+      return 'AUTH_FAILED';
+    }
+    if (this.lastVerificationState === 'INSUFFICIENT_BALANCE') {
+      return 'INSUFFICIENT_BALANCE';
+    }
+    return 'CONFIGURED_UNVERIFIED';
   }
 
   /**
-   * Verified Authentication Probe.
-   * Tests API key against official endpoint without submitting video generation jobs.
+   * Truthful Authentication Probe.
+   * Tests API key against official non-generation query endpoint (GET /v2/query/video_generation?page_num=1&page_size=1).
+   * Key is read server-side only. Never checks string length alone.
    */
   public async verifyApiKey(apiKeyToTest?: string): Promise<{
     success: boolean;
@@ -129,62 +178,36 @@ export class MiniMaxH3CreativeProvider implements CreativeWebsiteProvider {
     message: string;
     latencyMs: number;
   }> {
-    const key = apiKeyToTest || process.env.MINIMAX_API_KEY || this.apiKey;
-    const start = Date.now();
+    const probeOutcome = await this.client.verifyCredentials(apiKeyToTest);
 
-    if (!key) {
-      this.isVerified = false;
-      return {
-        success: false,
-        state: 'API_NOT_CONFIGURED',
-        message: 'No MINIMAX_API_KEY provided. Connector remains in MANUAL_TRIAL_AVAILABLE mode.',
-        latencyMs: 1
-      };
+    this.isVerified = probeOutcome.success;
+    this.lastVerificationState = probeOutcome.state;
+    this.lastVerificationAt = new Date().toISOString();
+
+    if (probeOutcome.success && apiKeyToTest) {
+      this.client.setApiKey(apiKeyToTest);
     }
 
-    try {
-      // In container sandbox, check if key meets format and simulate or perform official auth ping
-      if (key.length >= 16) {
-        this.apiKey = key;
-        this.isVerified = true;
-        this.lastVerificationAt = new Date().toISOString();
-
-        this.auditService.logAuditEvent({
-          tenantId: 'system',
-          actorId: 'operator',
-          action: 'VERIFY_MINIMAX_API_KEY',
-          endpoint: '/api/creative/minimax/verify',
-          status: 'SUCCESS',
-          details: {
-            model: this.modelId,
-            keyFingerprint: `key_sha256_${crypto.createHash('sha256').update(key).digest('hex').substring(0, 10)}`
-          }
-        });
-
-        return {
-          success: true,
-          state: 'AUTHENTICATION_VERIFIED',
-          message: 'MiniMax H3 Official API key authenticated successfully.',
-          latencyMs: Date.now() - start
-        };
-      } else {
-        this.isVerified = false;
-        return {
-          success: false,
-          state: 'API_NOT_CONFIGURED',
-          message: 'MINIMAX_API_KEY failed validation (invalid length or format).',
-          latencyMs: Date.now() - start
-        };
+    this.auditService.logAuditEvent({
+      tenantId: 'system',
+      actorId: 'operator',
+      action: 'VERIFY_MINIMAX_API_KEY',
+      endpoint: '/api/creative/minimax/verify',
+      status: probeOutcome.success ? 'SUCCESS' : 'FAILED',
+      details: {
+        model: this.modelId,
+        state: probeOutcome.state,
+        statusCode: probeOutcome.statusCode,
+        keyFingerprint: probeOutcome.fingerprint
       }
-    } catch (err: any) {
-      this.isVerified = false;
-      return {
-        success: false,
-        state: 'API_NOT_CONFIGURED',
-        message: `MiniMax authentication error: ${err.message}`,
-        latencyMs: Date.now() - start
-      };
-    }
+    });
+
+    return {
+      success: probeOutcome.success,
+      state: probeOutcome.state,
+      message: probeOutcome.message,
+      latencyMs: probeOutcome.latencyMs
+    };
   }
 
   /**
@@ -232,7 +255,7 @@ export class MiniMaxH3CreativeProvider implements CreativeWebsiteProvider {
       officialTrialUrl: this.officialTrialUrl,
       officialGithubDocsUrl: this.officialGithubDocsUrl,
       disclaimers: [
-        'Free trial credits and queue priority are determined exclusively by the official MiniMax/Hailuo platform.',
+        'Manual browser handoff causes no Relay API charge. Hailuo availability, trial credits, subscriptions, and external charges are controlled by MiniMax and may vary.',
         'Relay never submits payments or auto-upgrades subscriptions on external platforms.',
         'After video generation finishes on Hailuo, use the "Import Video" button to store the result in Relay.'
       ],
@@ -299,7 +322,7 @@ export class MiniMaxH3CreativeProvider implements CreativeWebsiteProvider {
     <div class="box">
       <h4>Cost & Dispatch Governance</h4>
       <p class="pricing">${costEstimate.costBreakdownSummary}</p>
-      <p style="font-size: 12px; color: #94a3b8;">Manual Trial Mode: Free execution on Hailuo | API Mode: Requires authenticated credentials & explicit human approval.</p>
+      <p style="font-size: 12px; color: #94a3b8;">Manual browser handoff causes no Relay API charge. Direct API generation requires authenticated credentials & explicit human approval.</p>
     </div>
   </div>
 </body>
@@ -312,8 +335,8 @@ export class MiniMaxH3CreativeProvider implements CreativeWebsiteProvider {
       renderedHtml: html,
       assets: [],
       generationDurationMs: Date.now() - startTime,
-      quotaStatusAtGeneration: 'FREE_AVAILABLE',
-      isFreeTier: true,
+      quotaStatusAtGeneration: this.isVerified ? 'PAID_ONLY' : 'AUTH_REQUIRED',
+      isFreeTier: false,
       revisionCount: 0,
       summary: `MiniMax H3 commercial storyboard and prompt package prepared for ${brief.brandName}.`,
       timestamp: new Date().toISOString()

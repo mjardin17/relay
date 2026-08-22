@@ -5,21 +5,27 @@ import {
 } from '../types/miniMaxH3';
 
 export const OFFICIAL_MINIMAX_PRICING: MiniMaxPricingConfig = {
-  pricingLastVerifiedDate: '2026-08-20',
-  baseRate768pPerSec: 0.08,
-  baseRate2KPerSec: 0.13,
-  regen768pTo2KPerSec: 0.05,
-  freeImageReferencesCount: 5,
-  extraImageReferenceCost: 0.01,
-  audioReferenceCost: 0.00,
-  referenceVideoRatePerSec: 0.08,
-  officialPricingSource: 'MiniMax Official API Pricing Schedule (Model: MiniMax-H3)'
+  pricingLastVerifiedDate: '2026-08-21',
+  baseRate768pPerSec: 0.08,             // $0.08/output second for 768P
+  baseRate2KPerSec: 0.13,                // $0.13/output second for 2K
+  regen768pTo2KPerSec: 0.05,             // $0.05/output second for regeneration
+  freeImageReferencesCount: 5,           // First 5 images free
+  extraImageReferenceCost: 0.04,         // $0.04 per additional image
+  audioReferenceCost: 0.00,              // Free
+  referenceVideoRate768pPerSec: 0.08,    // $0.08/sec of ref video for 768P output
+  referenceVideoRate2KPerSec: 0.13,      // $0.13/sec of ref video for 2K output
+  officialPricingSource: 'MiniMax Official Pay-As-You-Go Pricing Guide (https://platform.minimax.io/docs/guides/pricing-paygo)'
 };
 
 export class MiniMaxCostCalculator {
   /**
    * Calculates detailed cost estimate for MiniMax H3 generation.
-   * Recalculates dynamically whenever user alters duration, resolution, or reference files.
+   * Transparently accounts for:
+   * - Output video duration & resolution ($0.08/s for 768P, $0.13/s for 2K)
+   * - Reference images: first 5 free, $0.04 per additional image
+   * - Reference video input: $0.08/s for 768P output, $0.13/s for 2K output
+   * - Audio references: free
+   * - Regeneration from 768P to 2K: $0.05/output second
    */
   public static calculateEstimate(params: {
     durationSeconds: number;
@@ -34,25 +40,27 @@ export class MiniMaxCostCalculator {
   }): MiniMaxCostEstimate {
     const config = OFFICIAL_MINIMAX_PRICING;
     const duration = Math.max(4, Math.min(15, Math.round(params.durationSeconds || 5)));
-    const resolution = params.resolution || '768p';
+    const is2K = params.resolution === '2K';
+    const resolution: VideoResolution = is2K ? '2K' : '768p';
     const numImages = Math.max(0, params.imageReferencesCount || 0);
     const numVideos = Math.max(0, params.videoReferencesCount || 0);
-    const refVideoDuration = Math.max(0, params.videoReferencesTotalDurationSeconds || (numVideos * 5));
+    const refVideoDuration = Math.max(0, params.videoReferencesTotalDurationSeconds ?? (numVideos * 5));
     const numAudio = Math.max(0, params.audioReferencesCount || 0);
 
     // Base generation cost
-    let baseRate = resolution === '2K' ? config.baseRate2KPerSec : config.baseRate768pPerSec;
-    if (params.isRegenerationFrom768p && resolution === '2K') {
+    let baseRate = is2K ? config.baseRate2KPerSec : config.baseRate768pPerSec;
+    if (params.isRegenerationFrom768p && is2K) {
       baseRate = config.regen768pTo2KPerSec;
     }
     const baseCost = Number((duration * baseRate).toFixed(4));
 
-    // Image reference cost (first 5 free)
+    // Image reference cost (first 5 free, $0.04 per additional)
     const chargeableImages = Math.max(0, numImages - config.freeImageReferencesCount);
     const imageReferencesCost = Number((chargeableImages * config.extraImageReferenceCost).toFixed(4));
 
-    // Video reference input cost
-    const videoReferencesCost = Number((refVideoDuration * config.referenceVideoRatePerSec).toFixed(4));
+    // Video reference input cost ($0.08/s for 768P output, $0.13/s for 2K output)
+    const videoRefRate = is2K ? config.referenceVideoRate2KPerSec : config.referenceVideoRate768pPerSec;
+    const videoReferencesCost = Number((refVideoDuration * videoRefRate).toFixed(4));
 
     // Audio reference cost (free)
     const audioReferencesCost = 0.00;
@@ -61,19 +69,19 @@ export class MiniMaxCostCalculator {
       (baseCost + imageReferencesCost + videoReferencesCost + audioReferencesCost).toFixed(4)
     );
 
-    const breakdown = [
-      `Base Video (${duration}s @ ${resolution}): $${baseCost.toFixed(2)} ($${baseRate.toFixed(2)}/s)`,
+    const breakdownParts = [
+      `Base Output (${duration}s @ ${resolution === '2K' ? '2K' : '768P'}${params.isRegenerationFrom768p ? ' Regen' : ''}): $${baseCost.toFixed(2)} ($${baseRate.toFixed(2)}/s)`,
       numImages > 0
-        ? `Image References (${numImages} total, ${Math.min(numImages, 5)} free, ${chargeableImages} billable): $${imageReferencesCost.toFixed(2)}`
+        ? `Image References (${numImages} total, ${Math.min(numImages, config.freeImageReferencesCount)} free, ${chargeableImages} billable @ $${config.extraImageReferenceCost.toFixed(2)}/ea): $${imageReferencesCost.toFixed(2)}`
         : 'Image References: 0 ($0.00)',
       numVideos > 0
-        ? `Video References (${numVideos} files, ~${refVideoDuration}s total): $${videoReferencesCost.toFixed(2)}`
+        ? `Video References (${numVideos} files, ~${refVideoDuration}s input @ $${videoRefRate.toFixed(2)}/s): $${videoReferencesCost.toFixed(2)}`
         : 'Video References: 0 ($0.00)',
       numAudio > 0
         ? `Audio References (${numAudio} files): $0.00 (Official Free Tier)`
         : 'Audio References: 0 ($0.00)',
       `Total Estimated: $${totalEstimatedCostUsd.toFixed(2)} USD (Pricing verified: ${config.pricingLastVerifiedDate})`
-    ].join(' | ');
+    ];
 
     return {
       estimatedDurationSeconds: duration,
@@ -92,7 +100,7 @@ export class MiniMaxCostCalculator {
       humanApproved: params.humanApproved || false,
       approvedBy: params.approvedBy,
       approvedAt: params.humanApproved ? new Date().toISOString() : undefined,
-      costBreakdownSummary: breakdown
+      costBreakdownSummary: breakdownParts.join(' | ')
     };
   }
 

@@ -337,6 +337,13 @@ export default function App() {
             />
           )}
 
+          {activeTab === 'commercial_factory' && (
+            <CommercialFactoryStudio
+              darkMode={darkMode}
+              tenantId={businessProfile?.name ? `tenant_${businessProfile.name.toLowerCase().replace(/\s+/g, '_')}` : 'tenant_reis_electric'}
+            />
+          )}
+
           {activeTab === 'repurposer' && (
             <RepurposingEngine
               platforms={platforms}
