@@ -157,7 +157,30 @@ export class MiniMaxH3Client {
         };
       }
 
-      const body = (await res.json()) as MiniMaxListTasksResponse;
+      let body: any;
+      try {
+        body = await res.json();
+      } catch (jsonErr: any) {
+        return {
+          success: false,
+          state: 'CONFIGURED_UNVERIFIED',
+          statusCode: res.status,
+          message: `MiniMax returned invalid non-JSON body: ${jsonErr.message || jsonErr}`,
+          latencyMs,
+          fingerprint
+        };
+      }
+
+      if (!body || typeof body !== 'object') {
+        return {
+          success: false,
+          state: 'CONFIGURED_UNVERIFIED',
+          statusCode: res.status,
+          message: 'MiniMax returned invalid non-object response payload.',
+          latencyMs,
+          fingerprint
+        };
+      }
 
       if (body.base_resp && body.base_resp.status_code !== 0) {
         const code = body.base_resp.status_code;
@@ -191,7 +214,20 @@ export class MiniMaxH3Client {
         };
       }
 
-      // Valid response with items/tasks or status_code 0
+      // Ensure valid list structure (items array, tasks array, or total count)
+      const hasValidListShape = Array.isArray(body.items) || typeof body.total === 'number' || Array.isArray(body.tasks);
+      if (!hasValidListShape && (!body.base_resp || body.base_resp.status_code === undefined)) {
+        return {
+          success: false,
+          state: 'CONFIGURED_UNVERIFIED',
+          statusCode: res.status,
+          message: 'MiniMax probe response did not contain documented list structure (items/tasks/total or base_resp).',
+          latencyMs,
+          fingerprint
+        };
+      }
+
+      // Valid response with status_code 0 and documented list structure
       return {
         success: true,
         state: 'CONNECTED_VERIFIED',
@@ -415,7 +451,7 @@ export class MiniMaxH3Client {
 
   /**
    * Queries the status of an existing task:
-   * GET https://api.minimax.io/v2/query/video_generation?task_id={task_id} or /{task_id}
+   * GET https://api.minimax.io/v2/query/video_generation/{task_id}
    */
   public async queryTaskStatus(taskId: string): Promise<{
     taskId: string;
@@ -431,7 +467,7 @@ export class MiniMaxH3Client {
       throw new Error('MINIMAX_API_KEY_REQUIRED: Cannot query MiniMax task without an API key.');
     }
 
-    const endpoint = `${this.baseUrl}/v2/query/video_generation?task_id=${encodeURIComponent(taskId)}`;
+    const endpoint = `${this.baseUrl}/v2/query/video_generation/${encodeURIComponent(taskId)}`;
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), this.defaultTimeoutMs);
 
@@ -470,14 +506,15 @@ export class MiniMaxH3Client {
       throw new Error(`MINIMAX_QUERY_ERROR_${respData.base_resp.status_code}: ${respData.base_resp.status_msg}`);
     }
 
-    // Support both official V2 task object schema { task: { id, status, content: { url }, usage, error } } and legacy flat schema
-    const rawStatus = respData.task?.status || respData.status || '';
+    // Official V2 task schema: { task: { id, status, content: { url, file_id }, usage, error: { message } }, base_resp }
+    const taskObj = respData.task;
+    const rawStatus = taskObj?.status || respData.status || '';
     const mappedStatus = this.mapApiStatus(rawStatus);
-    const outputUrl = respData.task?.content?.url || respData.content?.url;
-    const fileId = respData.task?.content?.file_id || respData.file_id || respData.content?.file_id;
-    const errorMessage = respData.task?.error?.message || respData.error_msg;
-    const usage = respData.task?.usage;
-    const returnedTaskId = respData.task?.id || respData.task_id || taskId;
+    const outputUrl = taskObj?.content?.url || respData.content?.url;
+    const fileId = taskObj?.content?.file_id || respData.file_id || respData.content?.file_id;
+    const errorMessage = taskObj?.error?.message || respData.error_msg;
+    const usage = taskObj?.usage;
+    const returnedTaskId = taskObj?.id || respData.task_id || taskId;
 
     return {
       taskId: returnedTaskId,

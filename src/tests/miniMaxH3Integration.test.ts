@@ -78,6 +78,28 @@ describe('MiniMax H3 & Commercial Factory Integration Suite', () => {
       assert.strictEqual(estimate.baseCost, 0.30);
       assert.strictEqual(estimate.totalEstimatedCostUsd, 0.30);
     });
+
+    it('calculates actual cost accurately from task usage evidence or reconciled params', () => {
+      const directCost = MiniMaxCostCalculator.calculateActualCost({
+        resolution: '768p',
+        usage: {
+          cost: 0.48,
+          output_duration: 6
+        }
+      });
+      assert.strictEqual(directCost, 0.48);
+
+      const calculated2K = MiniMaxCostCalculator.calculateActualCost({
+        resolution: '2K',
+        usage: {
+          output_duration: 5,
+          reference_images: 7, // 2 billable images @ $0.04 = $0.08
+          reference_video_duration: 3 // 3s @ $0.13 = $0.39
+        }
+      });
+      // 5 * 0.13 = 0.65; 2 * 0.04 = 0.08; 3 * 0.13 = 0.39. Total = 1.12
+      assert.strictEqual(calculated2K, 1.12);
+    });
   });
 
   // =========================================================================
@@ -163,6 +185,13 @@ describe('MiniMax H3 & Commercial Factory Integration Suite', () => {
       });
       assert.strictEqual(invalid.valid, false);
     });
+
+    it('mapRatioToApi throws on invalid ratio and maps adaptive to 16:9', () => {
+      assert.strictEqual(MiniMaxPromptBuilder.mapRatioToApi('16:9'), '16:9');
+      assert.strictEqual(MiniMaxPromptBuilder.mapRatioToApi('9:16'), '9:16');
+      assert.strictEqual(MiniMaxPromptBuilder.mapRatioToApi('adaptive'), '16:9');
+      assert.throws(() => MiniMaxPromptBuilder.mapRatioToApi('custom_ratio'), /VALIDATION_ERROR/);
+    });
   });
 
   // =========================================================================
@@ -171,14 +200,15 @@ describe('MiniMax H3 & Commercial Factory Integration Suite', () => {
   describe('3. MiniMax H3 API Client with Injected HTTP Transport', () => {
     it('verifies credentials against non-generation query probe (HTTP 200 -> CONNECTED_VERIFIED)', async () => {
       const mockTransport: HttpTransport = async (url, options) => {
-        assert.ok(url.includes('/v2/query/video_generation'));
+        assert.ok(url.includes('/v2/query/video_generation?page_num=1&page_size=1'));
         assert.strictEqual(options?.method, 'GET');
         const headers = options?.headers as Record<string, string>;
         assert.strictEqual(headers['Authorization'], 'Bearer valid_test_key_12345');
 
         return mockJsonResponse({
           base_resp: { status_code: 0, status_msg: 'success' },
-          tasks: []
+          tasks: [],
+          total: 0
         }, 200);
       };
 
@@ -271,21 +301,34 @@ describe('MiniMax H3 & Commercial Factory Integration Suite', () => {
       assert.strictEqual(submittedBody.content[1].image_url.url, 'https://images.example.com/ref1.jpg');
     });
 
-    it('queries task status and maps official statuses (Preparing/Processing/Success/Fail)', async () => {
+    it('queries task status using single-task path /v2/query/video_generation/{task_id} without ?task_id=', async () => {
       const mockTransport: HttpTransport = async (url) => {
-        if (url.includes('task_processing')) {
+        // Assert official V2 single task query endpoint format
+        assert.ok(!url.includes('?task_id='), 'Single task query must not use ?task_id= query param');
+
+        if (url.endsWith('/task_processing')) {
           return mockJsonResponse({
             base_resp: { status_code: 0, status_msg: 'success' },
-            status: 'Processing'
+            task: {
+              id: 'task_processing',
+              status: 'Processing'
+            }
           }, 200);
         }
-        if (url.includes('task_success')) {
+        if (url.endsWith('/task_success')) {
           return mockJsonResponse({
             base_resp: { status_code: 0, status_msg: 'success' },
-            status: 'Success',
-            file_id: 'file_12345',
-            content: {
-              url: 'https://cdn.minimax.io/artifacts/video_12345.mp4'
+            task: {
+              id: 'task_success',
+              status: 'Success',
+              content: {
+                url: 'https://cdn.minimax.io/artifacts/video_12345.mp4',
+                file_id: 'file_12345'
+              },
+              usage: {
+                output_duration: 6,
+                cost: 0.48
+              }
             }
           }, 200);
         }
@@ -304,6 +347,7 @@ describe('MiniMax H3 & Commercial Factory Integration Suite', () => {
       assert.strictEqual(succResult.status, 'SUCCESS');
       assert.strictEqual(succResult.fileId, 'file_12345');
       assert.strictEqual(succResult.outputUrl, 'https://cdn.minimax.io/artifacts/video_12345.mp4');
+      assert.strictEqual(succResult.usage?.cost, 0.48);
     });
   });
 
@@ -346,13 +390,20 @@ describe('MiniMax H3 & Commercial Factory Integration Suite', () => {
       if (url.includes('task_persisted_test_123')) {
         return mockJsonResponse({
           base_resp: { status_code: 0, status_msg: 'success' },
-          status: 'Success',
-          content: {
-            url: 'https://cdn.minimax.io/output/persisted_test.mp4'
+          task: {
+            id: 'task_persisted_test_123',
+            status: 'Success',
+            content: {
+              url: 'https://cdn.minimax.io/output/persisted_test.mp4'
+            },
+            usage: {
+              output_duration: 6,
+              cost: 0.48
+            }
           }
         }, 200);
       }
-      if (url.includes('/v2/video_generation')) {
+      if (url.includes('/v2/video_generation') && !url.includes('/query/')) {
         return mockJsonResponse({
           base_resp: { status_code: 0, status_msg: 'success' },
           task_id: 'task_persisted_test_123'
@@ -361,7 +412,8 @@ describe('MiniMax H3 & Commercial Factory Integration Suite', () => {
       if (url.includes('/v2/query/video_generation')) {
         return mockJsonResponse({
           base_resp: { status_code: 0, status_msg: 'success' },
-          tasks: []
+          tasks: [],
+          total: 0
         }, 200);
       }
       throw new Error(`Unhandled URL: ${url}`);
@@ -485,6 +537,51 @@ describe('MiniMax H3 & Commercial Factory Integration Suite', () => {
 
       const thisTenantJobs = service.listJobs('tenant_reis_electric');
       assert.ok(thisTenantJobs.some(j => j.id === job.id));
+    });
+
+    it('rejects cross-tenant reference asset binding when submitting an API job', async () => {
+      const service = CommercialFactoryService.getInstance({ transport: mockTransport });
+      service.setApiKey('test_valid_key_for_submission');
+      await service.getProvider().verifyApiKey('test_valid_key_for_submission');
+
+      // Create asset owned by tenant Jardins Outpost
+      const assetA = service.registerReferenceAsset({
+        tenantId: 'tenant_jardins_outpost',
+        category: 'product_showcase',
+        name: 'Private Asset A',
+        mediaType: 'image',
+        url: 'https://images.example.com/assetA.jpg',
+        ownershipDeclaration: 'Tenant Jardins Outpost',
+        bindingRole: 'Hero'
+      });
+
+      // Create project owned by tenant Reis Electric
+      const projectB = service.createProject({
+        tenantId: 'tenant_reis_electric',
+        title: 'Project B',
+        commercialType: '15s_Spot',
+        brandVoice: 'Clear',
+        targetAudience: 'Users',
+        conceptBrief: 'Test'
+      });
+
+      // Assign asset A to project B's shot
+      service.updateShotPrompt({
+        projectId: projectB.id,
+        shotId: projectB.shots[0].shotId,
+        selectedReferenceAssetIds: [assetA.id]
+      });
+
+      // Attempting to submit job must fail with CROSS_TENANT_ASSET_VIOLATION
+      await assert.rejects(
+        () => service.submitApiJob({
+          projectId: projectB.id,
+          shotId: projectB.shots[0].shotId,
+          humanApproved: true,
+          approvedBy: 'operator'
+        }),
+        /CROSS_TENANT_ASSET_VIOLATION/
+      );
     });
   });
 });

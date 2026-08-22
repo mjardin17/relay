@@ -1,43 +1,28 @@
-import { Router, Request, Response, NextFunction } from 'express';
-import { MiniMaxH3CreativeProvider } from '../services/providers/miniMaxH3CreativeProvider';
+import { Router, Request, Response } from 'express';
+import { authMiddleware } from '../middleware/authMiddleware';
 import { CommercialFactoryService } from '../services/commercialFactoryService';
 import { MiniMaxPromptBuilder } from '../services/minimaxPromptBuilder';
 import { MiniMaxCostCalculator } from '../services/minimaxCostCalculator';
-import { AuthService } from '../services/authService';
 
 export const miniMaxApi = Router();
 
-const authService = AuthService.getInstance();
+// Apply strict session authentication and tenant isolation
+miniMaxApi.use(authMiddleware);
+
 const commercialService = CommercialFactoryService.getInstance();
 const miniMaxProvider = commercialService.getProvider();
 
-// Helper to resolve authenticated session or default tenant context
-function resolveSessionContext(req: Request): { tenantId: string; actorId: string; role: string } {
-  const authHeader = req.headers.authorization;
-  if (authHeader && authHeader.startsWith('Bearer ')) {
-    const token = authHeader.substring(7);
-    const session = authService.validateSession(token);
-    if (session) {
-      return {
-        tenantId: session.tenantId,
-        actorId: session.actorId,
-        role: session.role
-      };
-    }
-  }
-
-  const queryTenant = typeof req.query.tenantId === 'string' ? req.query.tenantId : undefined;
-  const bodyTenant = req.body && typeof req.body.tenantId === 'string' ? req.body.tenantId : undefined;
-
+// Helper to resolve session tenant & actor
+function getSessionContext(req: Request): { tenantId: string; actorId: string; role: string } {
   return {
-    tenantId: bodyTenant || queryTenant || 'tenant_reis_electric',
-    actorId: req.body?.approvedBy || req.body?.actorId || 'operator',
-    role: 'OPERATOR'
+    tenantId: (req as any).tenantId || 'default',
+    actorId: (req as any).userId || 'operator',
+    role: (req as any).userRole || 'OPERATOR'
   };
 }
 
 // 1. Status & Connector State
-miniMaxApi.get('/status', async (req, res) => {
+miniMaxApi.get('/status', async (req: Request, res: Response) => {
   try {
     const connState = miniMaxProvider.getConnectionState();
     const pricing = MiniMaxCostCalculator.getPricingConfig();
@@ -66,23 +51,31 @@ miniMaxApi.get('/status', async (req, res) => {
       }
     });
   } catch (err: any) {
-    return res.status(500).json({ success: false, error: err.message });
+    return res.status(500).json({ success: false, error: err.message || String(err) });
   }
 });
 
-// 2. Verify API Key Probe (Server-side execution only)
-miniMaxApi.post('/verify', async (req, res) => {
+// 2. Verify API Key Probe (Server-side environment key only, rejects client-supplied key)
+miniMaxApi.post('/verify', async (req: Request, res: Response) => {
   try {
-    const { apiKey } = req.body;
-    const result = await miniMaxProvider.verifyApiKey(apiKey);
+    if (req.body && req.body.apiKey !== undefined) {
+      return res.status(400).json({
+        success: false,
+        error: 'CLIENT_SUPPLIED_API_KEY_REJECTED',
+        message: 'MINIMAX_API_KEY must be read only from the server environment. Client-supplied API keys are strictly rejected.'
+      });
+    }
+
+    // Verify key exclusively from server environment
+    const result = await miniMaxProvider.verifyApiKey();
     return res.json(result);
   } catch (err: any) {
-    return res.status(500).json({ success: false, error: err.message });
+    return res.status(500).json({ success: false, error: err.message || String(err) });
   }
 });
 
 // 3. Cost Estimate Calculator
-miniMaxApi.post('/estimate-cost', (req, res) => {
+miniMaxApi.post('/estimate-cost', (req: Request, res: Response) => {
   try {
     const {
       durationSeconds,
@@ -94,7 +87,7 @@ miniMaxApi.post('/estimate-cost', (req, res) => {
       isRegenerationFrom768p,
       humanApproved,
       approvedBy
-    } = req.body;
+    } = req.body || {};
 
     const estimate = MiniMaxCostCalculator.calculateEstimate({
       durationSeconds: Number(durationSeconds) || 6,
@@ -105,32 +98,32 @@ miniMaxApi.post('/estimate-cost', (req, res) => {
       audioReferencesCount: Number(audioReferencesCount) || 0,
       isRegenerationFrom768p: Boolean(isRegenerationFrom768p),
       humanApproved: Boolean(humanApproved),
-      approvedBy
+      approvedBy: approvedBy || (req as any).userId
     });
 
     return res.json({ success: true, estimate });
   } catch (err: any) {
-    return res.status(500).json({ success: false, error: err.message });
+    return res.status(500).json({ success: false, error: err.message || String(err) });
   }
 });
 
 // 4. Compose & Validate MiniMax H3 Prompt
-miniMaxApi.post('/compose-prompt', (req, res) => {
+miniMaxApi.post('/compose-prompt', (req: Request, res: Response) => {
   try {
-    const { structure } = req.body;
+    const { structure } = req.body || {};
     if (!structure) {
       return res.status(400).json({ success: false, error: 'structure object is required' });
     }
     const composed = MiniMaxPromptBuilder.composePrompt(structure);
     return res.json({ success: true, composedPrompt: composed });
   } catch (err: any) {
-    return res.status(500).json({ success: false, error: err.message });
+    return res.status(500).json({ success: false, error: err.message || String(err) });
   }
 });
 
-miniMaxApi.post('/validate-prompt', (req, res) => {
+miniMaxApi.post('/validate-prompt', (req: Request, res: Response) => {
   try {
-    const { prompt, durationSeconds, resolution, aspectRatio, mode, references, firstFrameUrl, lastFrameUrl } = req.body;
+    const { prompt, durationSeconds, resolution, aspectRatio, mode, references, firstFrameUrl, lastFrameUrl } = req.body || {};
     const validation = MiniMaxPromptBuilder.validate({
       prompt: prompt || '',
       durationSeconds: Number(durationSeconds) || 6,
@@ -144,24 +137,24 @@ miniMaxApi.post('/validate-prompt', (req, res) => {
 
     return res.json({ success: true, validation });
   } catch (err: any) {
-    return res.status(500).json({ success: false, error: err.message });
+    return res.status(500).json({ success: false, error: err.message || String(err) });
   }
 });
 
-// 5. Tenant Reference Assets (SQLite backed)
-miniMaxApi.get('/assets', (req, res) => {
+// 5. Tenant Reference Assets (Strictly tenant-scoped)
+miniMaxApi.get('/assets', (req: Request, res: Response) => {
   try {
-    const sessionCtx = resolveSessionContext(req);
-    const assets = commercialService.listReferenceAssets(sessionCtx.tenantId);
-    return res.json({ success: true, tenantId: sessionCtx.tenantId, assets });
+    const { tenantId } = getSessionContext(req);
+    const assets = commercialService.listReferenceAssets(tenantId);
+    return res.json({ success: true, tenantId, assets });
   } catch (err: any) {
-    return res.status(500).json({ success: false, error: err.message });
+    return res.status(500).json({ success: false, error: err.message || String(err) });
   }
 });
 
-miniMaxApi.post('/assets/add', (req, res) => {
+const handleAddAsset = (req: Request, res: Response) => {
   try {
-    const sessionCtx = resolveSessionContext(req);
+    const { tenantId } = getSessionContext(req);
     const {
       category,
       name,
@@ -173,14 +166,14 @@ miniMaxApi.post('/assets/add', (req, res) => {
       ownershipDeclaration,
       bindingRole,
       tags
-    } = req.body;
+    } = req.body || {};
 
     if (!name || !url || !category) {
       return res.status(400).json({ success: false, error: 'name, url, and category are required' });
     }
 
     const created = commercialService.registerReferenceAsset({
-      tenantId: sessionCtx.tenantId,
+      tenantId,
       category,
       name,
       mediaType: mediaType || 'image',
@@ -195,31 +188,34 @@ miniMaxApi.post('/assets/add', (req, res) => {
 
     return res.json({ success: true, asset: created });
   } catch (err: any) {
-    return res.status(500).json({ success: false, error: err.message });
+    return res.status(500).json({ success: false, error: err.message || String(err) });
   }
-});
+};
 
-// 6. Commercial Factory Projects (SQLite backed)
-miniMaxApi.get('/projects', (req, res) => {
+miniMaxApi.post('/assets/add', handleAddAsset);
+miniMaxApi.post('/assets/register', handleAddAsset);
+
+// 6. Commercial Factory Projects (Strictly tenant-scoped)
+miniMaxApi.get('/projects', (req: Request, res: Response) => {
   try {
-    const sessionCtx = resolveSessionContext(req);
-    const projects = commercialService.listProjects(sessionCtx.tenantId);
+    const { tenantId } = getSessionContext(req);
+    const projects = commercialService.listProjects(tenantId);
     return res.json({ success: true, projects });
   } catch (err: any) {
-    return res.status(500).json({ success: false, error: err.message });
+    return res.status(500).json({ success: false, error: err.message || String(err) });
   }
 });
 
-miniMaxApi.post('/projects/create', (req, res) => {
+const handleCreateProject = (req: Request, res: Response) => {
   try {
-    const sessionCtx = resolveSessionContext(req);
-    const { title, commercialType, brandVoice, targetAudience, conceptBrief } = req.body;
+    const { tenantId } = getSessionContext(req);
+    const { title, commercialType, brandVoice, targetAudience, conceptBrief } = req.body || {};
     if (!title || !commercialType) {
       return res.status(400).json({ success: false, error: 'title and commercialType are required' });
     }
 
     const project = commercialService.createProject({
-      tenantId: sessionCtx.tenantId,
+      tenantId,
       title,
       commercialType,
       brandVoice: brandVoice || 'Authoritative and trustworthy commercial tone',
@@ -229,13 +225,17 @@ miniMaxApi.post('/projects/create', (req, res) => {
 
     return res.json({ success: true, project });
   } catch (err: any) {
-    return res.status(500).json({ success: false, error: err.message });
+    return res.status(500).json({ success: false, error: err.message || String(err) });
   }
-});
+};
 
-// 7. Update Individual Shot
-miniMaxApi.post('/projects/update-shot', (req, res) => {
+miniMaxApi.post('/projects/create', handleCreateProject);
+miniMaxApi.post('/create', handleCreateProject);
+
+// 7. Update Individual Shot (with tenant boundary check)
+const handleUpdateShot = (req: Request, res: Response) => {
   try {
+    const { tenantId } = getSessionContext(req);
     const {
       projectId,
       shotId,
@@ -244,10 +244,23 @@ miniMaxApi.post('/projects/update-shot', (req, res) => {
       durationSeconds,
       resolution,
       selectedReferenceAssetIds
-    } = req.body;
+    } = req.body || {};
 
     if (!projectId || !shotId) {
       return res.status(400).json({ success: false, error: 'projectId and shotId are required' });
+    }
+
+    const project = commercialService.getProject(projectId);
+    if (!project) {
+      return res.status(404).json({ success: false, error: `Project '${projectId}' not found.` });
+    }
+
+    if (project.tenantId !== tenantId) {
+      return res.status(403).json({
+        success: false,
+        error: 'FORBIDDEN',
+        message: `Project '${projectId}' belongs to another tenant.`
+      });
     }
 
     const updated = commercialService.updateShotPrompt({
@@ -262,41 +275,73 @@ miniMaxApi.post('/projects/update-shot', (req, res) => {
 
     return res.json({ success: true, shot: updated });
   } catch (err: any) {
-    return res.status(500).json({ success: false, error: err.message });
+    return res.status(500).json({ success: false, error: err.message || String(err) });
   }
-});
+};
 
-// 8. Import Video Result Back Into Relay
-miniMaxApi.post('/projects/import-video', (req, res) => {
+miniMaxApi.post('/projects/update-shot', handleUpdateShot);
+miniMaxApi.post('/update-shot', handleUpdateShot);
+
+// 8. Import Video Result Back Into Relay (with tenant boundary check)
+const handleImportVideo = (req: Request, res: Response) => {
   try {
-    const sessionCtx = resolveSessionContext(req);
-    const { projectId, shotId, videoUrl, notes } = req.body;
+    const { tenantId, actorId } = getSessionContext(req);
+    const { projectId, shotId, videoUrl, notes } = req.body || {};
     if (!projectId || !shotId || !videoUrl) {
       return res.status(400).json({ success: false, error: 'projectId, shotId, and videoUrl are required' });
+    }
+
+    const project = commercialService.getProject(projectId);
+    if (!project) {
+      return res.status(404).json({ success: false, error: `Project '${projectId}' not found.` });
+    }
+
+    if (project.tenantId !== tenantId) {
+      return res.status(403).json({
+        success: false,
+        error: 'FORBIDDEN',
+        message: `Project '${projectId}' belongs to another tenant.`
+      });
     }
 
     const shot = commercialService.importVideoResult({
       projectId,
       shotId,
       videoUrl,
-      importedBy: sessionCtx.actorId,
+      importedBy: actorId,
       notes
     });
 
     return res.json({ success: true, shot });
   } catch (err: any) {
-    return res.status(500).json({ success: false, error: err.message });
+    return res.status(500).json({ success: false, error: err.message || String(err) });
   }
-});
+};
 
-// 9. Submit Official API Job
-miniMaxApi.post('/submit-job', async (req, res) => {
+miniMaxApi.post('/projects/import-video', handleImportVideo);
+miniMaxApi.post('/import-video', handleImportVideo);
+
+// 9. Submit Official API Job (with tenant boundary check & human approval check)
+miniMaxApi.post('/submit-job', async (req: Request, res: Response) => {
   try {
-    const sessionCtx = resolveSessionContext(req);
-    const { projectId, shotId, idempotencyKey, humanApproved } = req.body;
+    const { tenantId, actorId } = getSessionContext(req);
+    const { projectId, shotId, idempotencyKey, humanApproved } = req.body || {};
 
     if (!projectId || !shotId) {
       return res.status(400).json({ success: false, error: 'projectId and shotId are required' });
+    }
+
+    const project = commercialService.getProject(projectId);
+    if (!project) {
+      return res.status(404).json({ success: false, error: `Project '${projectId}' not found.` });
+    }
+
+    if (project.tenantId !== tenantId) {
+      return res.status(403).json({
+        success: false,
+        error: 'FORBIDDEN',
+        message: `Project '${projectId}' belongs to another tenant.`
+      });
     }
 
     const job = await commercialService.submitApiJob({
@@ -304,24 +349,33 @@ miniMaxApi.post('/submit-job', async (req, res) => {
       shotId,
       idempotencyKey,
       humanApproved: Boolean(humanApproved),
-      approvedBy: sessionCtx.actorId
+      approvedBy: actorId
     });
 
     return res.json({ success: true, job });
   } catch (err: any) {
-    return res.status(400).json({ success: false, error: err.message });
+    return res.status(400).json({ success: false, error: err.message || String(err) });
   }
 });
 
-// 10. Query / Sync Job Status
-miniMaxApi.get('/jobs/:jobId', async (req, res) => {
+// 10. Query / Sync Job Status (with tenant boundary check)
+miniMaxApi.get('/jobs/:jobId', async (req: Request, res: Response) => {
   try {
+    const { tenantId } = getSessionContext(req);
     const { jobId } = req.params;
     const sync = req.query.sync === 'true';
 
     let job = commercialService.getJob(jobId);
     if (!job) {
-      return res.status(404).json({ success: false, error: `Job ${jobId} not found.` });
+      return res.status(404).json({ success: false, error: `Job '${jobId}' not found.` });
+    }
+
+    if (job.tenantId !== tenantId) {
+      return res.status(403).json({
+        success: false,
+        error: 'FORBIDDEN',
+        message: `Job '${jobId}' belongs to another tenant.`
+      });
     }
 
     if (sync && job.externalTaskId && job.status !== 'SUCCESS' && job.status !== 'FAILED') {
@@ -334,27 +388,41 @@ miniMaxApi.get('/jobs/:jobId', async (req, res) => {
 
     return res.json({ success: true, job });
   } catch (err: any) {
-    return res.status(500).json({ success: false, error: err.message });
+    return res.status(500).json({ success: false, error: err.message || String(err) });
   }
 });
 
-miniMaxApi.post('/jobs/:jobId/sync', async (req, res) => {
+miniMaxApi.post('/jobs/:jobId/sync', async (req: Request, res: Response) => {
   try {
+    const { tenantId } = getSessionContext(req);
     const { jobId } = req.params;
+
+    const existingJob = commercialService.getJob(jobId);
+    if (!existingJob) {
+      return res.status(404).json({ success: false, error: `Job '${jobId}' not found.` });
+    }
+
+    if (existingJob.tenantId !== tenantId) {
+      return res.status(403).json({
+        success: false,
+        error: 'FORBIDDEN',
+        message: `Job '${jobId}' belongs to another tenant.`
+      });
+    }
+
     const job = await commercialService.syncJobStatus(jobId);
     return res.json({ success: true, job });
   } catch (err: any) {
-    return res.status(400).json({ success: false, error: err.message });
+    return res.status(400).json({ success: false, error: err.message || String(err) });
   }
 });
 
-miniMaxApi.get('/jobs', (req, res) => {
+miniMaxApi.get('/jobs', (req: Request, res: Response) => {
   try {
-    const sessionCtx = resolveSessionContext(req);
-    const jobs = commercialService.listJobs(sessionCtx.tenantId);
+    const { tenantId } = getSessionContext(req);
+    const jobs = commercialService.listJobs(tenantId);
     return res.json({ success: true, jobs });
   } catch (err: any) {
-    return res.status(500).json({ success: false, error: err.message });
+    return res.status(500).json({ success: false, error: err.message || String(err) });
   }
 });
-

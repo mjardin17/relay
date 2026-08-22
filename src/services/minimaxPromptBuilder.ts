@@ -68,7 +68,10 @@ export class MiniMaxPromptBuilder {
     if (this.VALID_V2_RATIOS.includes(ratio as MiniMaxRatio)) {
       return ratio as MiniMaxRatio;
     }
-    return '16:9';
+    if (ratio === 'adaptive') {
+      return '16:9';
+    }
+    throw new Error(`VALIDATION_ERROR: Unsupported aspect ratio '${ratio}'. Supported ratios: ${this.VALID_V2_RATIOS.join(', ')}.`);
   }
 
   /**
@@ -307,7 +310,7 @@ export class MiniMaxPromptBuilder {
       audioCount,
       officialResolution: officialRes,
       officialAspectRatio: officialRatio,
-      officialRatio: this.mapRatioToApi(params.aspectRatio)
+      officialRatio: this.VALID_V2_RATIOS.includes(params.aspectRatio as any) ? (params.aspectRatio as MiniMaxRatio) : '16:9'
     };
   }
 

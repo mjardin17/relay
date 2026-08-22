@@ -108,6 +108,51 @@ export class MiniMaxCostCalculator {
     };
   }
 
+  /**
+   * Calculates actual incurred cost from completed task usage evidence or reconciled parameters.
+   */
+  public static calculateActualCost(params: {
+    resolution: VideoResolution;
+    usage?: {
+      output_duration?: number;
+      duration?: number;
+      reference_images?: number;
+      reference_video_duration?: number;
+      reference_audio_duration?: number;
+      cost?: number;
+    };
+    fallbackDurationSeconds?: number;
+    fallbackImageCount?: number;
+    fallbackVideoDurationSeconds?: number;
+    isRegenerationFrom768p?: boolean;
+  }): number {
+    if (params.usage && typeof params.usage.cost === 'number') {
+      return Number(params.usage.cost.toFixed(4));
+    }
+    const config = OFFICIAL_MINIMAX_PRICING;
+    const is2K = params.resolution === '2K';
+    const duration = params.usage?.output_duration ?? params.usage?.duration ?? params.fallbackDurationSeconds ?? 5;
+    const imageCount = params.usage?.reference_images ?? params.fallbackImageCount ?? 0;
+    const videoDuration = params.usage?.reference_video_duration ?? params.fallbackVideoDurationSeconds ?? 0;
+
+    let baseRate = is2K ? config.baseRate2KPerSec : config.baseRate768pPerSec;
+    let extraImgCost = config.extraImageReferenceCost;
+    let videoRefRate = is2K ? config.referenceVideoRate2KPerSec : config.referenceVideoRate768pPerSec;
+
+    if (params.isRegenerationFrom768p && is2K) {
+      baseRate = config.regen768pTo2KPerSec;
+      extraImgCost = 0.025;
+      videoRefRate = 0.05;
+    }
+
+    const baseCost = duration * baseRate;
+    const chargeableImages = Math.max(0, imageCount - config.freeImageReferencesCount);
+    const imageCost = chargeableImages * extraImgCost;
+    const videoCost = videoDuration * videoRefRate;
+
+    return Number((baseCost + imageCost + videoCost).toFixed(4));
+  }
+
   public static getPricingConfig(): MiniMaxPricingConfig {
     return { ...OFFICIAL_MINIMAX_PRICING };
   }

@@ -855,10 +855,34 @@ export class CommercialFactoryService {
     const jobId = `job_minimax_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
     const now = new Date().toISOString();
 
-    // Resolve reference asset URLs
+    // Resolve reference asset URLs & enforce strict tenant isolation
     const refAssets = (shot.selectedReferenceAssetIds || [])
-      .map(id => this.getReferenceAsset(id))
+      .map(id => {
+        const asset = this.getReferenceAsset(id);
+        if (asset && asset.tenantId !== project.tenantId) {
+          throw new Error(`CROSS_TENANT_ASSET_VIOLATION: Reference asset '${id}' belongs to tenant '${asset.tenantId}', not project tenant '${project.tenantId}'.`);
+        }
+        return asset;
+      })
       .filter((a): a is MiniMaxReferenceAsset => !!a);
+
+    let firstFrameUrl: string | undefined = undefined;
+    if (shot.firstFrameAssetId) {
+      const fAsset = this.getReferenceAsset(shot.firstFrameAssetId);
+      if (fAsset && fAsset.tenantId !== project.tenantId) {
+        throw new Error(`CROSS_TENANT_ASSET_VIOLATION: First frame asset '${shot.firstFrameAssetId}' belongs to tenant '${fAsset.tenantId}', not project tenant '${project.tenantId}'.`);
+      }
+      firstFrameUrl = fAsset?.url;
+    }
+
+    let lastFrameUrl: string | undefined = undefined;
+    if (shot.lastFrameAssetId) {
+      const lAsset = this.getReferenceAsset(shot.lastFrameAssetId);
+      if (lAsset && lAsset.tenantId !== project.tenantId) {
+        throw new Error(`CROSS_TENANT_ASSET_VIOLATION: Last frame asset '${shot.lastFrameAssetId}' belongs to tenant '${lAsset.tenantId}', not project tenant '${project.tenantId}'.`);
+      }
+      lastFrameUrl = lAsset?.url;
+    }
 
     const refImages = refAssets.filter(r => r.mediaType === 'image').map(r => r.url);
     const refVideos = refAssets.filter(r => r.mediaType === 'video').map(r => r.url);
@@ -871,8 +895,8 @@ export class CommercialFactoryService {
       resolution: shot.resolution,
       aspectRatio: shot.aspectRatio,
       mode: shot.mode,
-      firstFrameUrl: shot.firstFrameAssetId ? this.getReferenceAsset(shot.firstFrameAssetId)?.url : undefined,
-      lastFrameUrl: shot.lastFrameAssetId ? this.getReferenceAsset(shot.lastFrameAssetId)?.url : undefined,
+      firstFrameUrl,
+      lastFrameUrl,
       referenceImages: refImages.length > 0 ? refImages : undefined,
       referenceVideos: refVideos.length > 0 ? refVideos : undefined,
       referenceAudio: refAudio.length > 0 ? refAudio : undefined
@@ -1034,7 +1058,13 @@ export class CommercialFactoryService {
         }
 
         // Calculate actual cost incurred from usage evidence or standard rate
-        const actualCost = job.costEstimateUsd;
+        const actualCost = MiniMaxCostCalculator.calculateActualCost({
+          resolution: job.resolution,
+          usage: pollResult.usage,
+          fallbackDurationSeconds: job.durationSeconds,
+          fallbackImageCount: job.referenceAssetCount,
+          isRegenerationFrom768p: false
+        });
 
         db.prepare(`
           UPDATE minimax_generation_jobs SET
@@ -1214,6 +1244,16 @@ export class CommercialFactoryService {
       }
     }
 
+    const calculatedActualCost = queryResult.status === 'SUCCESS'
+      ? MiniMaxCostCalculator.calculateActualCost({
+          resolution: job.resolution,
+          usage: queryResult.usage,
+          fallbackDurationSeconds: job.durationSeconds,
+          fallbackImageCount: job.referenceAssetCount,
+          isRegenerationFrom768p: false
+        })
+      : job.actualCostIncurredUsd;
+
     const db = getDatabase();
     db.prepare(`
       UPDATE minimax_generation_jobs SET
@@ -1229,7 +1269,7 @@ export class CommercialFactoryService {
       queryResult.status,
       outputUrl || null,
       queryResult.outputUrl || job.temporaryProviderUrl || null,
-      queryResult.status === 'SUCCESS' ? job.costEstimateUsd : job.actualCostIncurredUsd,
+      calculatedActualCost,
       queryResult.errorMessage || null,
       (queryResult.status === 'SUCCESS' || queryResult.status === 'FAILED') ? now : (job.completedAt || null),
       now,
